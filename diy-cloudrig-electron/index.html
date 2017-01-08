@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<title></title>
+	<link rel="stylesheet" href="lib/semantic-ui/semantic.min.css">
+</head>
+
+<body>
+	<style>
+		body {
+			padding-top: 25px;
+		}
+		
+		th {
+			cursor: auto;
+			background: #F9FAFB;
+			text-align: inherit;
+			color: rgba(0, 0, 0, .87);
+			padding: .92857143em .78571429em;
+			vertical-align: inherit;
+			font-style: none;
+			font-weight: 700;
+			text-transform: none;
+			border-right: 1px solid rgba(34, 36, 38, .1);
+			border-top: 1px solid rgba(34, 36, 38, .1);
+			border-left: none;
+		}
+		
+		table tr:first-child th {
+			border-top: none;
+		}
+
+		.instance-state {
+			display: none;
+		}
+
+		.instance-state.active {
+			display: block;
+		}
+
+		button.item {
+			outline: none;
+		}
+
+		[data-tab]:disabled {
+			opacity: 0.6;
+		}
+
+		button.item:active {
+			
+		}
+
+		.action-button {
+			display: none;
+		}
+
+		textarea {
+			font-family: courier;
+			font-size: 10px;
+			padding: 5px;
+		}
+
+	</style>
+
+	<div class="ui container">
+		
+		<h1 class="ui center aligned header">CloudRig</h1>
+		
+		<div class="ui top attached tabular menu">
+			<button class="item disabled" data-tab="home" disabled>
+				Home
+			</button>
+			<button class="item" data-tab="configuration">
+				<span style="margin-right: 5px;">Configuration</span>
+				<span id="configuration-label">
+					<span class="ui active tiny inline loader"></span>
+				</span>
+			</button>
+			<button class="item disabled" data-tab="software" disabled>
+				<span style="margin-right: 5px;">Software</span>
+				<span id="state-label" style="display: none;">
+					<span class="ui active tiny inline loader"></span>
+				</span>
+			</button>
+		</div>
+		
+		<div class="ui bottom attached tab segment active" data-tab="home">
+
+			<div id="state-instance-active" class="instance-state">
+				
+				<h2>CloudRig running</h2>
+
+				<button class="ui button primary" id="stop-cloudrig">Stop</button>
+				<button class="ui button" id="update-cloudrig">Update</button>
+				<button class="ui button" id="update-stop-cloudrig">Update and stop</button>
+				<button class="ui button" id="open-rdp">Open RDP</button>
+
+			</div>
+
+			<div id="state-instance-inactive" class="instance-state">
+
+				<table class="ui celled table">
+					
+					<tbody>
+						<tr>
+							<th class="six wide">ARN</th>
+							<td><span id="settings-Arn"><span class="ui active tiny inline loader"></span></span></td>
+						</tr>
+						<tr>
+							<th class="six wide">ImageId</th>
+							<td><span id="settings-ImageId"><span class="ui active tiny inline loader"></span></span></td>
+						</tr>
+						<tr>
+							<th class="six wide">Security Group Id</th>
+							<td><span id="settings-SecurityGroupId"><span class="ui active tiny inline loader"></span></span></td>
+						</tr>
+						<tr>
+							<th class="six wide">Configured Max Price</th>
+							<td><span id="state-maxprice">-</span></td>
+						</tr>
+					</tbody>
+
+				</table>
+
+				<button class="ui button primary" id="start-cloudrig">Start</button>
+
+			</div>
+
+			<hr>
+
+			<div id="state-output">
+				<textarea rows="10" style="width: 100%;"></textarea>
+			</div>
+
+		</div>
+
+		<div class="ui bottom attached tab segment" data-tab="configuration">
+			
+			<form id="config-form" class="ui form" enctype="application/json">
+				
+				<div id="config-success" style="display: none; margin-bottom: 20px;">
+					
+					<div class="ui success message content">
+						<div class="header">Updated</div>
+					</div>
+
+				</div>
+				
+				<div class="three fields">
+					
+					<div class="field">
+						
+						<label for="AWSRegion">AWSRegion</label>
+						
+						<select name="AWSRegion" id="AWSRegion" class="ui dropdown">
+							<option>- Region -</option>
+							<option value="us-east-1">US East (N. Virginia)</option>
+							<option value="us-east-2">US East (Ohio)</option>
+							<option value="us-west-1">US West (N. California)</option>
+							<option value="us-west-2">US West (Oregon)</option>
+							<option value="ca-central-1">Canada (Central)</option>
+							<option value="eu-west-1">EU (Ireland)</option>
+							<option value="eu-central-1">EU (Frankfurt)</option>
+							<option value="eu-west-2">EU (London)</option>
+							<option value="ap-southeast-1">Asia Pacific (Singapore)</option>
+							<option value="ap-southeast-2">Asia Pacific (Sydney)</option>
+							<option value="ap-northeast-2">Asia Pacific (Seoul)</option>
+							<option value="ap-northeast-1">Asia Pacific (Tokyo)</option>
+							<option value="ap-south-1">Asia Pacific (Mumbai)</option>
+							<option value="sa-east-1">South America (São Paulo)</option>
+						</select>
+					</div>
+					
+					<div class="field">
+						<label for="AWSCredentialsProfile">AWSCredentialsProfile</label>
+						<input type="text" id="AWSCredentialsProfile" name="AWSCredentialsProfile">
+					</div>
+					
+					<div class="field">
+						<label for="AWSKeyPairName">AWSKeyPairName</label>
+						<input type="text" id="AWSKeyPairName" name="AWSKeyPairName">
+					</div>
+
+				</div>
+
+				<div class="three fields">
+					
+					<div class="field">
+						<label for="AWSMaxPrice">AWSMaxPrice</label>
+						<input type="number" id="AWSMaxPrice" step="0.1" name="AWSMaxPrice">
+					</div>
+					
+					<div class="field">
+						<label for="RDPConnectionName">RDPConnectionName</label>
+						<input type="text" id="RDPConnectionName" name="RDPConnectionName">
+					</div>
+					
+					<div class="field">
+						<label for="ZeroTierNetworkId">ZeroTierNetworkId</label>
+						<input type="text" id="ZeroTierNetworkId" name="ZeroTierNetworkId">
+					</div>
+
+				</div>
+
+				<button class="ui primary button" type="submit">Update</button>
+			
+			</form>
+
+		</div>
+
+		<div class="ui bottom attached tab segment" data-tab="software">
+			
+			<table class="ui celled table">
+
+				<tbody>
+
+					<tr>
+						<th class="six wide">ZeroTier</th>
+						<td>
+							<span id="state-zerotier">
+								<span class="ui active centered tiny inline loader"></span>
+							</span>
+							<button id="install-zerotier" class="action-button">Install</button>
+							
+						</td>
+					</tr>
+
+					<tr>
+						<th>MSFT Remote Desktop</th>
+						<td>
+							<span id="state-msft">
+								<span class="ui active tiny centered inline loader"></span>
+							</span>
+							<button id="install-msft" class="action-button">Install</button>
+						</td>
+					</tr>
+
+					<tr>
+						<th>Steam</th>
+						<td>
+							<span id="state-steam">
+								<span class="ui active tiny centered inline loader"></span>
+							</span>
+							<button id="open-steam" class="action-button">Open</button>
+							<button id="install-steam" class="action-button">Install</button>
+						</td>
+					</tr>
+					
+				</tbody>
+
+			</table>
+
+		</div>
+
+	</div>
+
+	<!-- http://stackoverflow.com/questions/32621988/electron-jquery-is-not-defined -->
+	<script>
+		if (typeof module === 'object') {
+			window.module = module;
+			module = undefined;
+		}
+	</script>
+	<script src="lib/jquery-3.1.1.min.js"></script>
+	<script src="lib/semantic-ui/semantic.min.js"></script>
+	<script>
+		if (window.module) module = window.module;
+	</script>
+	<script>
+		// You can also require other files to run in this process
+		require('./renderer.js')
+	</script>
+</body>
+
+</html>
