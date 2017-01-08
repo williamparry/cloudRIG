@@ -6,7 +6,7 @@ const ipc = electron.ipcMain
 const path = require('path')
 const url = require('url')
 const moment = require('moment')
-const cloudrig = require('../diy-cloudrig-core')
+const cloudrig = require('diy-cloudrig-core');
 
 let loaded = false;
 

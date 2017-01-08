@@ -3,7 +3,6 @@
 # Prerequisites
 
 * Electron
-* diy-cloudrig-cli npm installed (not in github repo atm)
 
 ## Running
 

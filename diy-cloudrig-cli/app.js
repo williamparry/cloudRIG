@@ -4,7 +4,7 @@ var prettyjson = require('prettyjson');
 var cowsay = require('cowsay');
 
 var config = require('./config');
-var cloudrig = require('../diy-cloudrig-core');
+var cloudrig = require('diy-cloudrig-core');
 
 function processAnswers(answers) {
 
