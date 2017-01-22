@@ -63,7 +63,7 @@ module.exports = {
 	},
 
 	getState: function(cb) {
-
+		// TODO: Better error handling if things don't exist
 		async.parallel([
 			Instance.getState,
 			VPN.getState,
@@ -83,6 +83,13 @@ module.exports = {
 			RDP.openRDP(instanceState.activeInstances[0].PublicDnsName, cb);
 		});
 		
+	},
+
+	// NOT IMPLEMENTED
+	createRDP: function(cb) {
+
+		RDP.createRDP("publicdns","password", cb);
+
 	},
 
 	updateAndTerminate: function(cb) {
@@ -109,3 +116,7 @@ module.exports = {
 	_Steam: Steam
 
 }
+
+// Set up security group
+// Set up image id
+// Se up key

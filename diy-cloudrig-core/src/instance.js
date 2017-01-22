@@ -1,5 +1,6 @@
 var AWS = require('aws-sdk');
 var async = require('async');
+var publicIp = require('public-ip');
 var reporter = require('./reporter');
 
 var config;
@@ -167,6 +168,99 @@ function createTags(resourceId, cb) {
 		}
 	});
 
+}
+
+// NOT IMPLEMENTED
+// THEORETICAL
+function createSecurityGroup (cb) {
+
+	publicIp.v4().then(function(ip) {
+
+		var params = {
+			Description: "CloudRig",
+			GroupName: "CloudRig" 
+		};
+
+		ec2.createSecurityGroup(params, function(err, data) {
+
+			if (err) {
+
+				reporter.report(err.stack, "error");
+
+			} else {
+
+				//http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_AuthorizeSecurityGroupEgress.html
+				var params = {
+					GroupId: data.GroupId, /* required */
+					CidrIp: ip + "/32",
+					FromPort: -1,
+					ToPort: -1,
+					IpProtocol: "all",
+				};
+
+				ec2.authorizeSecurityGroupEgress(params, function (err, data) {
+
+					if (err) {
+						reporter.report(err.stack, "error");
+					} else {
+						cb(data);
+					}
+				});
+
+			}
+			
+		});
+
+	});
+	
+}
+
+// NOT IMPLEMENTED
+function createRole (cb) {
+
+	var params = {
+		AssumeRolePolicyDocument: "<URL-encoded-JSON>", 
+		Path: "/", 
+		RoleName: "CloudRig"
+	};
+
+	iam.createRole(params, function(err, data) {
+
+		if (err) {
+
+			reporter.report(err.stack, "error");
+
+		} else {
+
+			cb(data);
+
+		}
+
+	});
+
+}
+
+// NOT IMPLEMENTED
+function createKeyPair (cb) {
+
+	var params = {
+		KeyName: "cloudrig"
+	};
+
+	ec2.createKeyPair(params, function(err, data) {
+		
+		if (err) {
+
+			reporter.report(err.stack, "error");
+
+		} else {
+
+			cb(data);
+
+		}
+
+	});
+	
 }
 
 function removeTags(resourceId, cb) {
@@ -387,6 +481,7 @@ function getState(cb) {
 
 }
 
+
 module.exports = {
 	
 	setConfig: function(_config) {
@@ -401,6 +496,12 @@ module.exports = {
 	init: function(cb) {
 		
 		credentials = new AWS.SharedIniFileCredentials({profile: config.AWSCredentialsProfile});
+		
+		if(!credentials.accessKeyId) {
+			cb("AWS profile not found");
+			return;
+		}
+
 		AWS.config.credentials = credentials;
 		AWS.config.region = config.AWSRegion;
 
@@ -413,8 +514,16 @@ module.exports = {
 			findSecurityGroup
 		], function(err, results) {
 
+			// http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/EC2.html#createKeyPair-property
+			// Check key
+
+			// http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/IAM.html#createRole-property
 			var role = results[0];
+
+			// Choose AMI
 			var AMI = results[1];
+
+			// http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/EC2.html#createSecurityGroup-property
 			var securityGroup = results[2]
 
 			if(err) {
