@@ -3,7 +3,9 @@ var RDP = require('./src/rdp');
 var VPN = require('./src/vpn');
 var Steam = require('./src/steam');
 var Instance = require('./src/instance');
-var reporter = require('./src/reporter');
+var reporter = require('./src/reporter')();
+
+var services = [Steam, Instance, RDP, VPN];
 
 var config;
 /*
@@ -13,38 +15,88 @@ if (require.main === module) {
 }
 */
 
-function getConfigState() {
-
-	for(var k in config) {
-		if(config[k] == "") {
-			return false;
-		}
-	}
-
-	return true;
-
-}
-
+// The point of this file is to create helper functions and pass through into the services
 module.exports = {
 
 	setReporter: function(_reporter) {
-		reporter.set(_reporter, "Instance");
-		Instance.setReporter(_reporter);
+		reporter.set(_reporter, "Core");
+		services.forEach((service) => service.setReporter(_reporter));
 	},
 
 	setConfig: function(_config) {
-		reporter.report("setConfig" + JSON.stringify(_config));
 		config = _config;
-		VPN.setConfig(config);
-		Instance.setConfig(config);
+		services.forEach((service) => service.setConfig(config));
 	},
 
-	getConfigState: function() {
-		return getConfigState();
+	getRequiredConfig: function() {
+		var ret = {};
+		services.forEach((service) => {
+			ret[service.id] = service.getRequiredConfig();
+		});
+		return ret;
 	},
 
-	init: function(cb) {
-		Instance.init(cb);
+	validateRequiredConfig: function(servicesRequiredConfig, cb) {
+
+		// TODO
+		cb(null, true);
+/*
+		Object.keys(servicesRequiredConfig, (serviceRequiredConfig) => {
+
+
+			
+		});
+
+		var ret = {};
+		services.forEach((service) => {
+			ret[service.id] = service.getRequiredConfig();
+		});
+		return ret;
+		*/
+	},
+
+	validateRequiredSoftware: function(cb) {
+		var ret = {};
+		async.parallel(services.map((service) => {
+			return function(cb) {
+				service.validateRequiredSoftware((err, state) => {
+					ret[service.id] = state;
+					cb()
+				})
+			}
+		}), function() {
+			cb(null, ret);
+		})
+	},
+
+	getState: function(cb) {
+		// TODO: Better error handling if things don't exist
+		var ret = {};
+		async.parallel(services.map((service) => {
+			return function(cb) {
+				service.getState((err, state) => {
+					ret[service.id] = state;
+					cb()
+				})
+			}
+		}), function() {
+			cb(null, ret);
+		})
+		
+	},
+
+	setup: function(cb) {
+		var ret = {};
+		async.parallel(services.map((service) => {
+			return function(cb) {
+				service.setup((err, state) => {
+					ret[service.id] = state;
+					cb()
+				})
+			}
+		}), function() {
+			cb(null, ret);
+		})
 	},
 
 	start: function(cb) {
@@ -62,17 +114,6 @@ module.exports = {
 
 	},
 
-	getState: function(cb) {
-		// TODO: Better error handling if things don't exist
-		async.parallel([
-			Instance.getState,
-			VPN.getState,
-			Steam.getState,
-			RDP.getState
-		], cb);
-		
-	},
-
 	update: function(cb) {
 		Instance.update(cb);
 	},
@@ -80,7 +121,7 @@ module.exports = {
 	openRDP: function(cb) {
 
 		Instance.getState(function(err, instanceState) {
-			RDP.openRDP(instanceState.activeInstances[0].PublicDnsName, cb);
+			RDP.open(instanceState.activeInstances[0].PublicDnsName, cb);
 		});
 		
 	},
@@ -88,7 +129,13 @@ module.exports = {
 	// NOT IMPLEMENTED
 	createRDP: function(cb) {
 
-		RDP.createRDP("publicdns","password", cb);
+		RDP.create("publicdns","password", cb);
+
+	},
+
+	createVPN: function(cb) {
+
+		VPN.create(cb)
 
 	},
 

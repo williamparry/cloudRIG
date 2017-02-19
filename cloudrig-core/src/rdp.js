@@ -1,37 +1,71 @@
 var exec = require('child_process').exec;
-var reporter = require('./reporter');
+var reporter = require('./reporter')();
+var config;
 
 var isWin = /^win/.test(process.platform);
-var applescript;
-if(!isWin) {
-	applescript = require('applescript');
+var applescript = isWin ? null : require('applescript')
+
+function getRequiredConfig() {
+	return ["RDPConnectionName"]
+}
+
+function validateRequiredConfig(configValues, cb) {
+
+	// TODO: Test that bookmark exists
+	cb(null, true);
+
+}
+
+function validateRequiredSoftware(cb) {
+
+	exec('ls /Applications/ | grep -i "Microsoft Remote Desktop.app"', function (error, stdout, stderr) {
+		
+		if (error) {
+			cb(error);
+			return;
+		}
+
+		cb(null, stdout !== "");
+
+	});
+
 }
 
 module.exports = {
+
+	id: "RDP",
+
+	setConfig: function(_config) {
+		config = _config;
+	},
 
 	setReporter: function(_reporter) {
 		reporter.set(_reporter, "RDP");
 	},
 
+	getRequiredConfig: function() {
+		return getRequiredConfig();
+	},
+
+	validateRequiredConfig: validateRequiredConfig,
+
+	validateRequiredSoftware: validateRequiredSoftware,
+
+	setup: function(cb) {
+		cb(null);
+	},
+
 	getState: function(cb) {
 
-		exec('ls /Applications/ | grep -i "Microsoft Remote Desktop.app"', function (error, stdout, stderr) {
-			
-			if (error) {
-				cb(error);
-				return;
-			}
-
+		validateRequiredSoftware(function(err, exists) {
 			cb(null, {
-				Exists:	stdout !== ""
-				// TODO: Check bookmark is present
-			});
-
-		});
+				Exists: exists
+			})
+		})
 
 	},
 
-	createRDP: function(publicDNS, password, cb) {
+	create: function(publicDNS, password, cb) {
 
 		if(!isWin) {
 
@@ -82,7 +116,7 @@ module.exports = {
 
 	},
 
-	openRDP: function(publicDNS, cb) {
+	open: function(publicDNS, cb) {
 
 		if(!isWin) {
 

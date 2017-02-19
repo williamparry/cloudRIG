@@ -10,6 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "async": "^2.1.4",
     "cowsay": "^1.1.8",
     "figlet": "^1.2.0",
     "inquirer": "^1.2.2",

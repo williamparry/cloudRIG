@@ -1,7 +1,7 @@
 var AWS = require('aws-sdk');
 var async = require('async');
 var publicIp = require('public-ip');
-var reporter = require('./reporter');
+var reporter = require('./reporter')();
 
 var config;
 var credentials;
@@ -172,8 +172,10 @@ function createTags(resourceId, cb) {
 
 // NOT IMPLEMENTED
 // THEORETICAL
-function createSecurityGroup (cb) {
-
+function createSecurityGroup(cb) {
+	reporter.report("Creating security group...");
+	cb(null, true);
+	return;
 	publicIp.v4().then(function(ip) {
 
 		var params = {
@@ -216,8 +218,10 @@ function createSecurityGroup (cb) {
 }
 
 // NOT IMPLEMENTED
-function createRole (cb) {
-
+function createRole(cb) {
+	reporter.report("Creating role...");
+	cb(null, true);
+	return;
 	var params = {
 		AssumeRolePolicyDocument: "<URL-encoded-JSON>", 
 		Path: "/", 
@@ -241,8 +245,10 @@ function createRole (cb) {
 }
 
 // NOT IMPLEMENTED
-function createKeyPair (cb) {
-
+function createKeyPair(cb) {
+	reporter.report("Creating key pair...");
+	cb(null, true);
+	return;
 	var params = {
 		KeyName: "cloudrig"
 	};
@@ -261,6 +267,13 @@ function createKeyPair (cb) {
 
 	});
 	
+}
+
+// NOT IMPLEMENTED
+function createImage(cb) {
+	reporter.report("Creating image...");
+	cb(null, true);
+	return;
 }
 
 function removeTags(resourceId, cb) {
@@ -456,8 +469,26 @@ function stop(spotFleetRequestId, instanceId, cb) {
 
 }
 
-function getState(cb) {
+function getRequiredConfig() {
+	return ["AWSCredentialsProfile", "AWSMaxPrice", "AWSRegion"]
+}
 
+function validateRequiredConfig(configValues, cb) {
+
+	var testCredentials = new AWS.SharedIniFileCredentials({
+		profile: configValues[0]
+	});
+	
+	if(!credentials.accessKeyId) {
+		cb(null, ["AWS profile not found"]);
+	} else {
+		cb(null, true);
+	}
+
+}
+
+function getState(cb) {
+	
 	async.parallel([
 		
 		getActiveInstances,
@@ -465,7 +496,7 @@ function getState(cb) {
 		getShuttingDownInstances
 
 	], function(err, results) {
-
+		
 		if(err) {
 			cb(err);
 			return;
@@ -484,24 +515,23 @@ function getState(cb) {
 
 module.exports = {
 	
+	id: "AWS",
+
 	setConfig: function(_config) {
 		config = _config;
 	},
 
 	setReporter: function(_reporter) {
-		reporter.set(_reporter, "Instance");
+		reporter.set(_reporter, "AWS");
 	},
 
 	// also reinit
-	init: function(cb) {
+	setup: function(cb) {
 		
-		credentials = new AWS.SharedIniFileCredentials({profile: config.AWSCredentialsProfile});
+		credentials = new AWS.SharedIniFileCredentials({
+			profile: config.AWSCredentialsProfile
+		});
 		
-		if(!credentials.accessKeyId) {
-			cb("AWS profile not found");
-			return;
-		}
-
 		AWS.config.credentials = credentials;
 		AWS.config.region = config.AWSRegion;
 
@@ -531,19 +561,50 @@ module.exports = {
 				return;
 			}
 			
-			settings.Arn = role.Arn;
-			settings.ImageId = AMI.ImageId;
-			settings.SecurityGroupId = securityGroup.GroupId;
+			var questions = [];
 
-			cb(null, settings);
+			if(!role.Arn) {
+				questions.push({
+					q: "Can I make a CloudRig user for you?",
+					m: createRole.bind(this)
+				});
+			} else {
+				settings.Arn = role.Arn;
+			}
+
+			if(!AMI.ImageId) {
+				questions.push({
+					q: "Can I make an AMI for you based off the stock CloudRig AMI?",
+					m: createImage.bind(this)
+				});
+			} else {
+				settings.ImageId = AMI.ImageId;
+			}
+
+			if(!securityGroup.GroupId) {
+				questions.push({
+					q: "Can I make a CloudRig security group for you?",
+					m: createImage.bind(this)
+				});
+			} else {
+				settings.SecurityGroupId = securityGroup.GroupId;
+			}
+			
+			cb(null, questions, settings);
 
 		});
 
 	},
 
-	getState: function(cb) {
-		return getState(cb);
+	getRequiredConfig: getRequiredConfig,
+
+	validateRequiredConfig: validateRequiredConfig,
+
+	validateRequiredSoftware: function(cb) {
+		cb(null, true);
 	},
+
+	getState: getState,
 
 	getActive: function(cb) {
 		getActiveInstances(cb);

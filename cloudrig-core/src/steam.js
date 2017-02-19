@@ -1,7 +1,9 @@
 var exec = require('child_process').exec;
+var reporter = require('./reporter')();
 var async = require('async');
+var config;
 
-function exists(cb) {
+function validateRequiredSoftware(cb) {
 			
 	exec('ls /Applications/ | grep -i "Steam.app"', function (error, stdout, stderr) {
 		
@@ -16,28 +18,56 @@ function exists(cb) {
 	
 }
 
-function running(cb) {
+// NOT IMPLEMENTED
+function portOpen(cb) {
 
-	exec('ps aux | grep steam_osx', function (error, stdout, stderr) {
+	exec('lsof -n -i -P | grep 27036', function (error, stdout, stderr) {
 		
 		if (error) {
 			cb(error);
 			return;
 		}
 
-		cb(null, stdout.indexOf('MacOS/steam_osx') !== -1);
+		cb(null, stdout.indexOf('steam_osx') !== -1);
 
 	});
 
 }
 
+
+
+
 module.exports = {
+
+	id: "Steam",
+
+	setConfig: function(_config) {
+		config = _config;
+	},
+
+	setReporter: function(_reporter) {
+		reporter.set(_reporter, "Steam");
+	},
+
+	getRequiredConfig: function() {
+		return [];
+	},
+
+	validateRequiredConfig: function(cb) {
+		cb(null, true);
+	},
+
+	setup: function(cb) {
+		cb(null);
+	},
+
+	validateRequiredSoftware: validateRequiredSoftware,
 
 	getState: function(cb) {
 		
 		async.parallel([
-			exists,
-			running
+			validateRequiredSoftware,
+			portOpen
 		], function(error, results) {
 
 			if(error) {
@@ -47,7 +77,7 @@ module.exports = {
 
 			cb(null, {
 				Exists: results[0],
-				Running: results[1]	
+				PortOpen: results[1]
 			});	
 			
 		});

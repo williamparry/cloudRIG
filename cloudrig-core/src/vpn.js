@@ -1,15 +1,24 @@
 var exec = require('child_process').exec;
 var commandExists = require('command-exists');
 var async = require('async');
+var publicIp = require('public-ip');
+var request = require('request');
+var reporter = require('./reporter')();
 var config;
+var vpnName = "cloudrig4";
+var settings = {};
 
-function exists(cb) {
+function getRequiredConfig() {
+	return ["ZeroTierAPIKey"];
+}
+
+function validateRequiredSoftware(cb) {
 
 	commandExists('zerotier-cli', function(err, commandExists) {
 
 		if(err) {
 
-			cb("VPN check error", err || "zerotier-cli does not exist");
+			cb("VPN check error", err);
 			return;
 
 		}
@@ -34,16 +43,232 @@ function joined(cb) {
 
 }
 
+function makeOptions() {
+	return {
+		url: 'https://my.zerotier.com/api/',
+		headers: {
+			'Authorization': 'Bearer ' + config.ZeroTierAPIKey
+			
+		}
+	};
+}
+
+function create(cb) {
+
+	async.waterfall([
+
+		function(cb) {
+
+			reporter.report("Making VPN network...");
+
+			var options = makeOptions();
+			options.url += "network"
+			options.method = "POST",
+			options.json = {
+
+				"config": {
+
+					"name": vpnName,
+
+					"rules": [
+						{
+							"ruleNo": 20,
+							"etherType": 2048,
+							"action": "accept"
+						},
+						{
+							"ruleNo": 21,
+							"etherType": 2054,
+							"action": "accept"
+						},
+						{
+							"ruleNo": 30,
+							"etherType": 34525,
+							"action": "accept"
+						}
+					],
+					"private": true,
+					"enableBroadcast": true,
+					"multicastLimit": 32,
+					"v4AssignMode": "zt",
+					"routes":[
+						{
+							"target": "10.147.17.0/24",
+							"via": null,
+							"flags": 0,
+							"metric": 0
+						}
+					],
+					"ipAssignmentPools": [
+						{
+							"ipRangeStart": "10.147.17.1",
+							"ipRangeEnd": "10.147.17.254"
+						}
+					],
+
+					"ui": {
+						"v4EasyMode": true
+					}
+				}
+				
+			}
+			
+			request(options, function (error, response, body) {
+				
+				if(error) {
+					cb(error);
+					return;
+				}
+
+				if (response.statusCode == 200) {
+					cb(null, body)
+				}
+
+			});
+
+		},
+		function(newVPN, cb) {
+
+			reporter.report("Adding user...");
+
+			var child = exec('zerotier-cli info -j');
+
+			child.stdout.on('data', function(data) {
+
+				var data = JSON.parse(data);
+				
+				var newVPNOptions = makeOptions();
+				newVPNOptions.url += "network/" + newVPN.id + "/member/" + data.address
+				newVPNOptions.method = "POST",
+				newVPNOptions.json = {
+					"hidden": false,
+					"config": {
+						"authorized": true 
+					}
+				}
+
+				request(newVPNOptions, function (error, response, body) {
+				
+					if(error) {
+						cb(error);
+						return;
+					}
+
+					if (response.statusCode == 200) {
+						cb(null, newVPN.id)
+					}
+
+				});
+				
+			});
+
+			child.stderr.on('data', function(data) {
+				cb("VPN info error: " + data);
+			});
+
+		}
+
+	], function(err, id) {
+
+		cb(null, id);
+
+	})
+
+}
+
+function getId(cb) {
+
+	var id;
+
+	var existsOptions = makeOptions();
+		existsOptions.url += "network/"
+		existsOptions.method = "GET",
+		
+		request(existsOptions, function (error, response, body) {
+
+			if(error) {
+				cb(error);
+				return;
+			}
+
+			networks = JSON.parse(body);
+
+			networks.forEach((network) => {
+
+				if(network.config.name.toLowerCase() == vpnName) {
+					id = network.id;
+					return;
+				}
+
+			});
+
+			cb(null, id)
+
+		});
+
+}
+
+function addCloudrigAddressToVPN(cb, clourigAddress) {
+
+}
+
 module.exports = {
+	
+	id: "VPN",
+
+	settings: {},
 
 	setConfig: function(_config) {
 		config = _config;
 	},
 
+	validateRequiredConfig: function(cb) {
+		// TODO: Make call with auth token
+		cb(null, true);
+	},
+
+	setup: function(cb) {
+		
+		var questions = [];
+
+		getId(function(err, id) {
+
+			if(!id) {
+
+				questions.push({
+					q: "Can I make a CloudRig ZeroTier network for you called " + vpnName + "?",
+					m: create.bind(this)
+				});
+
+				return;
+
+			} else {
+
+				settings.id = id;
+
+			}
+
+		})
+
+		cb(null, questions, settings);
+	},
+
+	setReporter: function(_reporter) {
+		reporter.set(_reporter, "VPN");
+	},
+
+	getRequiredConfig: function(cb) {
+		return getRequiredConfig();
+	},
+
+	validateRequiredSoftware: validateRequiredSoftware,
+
+	addCloudrigAddressToVPN: addCloudrigAddressToVPN,
+
 	getState: function(cb) {
 		
 		async.parallel([
-			exists,
+			validateRequiredSoftware,
 			joined
 		], function(error, results) {
 
@@ -64,7 +289,7 @@ module.exports = {
 	// also restart
 	start: function(cb) {
 
-		var child = exec('zerotier-cli join ' + config.ZeroTierNetworkId);
+		var child = exec('zerotier-cli join ' + settings.id);
 
 		child.stdout.on('data', function(data) {
 			cb();
@@ -78,7 +303,7 @@ module.exports = {
 
 	stop: function(cb) {
 
-		var child = exec('zerotier-cli leave ' + config.ZeroTierNetworkId);
+		var child = exec('zerotier-cli leave ' + settings.id);
 
 		child.stdout.on('data', function(data) {
 			cb();
@@ -87,6 +312,12 @@ module.exports = {
 		child.stderr.on('data', function(data) {
 			cb("VPN stop error: " + data);
 		});
+
+	},
+
+	create: function (cb) {
+
+		create(cb);
 
 	}
 

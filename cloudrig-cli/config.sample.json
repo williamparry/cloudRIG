@@ -1,8 +1,8 @@
 {
-	"AWSCredentialsProfile": "cloudrig",
+	"AWSCredentialsProfile": "",
 	"AWSKeyPairName": "",
-	"AWSMaxPrice": "0.4",
+	"AWSMaxPrice": "",
 	"AWSRegion": "",
 	"RDPConnectionName": "",
-	"ZeroTierNetworkId": ""
+	"ZeroTierAPIKey": ""
 }
