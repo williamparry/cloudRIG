@@ -1,7 +1,7 @@
 var AWS = require('aws-sdk');
 var async = require('async');
 var publicIp = require('public-ip');
-var reporter = require('./reporter')();
+var reporter = require('../helpers/reporter')();
 
 var config;
 var credentials;

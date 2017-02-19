@@ -1,5 +1,5 @@
 var exec = require('child_process').exec;
-var reporter = require('./reporter')();
+var reporter = require('../helpers/reporter')();
 var config;
 
 var isWin = /^win/.test(process.platform);

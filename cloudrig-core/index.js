@@ -1,9 +1,9 @@
 var async = require('async');
-var RDP = require('./src/rdp');
-var VPN = require('./src/vpn');
-var Steam = require('./src/steam');
-var Instance = require('./src/instance');
-var reporter = require('./src/reporter')();
+var RDP = require('./services/rdp');
+var VPN = require('./services/vpn');
+var Steam = require('./services/steam');
+var Instance = require('./services/instance');
+var reporter = require('./helpers/reporter')();
 
 var services = [Steam, Instance, RDP, VPN];
 

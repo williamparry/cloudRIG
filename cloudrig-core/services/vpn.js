@@ -3,9 +3,9 @@ var commandExists = require('command-exists');
 var async = require('async');
 var publicIp = require('public-ip');
 var request = require('request');
-var reporter = require('./reporter')();
+var reporter = require('../helpers/reporter')();
 var config;
-var vpnName = "cloudrig4";
+var vpnName = "cloudrig";
 var settings = {};
 
 function getRequiredConfig() {
