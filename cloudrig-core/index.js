@@ -99,10 +99,39 @@ module.exports = {
 		})
 	},
 
+	sendMessage: Instance.sendMessage,
+
 	start: function(cb) {
-		return Instance.start(function() {
-			VPN.start(cb);
+		
+		reporter.report("Starting instance...");
+
+		return Instance.start(() => {
+
+			reporter.report("Starting VPN...");
+			VPN.start(() => {
+				
+				// Get remote info
+				
+				Instance.sendMessage(VPN.getRemoteInfoCommand(), (err, resp) => {
+
+					// Send to VPN to add to network
+					reporter.report("Adding Instance VPN address to VPN...");
+					VPN.addCloudrigAddressToVPN(address, () => {
+
+						// Tell instance to join
+						reporter.report("Join Instance to VPN...");
+						Instance.sendMessage(VPN.getRemoteJoinCommand(), (err, resp) => {
+
+						})
+
+					});
+
+				});
+
+			});
+
 		});
+
 	},
 
 	stop: function(cb) {
@@ -153,7 +182,7 @@ module.exports = {
 		});
 
 	},
-
+	
 	_instance: Instance,
 
 	_VPN: VPN,

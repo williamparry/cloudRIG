@@ -208,6 +208,14 @@ function getId(cb) {
 
 }
 
+function getRemoteInfoCommand() {
+	return ["zerotier-cli info -j"];
+}
+
+function getRemoteJoinCommand() {
+	return ["zerotier-cli join " + settings.id];
+}
+
 function addCloudrigAddressToVPN(cb, clourigAddress) {
 
 }
@@ -257,9 +265,13 @@ module.exports = {
 		reporter.set(_reporter, "VPN");
 	},
 
-	getRequiredConfig: function(cb) {
+	getRequiredConfig: function() {
 		return getRequiredConfig();
 	},
+
+	getRemoteInfoCommand: getRemoteInfoCommand,
+
+	getRemoteJoinCommand: getRemoteJoinCommand,
 
 	validateRequiredSoftware: validateRequiredSoftware,
 
@@ -292,7 +304,7 @@ module.exports = {
 		var child = exec('zerotier-cli join ' + settings.id);
 
 		child.stdout.on('data', function(data) {
-			cb();
+			cb(null);
 		});
 
 		child.stderr.on('data', function(data) {

@@ -8,6 +8,7 @@ var credentials;
 var settings = {};
 var iam;
 var ec2;
+var ssm;
 var standardFilter = [
 {
 		Name: 'tag:cloudrig',
@@ -487,6 +488,44 @@ function validateRequiredConfig(configValues, cb) {
 
 }
 
+// http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/SSM.html#sendCommand-property
+function sendMessage(commands, cb) {
+
+	getState(function(err, state) {
+		
+		if(err) {
+			cb(err);
+			return;
+		}
+
+		var params = {
+			DocumentName: "AWS-RunPowerShellScript",
+			InstanceIds: [
+				state.activeInstances[0].InstanceId
+			],
+			Parameters: {
+				"commands": commands
+			}
+		};
+
+		reporter.report("Sending '" + commands.join("' ") + "' to " + state.activeInstances[0].InstanceId);
+
+		ssm.sendCommand(params, function(err, data) {
+			
+			// http://docs.aws.amazon.com/ssm/latest/APIReference/API_SendCommand.html
+			// InvalidInstanceId
+
+
+			if (err) {
+				reporter.report(err.stack, "error");
+			} else {
+				cb(data);
+			}
+		});
+
+	});
+}
+
 function getState(cb) {
 	
 	async.parallel([
@@ -535,8 +574,9 @@ module.exports = {
 		AWS.config.credentials = credentials;
 		AWS.config.region = config.AWSRegion;
 
-		iam = new AWS.IAM({apiVersion: '2010-05-08'});
-		ec2 = new AWS.EC2({apiVersion: '2016-09-15'});
+		iam = new AWS.IAM();
+		ec2 = new AWS.EC2();
+		ssm = new AWS.SSM();
 		
 		async.parallel([
 			findRole,
@@ -595,6 +635,8 @@ module.exports = {
 		});
 
 	},
+
+	sendMessage: sendMessage,
 
 	getRequiredConfig: getRequiredConfig,
 

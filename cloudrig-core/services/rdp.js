@@ -52,6 +52,10 @@ module.exports = {
 	validateRequiredSoftware: validateRequiredSoftware,
 
 	setup: function(cb) {
+
+		// TODO: Handle bookmark outside of config file
+
+
 		cb(null);
 	},
 

@@ -44,7 +44,7 @@ function displayState(cb) {
 
 function mainMenu() {
 
-	var choices = ["Get State"];
+	var choices = ["Get State", "Advanced"];
 
 	cloudrig.getState(function(err, state) {
 		
@@ -66,6 +66,12 @@ function mainMenu() {
 		]).then((answers) => {
 
 			switch(answers.cmd) {
+
+				case "Advanced":
+
+					advancedMenu(mainMenu);
+
+				break;
 
 				case "Start CloudRig":
 
@@ -177,6 +183,45 @@ function configMenu(cb) {
 		}
 	
 	})
+
+}
+
+function advancedMenu(cb) {
+
+	inquirer.prompt([{
+		name: "cmd",
+		message: "Advanced\n",
+		type: "rawlist",
+		choices: ["Back", "VPN Start", "Get Remote VPN Address"]
+	}
+
+	]).then((answers) => {
+
+		switch(answers.cmd) {
+
+			case "Back":
+				cb();
+			break;
+
+			case "VPN Start":
+
+				cloudrig._VPN.start(function() {
+					cb();
+				})
+
+			break;
+
+			case "Get Remote VPN Address":
+
+				cloudrig._instance.sendMessage(cloudrig._VPN.getRemoteInfoCommand(), (err, resp) => {
+					console.log(resp);
+				});
+
+			break;
+
+		}
+
+	});
 
 }
 
