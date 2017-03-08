@@ -15,6 +15,7 @@
     "aws-sdk": "^2.6.15",
     "command-exists": "^1.0.2",
     "public-ip": "^2.0.1",
-    "request": "^2.79.0"
+    "request": "^2.79.0",
+    "ursa": "^0.9.4"
   }
 }

@@ -1,6 +1,7 @@
 var AWS = require('aws-sdk');
 var async = require('async');
 var fs = require('fs');
+var ursa = require('ursa');
 var publicIp = require('public-ip');
 var reporter = require('../helpers/reporter')();
 
@@ -345,7 +346,7 @@ function createFleetRole(cb) {
 				AssumeRolePolicyDocument: policy,
 				Path: "/", 
 				RoleName: fleetRoleName
-			}, cb)
+			}, cb);
 
 		},
 
@@ -407,7 +408,7 @@ function createSSMRole(cb) {
 			iam.attachRolePolicy({
 				PolicyArn: policy, 
 				RoleName: ssmRoleName
-			}, cb)
+			}, cb);
 
 		},
 
@@ -420,7 +421,7 @@ function createSSMRole(cb) {
 			iam.attachRolePolicy({
 				PolicyArn: policy, 
 				RoleName: ssmRoleName
-			}, cb)
+			}, cb);
 
 		},
 
@@ -430,7 +431,7 @@ function createSSMRole(cb) {
 
 			iam.createInstanceProfile({
 				InstanceProfileName: ssmRoleName
-			}, cb)
+			}, cb);
 
 		},
 
@@ -441,7 +442,7 @@ function createSSMRole(cb) {
 			iam.addRoleToInstanceProfile({
 				InstanceProfileName: ssmRoleName, 
 				RoleName: ssmRoleName
-			}, cb)
+			}, cb);
 
 		}
 
@@ -460,6 +461,7 @@ function createKeyPair(cb) {
 		if (err) {
 
 			reporter.report(err.stack, "error");
+			cb("error");
 
 		} else {
 
@@ -471,11 +473,60 @@ function createKeyPair(cb) {
 	
 }
 
-// NOT IMPLEMENTED
 function createImage(cb) {
+
 	reporter.report("Creating image...");
-	cb(null, true);
-	return;
+
+	var params = {
+		Name: 'cloudrig',
+		SourceImageId: 'ami-f0d0d293',
+		SourceRegion: 'ap-southeast-2'
+	};
+
+	ec2.copyImage(params, function(err, data) {
+
+		if (err) {
+			reporter.report(err.stack, "error");
+			cb("error");
+		} else {
+
+			reporter.report("Waiting for image to become available...");
+
+			ec2.waitFor('imageAvailable', {
+				ImageIds: [data.ImageId]
+			}, function() {
+
+				reporter.report("Adding tags to '" + data.ImageId + "'...");
+				createTags(data.ImageId, cb);
+
+			});
+
+		}
+
+	});
+
+}
+
+function getPassword(instanceId, cb) {
+
+	reporter.report("Getting password using private key '" + securityKeyPairPath + "'...")
+
+	var pem = fs.readFileSync(securityKeyPairPath);
+	var pkey = ursa.createPrivateKey(pem);
+
+	ec2.getPasswordData({InstanceId: instanceId}, function (err, data) {
+
+		if(err) {
+			cb(err);
+			return;
+		}
+
+		var password = pkey.decrypt(data.PasswordData, 'base64', 'utf8', ursa.RSA_PKCS1_PADDING);
+
+		cb(null, password);
+
+	});
+
 }
 
 function removeTags(resourceId, cb) {
@@ -809,6 +860,23 @@ module.exports = {
 		reporter.set(_reporter, "AWS");
 	},
 
+	getPassword: function(cb) {
+		
+		getState(function(err, state) {
+
+			if(err) {
+				cb(err);
+				return;
+			}
+
+			var instanceId = state.activeInstances[0].InstanceId;
+
+			getPassword(instanceId, cb);
+
+		});
+
+	},
+
 	// also reinit
 	setup: function(cb) {
 		
@@ -871,7 +939,7 @@ module.exports = {
 				settings.ssmRole = ssmRole.Role.Arn;
 			}
 
-			if(!AMI.ImageId) {
+			if(!AMI) {
 				questions.push({
 					q: "Shall I make an AMI based off the stock 'cloudrig' AMI?",
 					m: createImage.bind(this)

@@ -49,7 +49,7 @@ function mainMenu() {
 	cloudrig.getState(function(err, state) {
 		
 		if(state.AWS.activeInstances.length > 0) {
-			choices = choices.concat(["Stop CloudRig", "Open RDP", "Update AMI", "Update AMI and shut down"]);
+			choices = choices.concat(["Stop CloudRig", "Get Windows Password", "Open RDP", "Update AMI", "Update AMI and shut down"]);
 		} else {
 			choices = choices.concat(["Start CloudRig", "Setup"]);
 		}
@@ -102,6 +102,17 @@ function mainMenu() {
 					configMenu(() => {
 						setup(mainMenu);
 					});
+
+				break;
+
+				case "Get Windows Password":
+
+					cloudrig.getWindowsPassword((err, password) => {
+						console.log("------------------------");
+						console.log("Password: " + password);
+						console.log("------------------------");
+						mainMenu();
+					})
 
 				break;
 

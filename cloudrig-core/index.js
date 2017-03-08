@@ -152,6 +152,10 @@ module.exports = {
 		Instance.update(cb);
 	},
 
+	getWindowsPassword: function(cb) {
+		Instance.getPassword(cb);
+	},
+
 	openRDP: function(cb) {
 
 		Instance.getState(function(err, instanceState) {
