@@ -12,8 +12,8 @@ var iam;
 var ec2;
 var ssm;
 var securityKeyPairPath = "cloudrig.pem";
-var fleetRoleName = "cloudrig-spotfleet-4";
-var ssmRoleName = "cloudrig-ssm-4";
+var fleetRoleName = "cloudrig-spotfleet";
+var ssmRoleName = "cloudrig-ssm";
 var standardFilter = [{
 	Name: 'tag:cloudrig',
 	Values: ['true']
@@ -861,7 +861,7 @@ module.exports = {
 	},
 
 	getPassword: function(cb) {
-		
+
 		getState(function(err, state) {
 
 			if(err) {
