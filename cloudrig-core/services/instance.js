@@ -1,5 +1,6 @@
 var AWS = require('aws-sdk');
 var async = require('async');
+var fs = require('fs');
 var publicIp = require('public-ip');
 var reporter = require('../helpers/reporter')();
 
@@ -9,14 +10,15 @@ var settings = {};
 var iam;
 var ec2;
 var ssm;
-var standardFilter = [
-{
-		Name: 'tag:cloudrig',
-		Values: ['true']
-	}
-];
+var securityKeyPairPath = "cloudrig.pem";
+var fleetRoleName = "cloudrig-spotfleet-4";
+var ssmRoleName = "cloudrig-ssm-4";
+var standardFilter = [{
+	Name: 'tag:cloudrig',
+	Values: ['true']
+}];
 
-function findRole(cb) {
+function findFleetRole(cb) {
 
 	iam.listRoles({}, function(err, data) {
 		
@@ -24,15 +26,87 @@ function findRole(cb) {
 			cb(err); 
 		} else  {
 			for(var i = 0; i < data.Roles.length; i++) {
-				if(data.Roles[i].RoleName == "aws-ec2-spot-fleet-role") {
+				
+				if(data.Roles[i].RoleName == fleetRoleName) {
 					cb(null, data.Roles[i]);
-					break;
+					return;
 				}
 			}
+			cb(null);
 		}
 	});
 
 }
+
+function findSSMRole(cb) {
+
+	var ret = {};
+
+	async.series([
+
+		(cb) => {
+
+			iam.listRoles({}, function(err, data) {
+
+				if (err) {
+					cb(err);
+					return;
+				}
+
+				data.Roles.forEach((role, i) => {
+
+					if(role.RoleName == ssmRoleName) {
+
+						ret.Role = role;
+
+					}
+					
+				});
+
+				cb(null);
+
+			});
+
+		},
+
+		(cb) => {
+
+			iam.listInstanceProfiles({}, function(err, data) {
+				
+				if (err) {
+					cb(err);
+					return;
+				}
+
+				data.InstanceProfiles.forEach((profile, i) => {
+
+					if(profile.InstanceProfileName == ssmRoleName) {
+
+						ret.InstanceProfile = profile;
+
+					}
+					
+				});
+
+				cb(null);
+
+			});
+
+		}
+
+	], (err, results) => {
+
+		if(err) {
+			cb(err);
+			return;
+		}
+
+		cb(null, ret);
+
+	});	
+
+}
+
 
 function findAMI (cb) {
 
@@ -64,6 +138,27 @@ function findSecurityGroup(cb) {
 			cb(err); 
 		} else {
 			cb(null, data.SecurityGroups[0]);
+		}
+		
+	});
+}
+
+
+function findKeyPair (cb) {
+
+	var params = {
+		KeyNames: [
+			"cloudrig"
+		]
+	};
+
+	ec2.describeKeyPairs(params, function(err, data) {
+		// Error if there are no keys
+		// TODO: Warn if there's more than 1
+		if (err) {
+			cb(null, null); 
+		} else {
+			cb(null, data.KeyPairs[0]);
 		}
 		
 	});
@@ -171,43 +266,51 @@ function createTags(resourceId, cb) {
 
 }
 
-// NOT IMPLEMENTED
-// THEORETICAL
 function createSecurityGroup(cb) {
+	
 	reporter.report("Creating security group...");
-	cb(null, true);
-	return;
+	
 	publicIp.v4().then(function(ip) {
 
 		var params = {
-			Description: "CloudRig",
-			GroupName: "CloudRig" 
+			Description: "CloudRig" + (+new Date()),
+			GroupName: "CloudRig" + (+new Date())
 		};
 
-		ec2.createSecurityGroup(params, function(err, data) {
+		ec2.createSecurityGroup(params, function(err, securityGroupData) {
 
 			if (err) {
 
 				reporter.report(err.stack, "error");
 
 			} else {
-
+				
 				//http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_AuthorizeSecurityGroupEgress.html
 				var params = {
-					GroupId: data.GroupId, /* required */
-					CidrIp: ip + "/32",
-					FromPort: -1,
-					ToPort: -1,
-					IpProtocol: "all",
+					GroupId: securityGroupData.GroupId, /* required */
+					IpPermissions: [{
+						FromPort: -1,
+						ToPort: -1,
+						IpProtocol: '-1',
+						IpRanges: [
+							{ CidrIp: ip + "/32" }
+						]
+					}]
 				};
 
-				ec2.authorizeSecurityGroupEgress(params, function (err, data) {
+				reporter.report(params)
+				
+				ec2.authorizeSecurityGroupIngress(params, function (err, data) {
 
 					if (err) {
+
 						reporter.report(err.stack, "error");
+
 					} else {
-						cb(data);
+						reporter.report("Tagging...")
+						createTags(securityGroupData.GroupId, cb)
 					}
+
 				});
 
 			}
@@ -218,38 +321,136 @@ function createSecurityGroup(cb) {
 	
 }
 
-// NOT IMPLEMENTED
-function createRole(cb) {
-	reporter.report("Creating role...");
-	cb(null, true);
-	return;
-	var params = {
-		AssumeRolePolicyDocument: "<URL-encoded-JSON>", 
-		Path: "/", 
-		RoleName: "CloudRig"
-	};
 
-	iam.createRole(params, function(err, data) {
+function createFleetRole(cb) {
 
-		if (err) {
+	async.series([
 
-			reporter.report(err.stack, "error");
+		(cb) => {
 
-		} else {
+			var policy = '{\
+				"Version": "2012-10-17",\
+				"Statement": {\
+					"Effect": "Allow",\
+					"Principal": {\
+						"Service": "spotfleet.amazonaws.com"\
+					},\
+					"Action": "sts:AssumeRole"\
+				}\
+			}';
 
-			cb(data);
+			reporter.report("Creating fleet role '" + fleetRoleName + "'...");
+
+			iam.createRole({
+				AssumeRolePolicyDocument: policy,
+				Path: "/", 
+				RoleName: fleetRoleName
+			}, cb)
+
+		},
+
+		(cb) => {
+
+			var policy = "arn:aws:iam::aws:policy/service-role/AmazonEC2SpotFleetRole";
+
+			reporter.report("Attaching the policy '" + policy + "'...");
+			
+			iam.attachRolePolicy({
+				PolicyArn: policy, 
+				RoleName: fleetRoleName
+			}, cb);
 
 		}
 
-	});
+
+	], cb);
 
 }
 
-// NOT IMPLEMENTED
+
+function createSSMRole(cb) {
+	
+	async.series([
+
+		(cb) => {
+
+			var policy = '{\
+				"Version": "2012-10-17",\
+				"Statement": {\
+					"Effect": "Allow",\
+					"Principal": {\
+						"Service": "ec2.amazonaws.com",\
+						"Service": "ssm.amazonaws.com"\
+					},\
+					"Action": "sts:AssumeRole"\
+				}\
+			}';
+
+			reporter.report("Creating SSM role '" + ssmRoleName + "'...");
+
+			iam.createRole({
+				AssumeRolePolicyDocument: policy,
+				Path: "/", 
+				RoleName: ssmRoleName
+			}, () => {
+				cb(null);
+			})
+
+		},
+
+		(cb) => {
+
+			var policy = "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM";
+
+			reporter.report("Attaching the policy '" + policy + "'...");
+
+			iam.attachRolePolicy({
+				PolicyArn: policy, 
+				RoleName: ssmRoleName
+			}, cb)
+
+		},
+
+		(cb) => {
+
+			var policy = "arn:aws:iam::aws:policy/AmazonSNSFullAccess";
+
+			reporter.report("Attaching the policy '" + policy + "'...");
+
+			iam.attachRolePolicy({
+				PolicyArn: policy, 
+				RoleName: ssmRoleName
+			}, cb)
+
+		},
+
+		(cb) => {
+
+			reporter.report("Creating instance profile '" + ssmRoleName + "'...");
+
+			iam.createInstanceProfile({
+				InstanceProfileName: ssmRoleName
+			}, cb)
+
+		},
+
+		(cb) => {
+
+			reporter.report("Adding role '" + ssmRoleName + "' to instance profile '" + ssmRoleName + "'...");
+
+			iam.addRoleToInstanceProfile({
+				InstanceProfileName: ssmRoleName, 
+				RoleName: ssmRoleName
+			}, cb)
+
+		}
+
+	], cb);
+
+}
+
 function createKeyPair(cb) {
-	reporter.report("Creating key pair...");
-	cb(null, true);
-	return;
+	
 	var params = {
 		KeyName: "cloudrig"
 	};
@@ -343,16 +544,19 @@ function updateImage(instanceId, amiId, cb) {
 	
 }
 
-function start(Arn, ImageId, SecurityGroupId, cb) {
+function start(fleetRoleArn, ssmInstanceProfileArn, ImageId, SecurityGroupId, KeyName, cb) {
 
 	var params = {
 		SpotFleetRequestConfig: {
-			IamFleetRole: Arn,
+			IamFleetRole: fleetRoleArn,
 			LaunchSpecifications: [
 				{
+					IamInstanceProfile: {
+						Arn: ssmInstanceProfileArn
+					}, 
 					ImageId: ImageId,
 					InstanceType: "g2.2xlarge",
-					KeyName: config.AWSKeyPairName,
+					KeyName: KeyName,
 					SecurityGroups: [ { GroupId: SecurityGroupId } ]
 				}
 			],
@@ -376,54 +580,61 @@ function start(Arn, ImageId, SecurityGroupId, cb) {
 
 				findSpotFleetInstances(data.SpotFleetRequestId, function(err, instances) {
 					
-					if(instances.length > 0) {
+					if(err) {
+						reporter.report(err.stack);
 						clearInterval(c);
-						c = null;
+					} else {
 
-						var instanceId = instances[0].InstanceId;
+						if(instances.length > 0) {
+							clearInterval(c);
+							c = null;
 
-						reporter.report("Got an instance: " + instanceId);
-						reporter.report("Tagging instance...");
-						
-						createTags(instanceId, function() {
+							var instanceId = instances[0].InstanceId;
+
+							reporter.report("Got an instance: " + instanceId);
+							reporter.report("Tagging instance...");
 							
-							reporter.report("Tagged 'cloudrig'");
+							createTags(instanceId, function() {
+								
+								reporter.report("Tagged 'cloudrig'");
 
-							reporter.report("Now we wait for our instance to be ready...");
+								reporter.report("Now we wait for our instance to be ready...");
 
-							var v = setInterval(function() {
+								var v = setInterval(function() {
 
-								getActiveInstances(function(err, instances) {
-									
-									if(instances.length > 0) {
+									getActiveInstances(function(err, instances) {
 										
-										clearInterval(v);
-										v = null;
-
-										reporter.report("Now we wait for our instance to be OK...");
-
-										ec2.waitFor('instanceStatusOk', {
-
-											InstanceIds: [ instanceId ]
+										if(instances.length > 0) {
 											
-										}, function(err, data) {
-											
-											if (err) { 
-												reporter.report(err.stack, "error")
-											} else {
-												reporter.report("Ready");
-												cb(null);
-											}
+											clearInterval(v);
+											v = null;
 
-										});
-									}
+											reporter.report("Now we wait for our instance to be OK...");
 
-								});
+											ec2.waitFor('instanceStatusOk', {
 
-							}, 5000);
+												InstanceIds: [ instanceId ]
+												
+											}, function(err, data) {
+												
+												if (err) { 
+													reporter.report(err.stack, "error")
+												} else {
+													reporter.report("Ready");
+													cb(null);
+												}
 
-						});
-						
+											});
+										}
+
+									});
+
+								}, 5000);
+
+							});
+							
+						}
+
 					}
 				});
 
@@ -498,32 +709,66 @@ function sendMessage(commands, cb) {
 			return;
 		}
 
+		var instanceId = state.activeInstances[0].InstanceId;
+
 		var params = {
 			DocumentName: "AWS-RunPowerShellScript",
 			InstanceIds: [
-				state.activeInstances[0].InstanceId
+				instanceId
 			],
+			ServiceRoleArn: settings.ssmRole,
 			Parameters: {
 				"commands": commands
 			}
 		};
 
 		reporter.report("Sending '" + commands.join("' ") + "' to " + state.activeInstances[0].InstanceId);
+		reporter.report(JSON.stringify(params, null, 4))
 
 		ssm.sendCommand(params, function(err, data) {
 			
-			// http://docs.aws.amazon.com/ssm/latest/APIReference/API_SendCommand.html
-			// InvalidInstanceId
-
-
-			if (err) {
-				reporter.report(err.stack, "error");
-			} else {
-				cb(data);
+			if(err) {
+				cb(err);
+				return;
 			}
+
+			function check() {
+
+				reporter.report("Checking command '" + data.Command.CommandId + "'...");
+
+				ssm.listCommandInvocations({
+					CommandId: data.Command.CommandId, /* required */
+					InstanceId: instanceId,
+					Details: true
+				}, function(err, data) {
+					
+					if(err) {
+						cb(err);
+						return;
+					}
+					
+					// https://github.com/aws/aws-sdk-net/issues/535
+					if(data.CommandInvocations && data.CommandInvocations.length > 0 && data.CommandInvocations[0].Status == "Success") {
+						
+						cb(null, data.CommandInvocations[0].CommandPlugins[0].Output);
+
+					} else {
+
+						setTimeout(check, 1000);
+						
+					}
+
+				});
+
+			}
+			
+			check();
+
 		});
+		
 
 	});
+
 }
 
 function getState(cb) {
@@ -579,46 +824,77 @@ module.exports = {
 		ssm = new AWS.SSM();
 		
 		async.parallel([
-			findRole,
+			findFleetRole,
+			findSSMRole,
 			findAMI,
-			findSecurityGroup
+			findSecurityGroup,
+			findKeyPair
 		], function(err, results) {
-
-			// http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/EC2.html#createKeyPair-property
-			// Check key
-
-			// http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/IAM.html#createRole-property
-			var role = results[0];
-
-			// Choose AMI
-			var AMI = results[1];
-
-			// http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/EC2.html#createSecurityGroup-property
-			var securityGroup = results[2]
 
 			if(err) {
 				cb("Error " + err);
 				return;
 			}
+
+			// http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/IAM.html#createRole-property
+			var fleetRole = results[0];
+
+			var ssmRole = results[1];
+
+			// Choose AMI
+			var AMI = results[2];
+
+			// http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/EC2.html#createSecurityGroup-property
+			var securityGroup = results[3];
+
+			// http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/EC2.html#createKeyPair-property
+			var keyPair = results[4];
 			
 			var questions = [];
 
-			if(!role.Arn) {
+			if(!fleetRole) {
 				questions.push({
-					q: "Can I make a CloudRig user for you?",
-					m: createRole.bind(this)
+					q: "Shall I make a role called '" + fleetRoleName + "' for Spot Fleet requests?",
+					m: createFleetRole.bind(this)
 				});
 			} else {
-				settings.Arn = role.Arn;
+				settings.fleetRole = fleetRole.Arn;
+			}
+
+			if(!ssmRole || (ssmRole && !ssmRole.Role)) {
+				questions.push({
+					q: "Shall I make a role and instance profile called '" + ssmRoleName + "' for SSM communication?",
+					m: createSSMRole.bind(this)
+				});
+			} else {
+				settings.ssmInstanceProfile = ssmRole.InstanceProfile.Arn;
+				settings.ssmRole = ssmRole.Role.Arn;
 			}
 
 			if(!AMI.ImageId) {
 				questions.push({
-					q: "Can I make an AMI for you based off the stock CloudRig AMI?",
+					q: "Shall I make an AMI based off the stock 'cloudrig' AMI?",
 					m: createImage.bind(this)
 				});
 			} else {
 				settings.ImageId = AMI.ImageId;
+			}
+			
+			if(!keyPair) {
+				questions.push({
+					q: "Shall I make a Key Pair called 'cloudrig'?",
+					m: function(cb) {
+
+						createKeyPair((data) => {
+							reporter.report("PEM stored at " + securityKeyPairPath);
+							fs.writeFile(securityKeyPairPath, data.KeyMaterial, (err) => {
+								cb(null);
+							});
+						})
+					}.bind(this)
+				});
+			} else {
+				settings.KeyName = keyPair.KeyName;
 			}
 
 			if(!securityGroup.GroupId) {
@@ -667,7 +943,7 @@ module.exports = {
 			return;	
 		}
 		*/
-		return start(settings.Arn, settings.ImageId, settings.SecurityGroupId, cb);
+		return start(settings.fleetRole, settings.ssmInstanceProfile, settings.ImageId, settings.SecurityGroupId, settings.KeyName, cb);
 	},
 
 	stop: function(cb) {
@@ -734,6 +1010,10 @@ module.exports = {
 			stop(settings.ImageId, cb);	
 		});
 
-	}
+	},
+	
+	_createSecurityGroup: createSecurityGroup,
+
+	_createKeyPair: createKeyPair,
 
 }

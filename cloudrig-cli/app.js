@@ -192,7 +192,7 @@ function advancedMenu(cb) {
 		name: "cmd",
 		message: "Advanced\n",
 		type: "rawlist",
-		choices: ["Back", "VPN Start", "Get Remote VPN Address"]
+		choices: ["Back", "VPN Start", "Get Remote VPN Address", "Add Instance address to VPN", "Create Security Group", "Create Key Pair"]
 	}
 
 	]).then((answers) => {
@@ -202,21 +202,41 @@ function advancedMenu(cb) {
 			case "Back":
 				cb();
 			break;
-
+			
 			case "VPN Start":
-
-				cloudrig._VPN.start(function() {
-					cb();
-				})
-
+				cloudrig._VPN.start(cb)
 			break;
 
 			case "Get Remote VPN Address":
 
 				cloudrig._instance.sendMessage(cloudrig._VPN.getRemoteInfoCommand(), (err, resp) => {
-					console.log(resp);
+					console.log(JSON.parse(resp).address);
+					advancedMenu(cb);
 				});
 
+			break;
+
+			case "Add Instance address to VPN":
+				cloudrig._instance.sendMessage(cloudrig._VPN.getRemoteInfoCommand(), (err, resp) => {
+					console.log(resp)
+					var address = JSON.parse(resp).address;
+					console.log(address);
+					cloudrig._VPN.addCloudrigAddressToVPN(address, () => {
+						console.log()
+						cloudrig._instance.sendMessage(cloudrig._VPN.getRemoteJoinCommand(), (err, resp) => {
+							console.log("Done");
+							advancedMenu(cb);
+						});
+					})
+				});
+			break;
+
+			case "Create Security Group":
+				cloudrig._instance._createSecurityGroup(cb);
+			break;
+
+			case "Create Key Pair":
+				cloudrig._instance._createKeyPair(cb);
 			break;
 
 		}

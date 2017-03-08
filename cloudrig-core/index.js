@@ -114,15 +114,20 @@ module.exports = {
 				
 				Instance.sendMessage(VPN.getRemoteInfoCommand(), (err, resp) => {
 
+					var address = JSON.parse(resp).address;
+
 					// Send to VPN to add to network
-					reporter.report("Adding Instance VPN address to VPN...");
+					reporter.report("Adding Instance VPN address '" + address + "' to VPN...");
 					VPN.addCloudrigAddressToVPN(address, () => {
 
 						// Tell instance to join
 						reporter.report("Join Instance to VPN...");
 						Instance.sendMessage(VPN.getRemoteJoinCommand(), (err, resp) => {
 
-						})
+							reporter.report("Joined");
+							cb(null);
+
+						});
 
 					});
 

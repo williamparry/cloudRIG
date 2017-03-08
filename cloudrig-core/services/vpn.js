@@ -53,6 +53,36 @@ function makeOptions() {
 	};
 }
 
+function addUserToVPN(vpnId, address, cb) {
+
+	reporter.report("Adding user '" + address + "' to '" + vpnId + "'...");
+
+	var newVPNOptions = makeOptions();
+	newVPNOptions.url += "network/" + vpnId + "/member/" + address
+	newVPNOptions.method = "POST",
+	newVPNOptions.json = {
+		"hidden": false,
+		"config": {
+			"authorized": true 
+		}
+	}
+
+	request(newVPNOptions, function (error, response, body) {
+	
+		if(error) {
+			cb(error);
+			return;
+		}
+
+		if (response.statusCode == 200) {
+			cb(null)
+		}
+
+	});
+	
+	
+}
+
 function create(cb) {
 
 	async.waterfall([
@@ -137,29 +167,8 @@ function create(cb) {
 
 				var data = JSON.parse(data);
 				
-				var newVPNOptions = makeOptions();
-				newVPNOptions.url += "network/" + newVPN.id + "/member/" + data.address
-				newVPNOptions.method = "POST",
-				newVPNOptions.json = {
-					"hidden": false,
-					"config": {
-						"authorized": true 
-					}
-				}
+				addUserToVPN(newVPN.id, data.address, cb);
 
-				request(newVPNOptions, function (error, response, body) {
-				
-					if(error) {
-						cb(error);
-						return;
-					}
-
-					if (response.statusCode == 200) {
-						cb(null, newVPN.id)
-					}
-
-				});
-				
 			});
 
 			child.stderr.on('data', function(data) {
@@ -184,27 +193,27 @@ function getId(cb) {
 		existsOptions.url += "network/"
 		existsOptions.method = "GET",
 		
-		request(existsOptions, function (error, response, body) {
+	request(existsOptions, function (error, response, body) {
 
-			if(error) {
-				cb(error);
+		if(error) {
+			cb(error);
+			return;
+		}
+
+		networks = JSON.parse(body);
+
+		networks.forEach((network) => {
+
+			if(network.config.name.toLowerCase() == vpnName) {
+				id = network.id;
 				return;
 			}
 
-			networks = JSON.parse(body);
-
-			networks.forEach((network) => {
-
-				if(network.config.name.toLowerCase() == vpnName) {
-					id = network.id;
-					return;
-				}
-
-			});
-
-			cb(null, id)
-
 		});
+
+		cb(null, id)
+
+	});
 
 }
 
@@ -216,8 +225,8 @@ function getRemoteJoinCommand() {
 	return ["zerotier-cli join " + settings.id];
 }
 
-function addCloudrigAddressToVPN(cb, clourigAddress) {
-
+function addCloudrigAddressToVPN(cloudrigAddress, cb) {
+	addUserToVPN(settings.id, cloudrigAddress, cb);
 }
 
 module.exports = {
