@@ -1,3 +1,9 @@
+/*
+TODO: Update Security Group with current IP
+TODO: Investigate snapshot instead of making new AMI
+BUG: waitFor is returning early (possibly associated with error handling)
+*/
+
 var AWS = require('aws-sdk');
 var async = require('async');
 var fs = require('fs');
@@ -39,6 +45,28 @@ function findFleetRole(cb) {
 
 }
 
+function listInstanceProfiles(cb) {
+
+	iam.listInstanceProfiles({}, function(err, data) {
+		
+		if (err) {
+			cb(err);
+			return;
+		}
+
+		cb(null, data.InstanceProfiles);
+
+	});
+}
+
+function deleteInstanceProfile(instanceProfileName, cb) {
+
+	iam.deleteInstanceProfile({
+		InstanceProfileName: instanceProfileName
+	}, cb);
+	
+}
+
 function findSSMRole(cb) {
 
 	var ret = {};
@@ -72,14 +100,14 @@ function findSSMRole(cb) {
 
 		(cb) => {
 
-			iam.listInstanceProfiles({}, function(err, data) {
+			listInstanceProfiles((err, instanceProfiles) => {
 				
 				if (err) {
 					cb(err);
 					return;
 				}
 
-				data.InstanceProfiles.forEach((profile, i) => {
+				instanceProfiles.forEach((profile, i) => {
 
 					if(profile.InstanceProfileName == ssmRoleName) {
 
@@ -274,8 +302,8 @@ function createSecurityGroup(cb) {
 	publicIp.v4().then(function(ip) {
 
 		var params = {
-			Description: "CloudRig" + (+new Date()),
-			GroupName: "CloudRig" + (+new Date())
+			Description: "cloudrig",
+			GroupName: "cloudrig"
 		};
 
 		ec2.createSecurityGroup(params, function(err, securityGroupData) {
@@ -321,7 +349,6 @@ function createSecurityGroup(cb) {
 	});
 	
 }
-
 
 function createFleetRole(cb) {
 
@@ -877,6 +904,23 @@ module.exports = {
 
 	},
 
+	_maintenance: function(cb) {
+
+		credentials = new AWS.SharedIniFileCredentials({
+			profile: config.AWSCredentialsProfile
+		});
+		
+		AWS.config.credentials = credentials;
+		AWS.config.region = config.AWSRegion;
+
+		iam = new AWS.IAM();
+		ec2 = new AWS.EC2();
+		ssm = new AWS.SSM();
+
+		cb(null);
+
+	},
+
 	// also reinit
 	setup: function(cb) {
 		
@@ -965,9 +1009,9 @@ module.exports = {
 				settings.KeyName = keyPair.KeyName;
 			}
 
-			if(!securityGroup.GroupId) {
+			if(!securityGroup) {
 				questions.push({
-					q: "Can I make a CloudRig security group for you?",
+					q: "Shall I make a CloudRig security group for you?",
 					m: createImage.bind(this)
 				});
 			} else {
@@ -1068,8 +1112,6 @@ module.exports = {
 
 		});
 
-		
-
 	},
 
 	updateAndStop: function(cb) {
@@ -1079,6 +1121,10 @@ module.exports = {
 		});
 
 	},
+
+	_listInstanceProfiles: listInstanceProfiles,
+
+	_deleteInstanceProfile: deleteInstanceProfile,
 	
 	_createSecurityGroup: createSecurityGroup,
 

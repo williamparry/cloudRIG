@@ -5,6 +5,7 @@ var inquirer = require('inquirer');
 var prettyjson = require('prettyjson');
 var figlet = require('figlet');
 var cowsay = require('cowsay');
+var argv = require('yargs').argv;
 
 function getConfigFile() {
 	return JSON.parse(fs.readFileSync("./config.json"));
@@ -13,8 +14,6 @@ function getConfigFile() {
 function setConfigFile(config) {
 	fs.writeFileSync("./config.json", JSON.stringify(config));
 }
-
-
 
 function displayState(cb) {
 
@@ -189,11 +188,75 @@ function configMenu(cb) {
 			Object.assign(config, answers);
 			setConfigFile(config);
 
-			cb()
+			cb();
 
 		}
 	
 	})
+
+}
+
+function maintenanceMenu() {
+
+	inquirer.prompt([{
+		name: "cmd",
+		message: "Maintenance Menu\n",
+		type: "rawlist",
+		choices: ["Clean up Instance Profiles", "Create Security Group", "Create Key Pair"]
+	}
+
+	]).then((answers) => {
+
+		switch(answers.cmd) {
+
+			case "Clean up Instance Profiles":
+				
+				cloudrig._instance._listInstanceProfiles((err, data) => {
+					
+					if(data.length > 0) {
+
+						inquirer.prompt([{
+							name: "toDelete",
+							message: "Select instance profiles to delete\n",
+							type: "checkbox",
+							choices: data.map((profile) => {
+								return {
+									name: profile.InstanceProfileName
+								}
+							})
+
+						}]).then((answers) => {
+
+							async.parallel(answers.toDelete.map((answer) => {
+								return cloudrig._instance._deleteInstanceProfile.bind(null, answer);
+							}), (err, results) => {
+								console.log("\nDone\n");
+								maintenanceMenu();
+							});
+
+						});
+
+					} else {
+
+						console.log("\nNo instance profiles\n");
+						maintenanceMenu();
+
+					}
+
+				})
+			break;
+
+			case "Create Security Group":
+				cloudrig._instance._createSecurityGroup(maintenanceMenu);
+			break;
+
+			case "Create Key Pair":
+				cloudrig._instance._createKeyPair(maintenanceMenu);
+			break;
+
+		}
+
+	});
 
 }
 
@@ -203,7 +266,7 @@ function advancedMenu(cb) {
 		name: "cmd",
 		message: "Advanced\n",
 		type: "rawlist",
-		choices: ["Back", "VPN Start", "Get Remote VPN Address", "Add Instance address to VPN", "Create Security Group", "Create Key Pair"]
+		choices: ["Back", "VPN Start", "Get Remote VPN Address", "Add Instance address to VPN"]
 	}
 
 	]).then((answers) => {
@@ -242,13 +305,6 @@ function advancedMenu(cb) {
 				});
 			break;
 
-			case "Create Security Group":
-				cloudrig._instance._createSecurityGroup(cb);
-			break;
-
-			case "Create Key Pair":
-				cloudrig._instance._createKeyPair(cb);
-			break;
 
 		}
 
@@ -485,13 +541,17 @@ showIntro();
 checkAndSetDefaultConfig();
 setReporter();
 
-async.series([
+var bootstrap;
 
-	validateRequiredSoftware,
-	validateAndSetConfig,
-	setup
+if(!argv.m) {
 
-], (err) => {
+	async.series([
+
+		validateRequiredSoftware,
+		validateAndSetConfig,
+		setup
+
+	], (err) => {
 
 	if(err) {
 		console.log(cowsay.say({
@@ -505,3 +565,31 @@ async.series([
 	mainMenu();
 
 });
+
+} else {
+
+	console.log("\n------------ [!] MAINTENANCE MODE [!] ------------");
+
+	async.series([
+
+		validateRequiredSoftware,
+		validateAndSetConfig,
+		cloudrig._maintenance
+
+	], (err) => {
+
+		if(err) {
+			console.log(cowsay.say({
+				text : "Something catastrophic went wrong.",
+				e : "oO",
+				T : "U "
+			}));
+			return;
+		}
+
+		maintenanceMenu();
+
+	});
+
+}
+

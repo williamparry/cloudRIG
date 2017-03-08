@@ -191,6 +191,12 @@ module.exports = {
 		});
 
 	},
+
+	_maintenance: function(cb) {
+
+		Instance._maintenance(cb);
+
+	},
 	
 	_instance: Instance,
 
