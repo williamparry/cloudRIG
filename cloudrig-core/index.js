@@ -110,28 +110,32 @@ module.exports = {
 			reporter.report("Starting VPN...");
 			VPN.start(() => {
 				
-				// Get remote info
-				
-				Instance.sendMessage(VPN.getRemoteInfoCommand(), (err, resp) => {
+				reporter.report("Waiting 120 seconds for SSM agent to start")
+				setTimeout(() => {
 
-					var address = JSON.parse(resp).address;
+					// Get remote info
+					Instance.sendMessage(VPN.getRemoteInfoCommand(), (err, resp) => {
 
-					// Send to VPN to add to network
-					reporter.report("Adding Instance VPN address '" + address + "' to VPN...");
-					VPN.addCloudrigAddressToVPN(address, () => {
+						var address = JSON.parse(resp).address;
 
-						// Tell instance to join
-						reporter.report("Join Instance to VPN...");
-						Instance.sendMessage(VPN.getRemoteJoinCommand(), (err, resp) => {
+						// Send to VPN to add to network
+						reporter.report("Adding Instance VPN address '" + address + "' to VPN...");
+						VPN.addCloudrigAddressToVPN(address, () => {
 
-							reporter.report("Joined");
-							cb(null);
+							// Tell instance to join
+							reporter.report("Join Instance to VPN...");
+							Instance.sendMessage(VPN.getRemoteJoinCommand(), (err, resp) => {
+
+								reporter.report("Joined");
+								cb(null);
+
+							});
 
 						});
 
 					});
 
-				});
+				}, 120000);
 
 			});
 
