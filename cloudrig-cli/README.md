@@ -1,3 +1,5 @@
 # DIY Cloudrig CLI
 
-* Rename config.sample.json to config.json
+    node app [-m]
+
+m = maintenance mode

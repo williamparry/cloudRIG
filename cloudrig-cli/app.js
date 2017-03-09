@@ -8,11 +8,11 @@ var cowsay = require('cowsay');
 var argv = require('yargs').argv;
 
 function getConfigFile() {
-	return JSON.parse(fs.readFileSync("./config.json"));
+	return JSON.parse(fs.readFileSync(process.cwd() + "/config.json"));
 }
 
 function setConfigFile(config) {
-	fs.writeFileSync("./config.json", JSON.stringify(config));
+	fs.writeFileSync(process.cwd() + "/config.json", JSON.stringify(config));
 }
 
 function displayState(cb) {
@@ -107,9 +107,9 @@ function mainMenu() {
 				case "Get Windows Password":
 
 					cloudrig.getWindowsPassword((err, password) => {
-						console.log("------------------------");
+						console.log("---------------------------------");
 						console.log("Password: " + password);
-						console.log("------------------------");
+						console.log("---------------------------------");
 						mainMenu();
 					})
 
@@ -291,21 +291,21 @@ function advancedMenu(cb) {
 			break;
 
 			case "Add Instance address to VPN":
+
 				cloudrig._instance.sendMessage(cloudrig._VPN.getRemoteInfoCommand(), (err, resp) => {
-					console.log(resp)
+					console.log(resp);
 					var address = JSON.parse(resp).address;
 					console.log(address);
 					cloudrig._VPN.addCloudrigAddressToVPN(address, () => {
-						console.log()
 						cloudrig._instance.sendMessage(cloudrig._VPN.getRemoteJoinCommand(), (err, resp) => {
 							console.log("Done");
 							advancedMenu(cb);
 						});
-					})
+					});
 				});
+
 			break;
-
-
+			
 		}
 
 	});
@@ -531,7 +531,7 @@ function checkAndSetDefaultConfig() {
 		getConfigFile();
 	} catch(ex) {
 		console.log("\n[!] Config file missing/broken - copying from config.sample.json")
-		setConfigFile(JSON.parse(fs.readFileSync("./config.sample.json")));
+		setConfigFile(JSON.parse(fs.readFileSync(process.cwd() + "/config.sample.json")));
 	}
 }
 

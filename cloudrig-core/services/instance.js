@@ -3,7 +3,6 @@ TODO: Update Security Group with current IP
 TODO: Investigate snapshot instead of making new AMI
 BUG: waitFor is returning early (possibly associated with error handling)
 */
-
 var AWS = require('aws-sdk');
 var async = require('async');
 var fs = require('fs');
@@ -17,7 +16,7 @@ var settings = {};
 var iam;
 var ec2;
 var ssm;
-var securityKeyPairPath = "cloudrig.pem";
+var securityKeyPairPath = process.cwd() + "/cloudrig.pem";
 var fleetRoleName = "cloudrig-spotfleet";
 var ssmRoleName = "cloudrig-ssm";
 var standardFilter = [{
@@ -356,16 +355,16 @@ function createFleetRole(cb) {
 
 		(cb) => {
 
-			var policy = '{\
-				"Version": "2012-10-17",\
-				"Statement": {\
-					"Effect": "Allow",\
-					"Principal": {\
-						"Service": "spotfleet.amazonaws.com"\
-					},\
-					"Action": "sts:AssumeRole"\
-				}\
-			}';
+			var policy = `{
+				"Version": "2012-10-17",
+				"Statement": {
+					"Effect": "Allow",
+					"Principal": {
+						"Service": "spotfleet.amazonaws.com"
+					},
+					"Action": "sts:AssumeRole"
+				}
+			}`;
 
 			reporter.report("Creating fleet role '" + fleetRoleName + "'...");
 
@@ -402,17 +401,17 @@ function createSSMRole(cb) {
 
 		(cb) => {
 
-			var policy = '{\
-				"Version": "2012-10-17",\
-				"Statement": {\
-					"Effect": "Allow",\
-					"Principal": {\
-						"Service": "ec2.amazonaws.com",\
-						"Service": "ssm.amazonaws.com"\
-					},\
-					"Action": "sts:AssumeRole"\
-				}\
-			}';
+			var policy = `{
+				"Version": "2012-10-17",
+				"Statement": {
+					"Effect": "Allow",
+					"Principal": {
+						"Service": "ec2.amazonaws.com",
+						"Service": "ssm.amazonaws.com"
+					},
+					"Action": "sts:AssumeRole"
+				}
+			}`;
 
 			reporter.report("Creating SSM role '" + ssmRoleName + "'...");
 
@@ -714,11 +713,13 @@ function start(fleetRoleArn, ssmInstanceProfileArn, ImageId, SecurityGroupId, Ke
 						}
 
 					}
+
 				});
 
 			}, 5000);
 
 		}
+		
 	});
 
 	return params;
@@ -820,19 +821,25 @@ function sendMessage(commands, cb) {
 					Details: true
 				}, function(err, data) {
 					
+
 					if(err) {
 						cb(err);
 						return;
 					}
 					
 					// https://github.com/aws/aws-sdk-net/issues/535
-					if(data.CommandInvocations && data.CommandInvocations.length > 0 && data.CommandInvocations[0].Status == "Success") {
+					if(
+						data.CommandInvocations && 
+						data.CommandInvocations.length > 0 && 
+						data.CommandInvocations[0].Status == "Success" &&
+						!!data.CommandInvocations[0].CommandPlugins[0].Output
+					) {
 						
 						cb(null, data.CommandInvocations[0].CommandPlugins[0].Output);
 
 					} else {
 
-						setTimeout(check, 1000);
+						setTimeout(check, 2000);
 						
 					}
 
@@ -1072,9 +1079,9 @@ module.exports = {
 			state.activeInstances[0].Tags.forEach(function(tag) {
 
 				if(tag.Key === "aws:ec2spot:fleet-request-id") {
-						id = tag.Value;
-					}
-				});
+					id = tag.Value;
+				}
+			});
 
 			stop(id, state.activeInstances[0].InstanceId, cb);
 

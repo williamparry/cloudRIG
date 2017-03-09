@@ -157,18 +157,11 @@ module.exports = {
 	},
 
 	openRDP: function(cb) {
-
-		Instance.getState(function(err, instanceState) {
-			RDP.open(instanceState.activeInstances[0].PublicDnsName, cb);
+		Instance.getPassword((err, password) => {
+			Instance.getState(function(err, instanceState) {
+				RDP.open(instanceState.activeInstances[0].PublicDnsName, password, cb);
+			});
 		});
-		
-	},
-
-	// NOT IMPLEMENTED
-	createRDP: function(cb) {
-
-		RDP.create("publicdns","password", cb);
-
 	},
 
 	createVPN: function(cb) {
