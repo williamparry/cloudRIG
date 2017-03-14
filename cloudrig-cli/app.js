@@ -48,12 +48,10 @@ function mainMenu() {
 	cloudrig.getState(function(err, state) {
 		
 		if(state.AWS.activeInstances.length > 0) {
-			choices = choices.concat(["Stop CloudRig", "Get Windows Password", "Open RDP", "Update AMI", "Update AMI and shut down"]);
+			choices = choices.concat(["Stop CloudRig", "Open Remote Desktop", "Snapshot"]);
 		} else {
 			choices = choices.concat(["Start CloudRig", "Setup"]);
 		}
-
-		console.log("");
 
 		inquirer.prompt([{
 			name: "cmd",
@@ -104,18 +102,7 @@ function mainMenu() {
 
 				break;
 
-				case "Get Windows Password":
-
-					cloudrig.getWindowsPassword((err, password) => {
-						console.log("---------------------------------");
-						console.log("Password: " + password);
-						console.log("---------------------------------");
-						mainMenu();
-					})
-
-				break;
-
-				case "Open RDP":
+				case "Open Remote Desktop":
 					
 					cloudrig.openRDP(function() {
 
@@ -132,23 +119,37 @@ function mainMenu() {
 
 				break;
 
-				case "Update AMI":
+				case "Snapshot":
 
-					cloudrig.update(function() {
+					inquirer.prompt([
+					{
+						type: "confirm",
+						name: "shutdown",
+						message: "Stop cloudrig?",
+						default: false
+					}
+					]).then((answers) => {
 						
-						console.log("Updated");
-						mainMenu();
+						if(answers.shutdown) {
 
-					});
+							inquirer.prompt([
+							{
+								type: "confirm",
+								name: "del",
+								message: "Delete existing snapshot?",
+								default: true
+							}
+							]).then((answers) => {
+								cloudrig.snapshot(true, answers.del, mainMenu);
+							});
 
-				break;
+						} else {
 
-				case "Update AMI and shut down":
+							cloudrig.snapshot(false, false, mainMenu);
 
-					cloudrig.updateAndTerminate(function() {
+						}
 
-						console.log("\nUpdated and TERMINATED");
-						mainMenu();
+						
 
 					});
 
@@ -202,7 +203,7 @@ function maintenanceMenu() {
 		name: "cmd",
 		message: "Maintenance Menu\n",
 		type: "rawlist",
-		choices: ["Clean up Instance Profiles", "Create Security Group", "Create Key Pair"]
+		choices: ["Clean up Instance Profiles", "Create Security Group", "Create Key Pair"] // TODO: Delete old snapshots
 	}
 
 	]).then((answers) => {
@@ -211,7 +212,7 @@ function maintenanceMenu() {
 
 			case "Clean up Instance Profiles":
 				
-				cloudrig._instance._listInstanceProfiles((err, data) => {
+				cloudrig._Instance._listInstanceProfiles((err, data) => {
 					
 					if(data.length > 0) {
 
@@ -228,7 +229,7 @@ function maintenanceMenu() {
 						}]).then((answers) => {
 
 							async.parallel(answers.toDelete.map((answer) => {
-								return cloudrig._instance._deleteInstanceProfile.bind(null, answer);
+								return cloudrig._Instance._deleteInstanceProfile.bind(null, answer);
 							}), (err, results) => {
 								console.log("\nDone\n");
 								maintenanceMenu();
@@ -247,11 +248,11 @@ function maintenanceMenu() {
 			break;
 
 			case "Create Security Group":
-				cloudrig._instance._createSecurityGroup(maintenanceMenu);
+				cloudrig._Instance._createSecurityGroup(maintenanceMenu);
 			break;
 
 			case "Create Key Pair":
-				cloudrig._instance._createKeyPair(maintenanceMenu);
+				cloudrig._Instance._createKeyPair(maintenanceMenu);
 			break;
 
 		}
@@ -266,7 +267,7 @@ function advancedMenu(cb) {
 		name: "cmd",
 		message: "Advanced\n",
 		type: "rawlist",
-		choices: ["Back", "VPN Start", "Get Remote VPN Address", "Add Instance address to VPN"]
+		choices: ["Back", "VPN Start", "Get Remote VPN Address", "Add Instance address to VPN", "Get Windows Password"]
 	}
 
 	]).then((answers) => {
@@ -283,7 +284,7 @@ function advancedMenu(cb) {
 
 			case "Get Remote VPN Address":
 
-				cloudrig._instance.sendMessage(cloudrig._VPN.getRemoteInfoCommand(), (err, resp) => {
+				cloudrig._Instance.sendMessage(cloudrig._VPN.getRemoteInfoCommand(), (err, resp) => {
 					console.log(JSON.parse(resp).address);
 					advancedMenu(cb);
 				});
@@ -292,17 +293,28 @@ function advancedMenu(cb) {
 
 			case "Add Instance address to VPN":
 
-				cloudrig._instance.sendMessage(cloudrig._VPN.getRemoteInfoCommand(), (err, resp) => {
+				cloudrig._Instance.sendMessage(cloudrig._VPN.getRemoteInfoCommand(), (err, resp) => {
 					console.log(resp);
 					var address = JSON.parse(resp).address;
 					console.log(address);
 					cloudrig._VPN.addCloudrigAddressToVPN(address, () => {
-						cloudrig._instance.sendMessage(cloudrig._VPN.getRemoteJoinCommand(), (err, resp) => {
+						cloudrig._Instance.sendMessage(cloudrig._VPN.getRemoteJoinCommand(), (err, resp) => {
 							console.log("Done");
 							advancedMenu(cb);
 						});
 					});
 				});
+
+			break;
+
+			case "Get Windows Password":
+	
+				cloudrig._Instance.getPassword((err, password) => {
+					console.log("---------------------------------");
+					console.log("Password: " + password);
+					console.log("---------------------------------");
+					advancedMenu(cb);
+				})
 
 			break;
 			
@@ -555,7 +567,7 @@ if(!argv.m) {
 
 	if(err) {
 		console.log(cowsay.say({
-			text : "Something catastrophic went wrong.",
+			text : `Something catastrophic went wrong...\n\n${err}`,
 			e : "oO",
 			T : "U "
 		}));

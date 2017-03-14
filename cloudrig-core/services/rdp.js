@@ -168,6 +168,9 @@ module.exports = {
 						'tell process "Microsoft Remote Desktop"',
 
 							'keystroke "f" using {command down}',
+							'delay 1',
+							'key code 53',
+							'delay 1',
 							'keystroke "cloudrig"',
 							'keystroke tab',
 							'key code 125',

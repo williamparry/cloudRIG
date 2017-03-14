@@ -87,14 +87,23 @@ module.exports = {
 
 	setup: function(cb) {
 		var ret = {};
+		// BUG: Callback still firing on error
 		async.parallel(services.map((service) => {
 			return function(cb) {
 				service.setup((err, state) => {
+					if(err) {
+						cb(err);
+						return;
+					}
 					ret[service.id] = state;
 					cb()
 				})
 			}
-		}), function() {
+		}), function(err, results) {
+			if(err) {
+				cb(err);
+				return;
+			}
 			cb(null, ret);
 		})
 	},
@@ -152,14 +161,6 @@ module.exports = {
 
 	},
 
-	update: function(cb) {
-		Instance.update(cb);
-	},
-
-	getWindowsPassword: function(cb) {
-		Instance.getPassword(cb);
-	},
-
 	openRDP: function(cb) {
 		Instance.getPassword((err, password) => {
 			Instance.getState(function(err, instanceState) {
@@ -169,33 +170,55 @@ module.exports = {
 	},
 
 	createVPN: function(cb) {
-
 		VPN.create(cb)
-
 	},
 
-	updateAndTerminate: function(cb) {
+	snapshot: function(stop, del, cb) {
 		
-		Instance.update(function() {
+		// We need to find the existing snapshot here if we want to delete it
+		Instance.findSnapshot((err, snapshot) => {
 			
-			reporter.report("Updated");
+			Instance.snapshot(snapshot.SnapshotId, () => {
+				
+				reporter.report("Snapshot taken");
 
-			async.parallel([
-				Instance.stop,
-				VPN.stop
-			], cb);
+				if(stop) {
+
+					reporter.report("Stopping...");
+
+					async.parallel([
+						Instance.stop,
+						VPN.stop
+					], () => {
+
+						if(del) {
+
+							reporter.report("Waiting 30s for the AMI to release the snapshot");
+
+							setTimeout(() => {
+								Instance.deleteSnapshot(snapshot.SnapshotId, cb);
+							}, 30000);
+
+						} else {
+							cb(null);
+						}
+
+					});
+
+				}
+
+			});
 
 		});
 
+		
 	},
 
 	_maintenance: function(cb) {
-
 		Instance._maintenance(cb);
-
 	},
 	
-	_instance: Instance,
+	_Instance: Instance,
 
 	_VPN: VPN,
 
