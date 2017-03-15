@@ -1,7 +1,24 @@
 #!/bin/bash
+echo "Checking prerequisites...";
+# TODO check out https://nodejs.org/en/download/package-manager/#osx
+if ! type "node" > /dev/null; then
+    echo "You need to install Node.js® >= 6.*"
+    echo "Do you wish to visit the application web page?"
+    select yn in "Yes" "No"; do
+        case $yn in
+            Yes ) open https://nodejs.org/en/; break;;
+            No ) exit;;
+        esac
+    done
+    exit
+else
+    echo "Node.js® installed."
+fi
+echo "Checking latest version...";
 git pull
 cd cloudrig-core
 npm install
 cd ../cloudrig-cli
 npm install
+echo "Starting..."
 node app
