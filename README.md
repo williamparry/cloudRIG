@@ -4,6 +4,8 @@
 
 **Don't forget to turn it off**
 
+![Image of CloudRig boot screen](http://i.imgur.com/onr6zvS.png)
+
 ## Setup
 
 ### ZeroTier
