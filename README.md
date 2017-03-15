@@ -4,7 +4,7 @@
 
 **Don't forget to turn it off**
 
-![Image of CloudRig boot screen](http://i.imgur.com/onr6zvS.png)
+![Image of CloudRig boot screen](http://i.imgur.com/vvTtmw6.png)
 
 ## Setup
 
