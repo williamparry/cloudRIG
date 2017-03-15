@@ -444,7 +444,10 @@ function validateAndSetConfig(cb) {
 	} else {
 
 		console.log("\nSetting config:\n");
-		console.log(prettyjson.render(config, null, 4));
+		var displayConfig = Object.assign({}, config);
+		displayConfig["ZeroTierAPIKey"] = "(set)";
+		
+		console.log(prettyjson.render(displayConfig, null, 4));
 		cloudrig.setConfig(config);
 
 		cb(null);
