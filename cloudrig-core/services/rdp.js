@@ -94,7 +94,7 @@ module.exports = {
 
 	validateRequiredSoftware: validateRequiredSoftware,
 
-	setup: function(cb) {
+	setup: function(_userDataReader, _userDataWriter, cb) {
 
 		// TODO: Handle bookmark outside of config file
 		// TODO: Test fresh install for instance of file

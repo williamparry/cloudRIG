@@ -6,13 +6,27 @@ var prettyjson = require('prettyjson');
 var figlet = require('figlet');
 var cowsay = require('cowsay');
 var argv = require('yargs').argv;
+var homedir = require('os').homedir();
+var cloudrigDir = homedir + "/.cloudrig/";
+
+if (!fs.existsSync(cloudrigDir)) {
+	fs.mkdirSync(cloudrigDir)
+}
 
 function getConfigFile() {
-	return JSON.parse(fs.readFileSync(process.cwd() + "/config.json"));
+	return JSON.parse(userDataFileReader("config.json"));
 }
 
 function setConfigFile(config) {
-	fs.writeFileSync(process.cwd() + "/config.json", JSON.stringify(config));
+	userDataFileWriter("config.json", JSON.stringify(config));
+}
+
+function userDataFileWriter(filename, content) {
+	fs.writeFileSync(cloudrigDir + filename, content);
+}
+
+function userDataFileReader(filename) {
+	return fs.readFileSync(cloudrigDir + filename);
 }
 
 function displayState(cb) {
@@ -203,7 +217,7 @@ function maintenanceMenu() {
 		name: "cmd",
 		message: "Maintenance Menu\n",
 		type: "rawlist",
-		choices: ["Clean up Instance Profiles", "Create Security Group", "Create Key Pair"] // TODO: Delete old snapshots
+		choices: ["Clean up Instance Profiles", "Create Security Group", "Create Key Pair", "Change Config"] // TODO: Delete old snapshots
 	}
 
 	]).then((answers) => {
@@ -253,6 +267,10 @@ function maintenanceMenu() {
 
 			case "Create Key Pair":
 				cloudrig._Instance._createKeyPair(maintenanceMenu);
+			break;
+
+			case "Change Config":
+				configMenu(maintenanceMenu);
 			break;
 
 		}
@@ -439,7 +457,7 @@ function setup(cb) {
 
 	console.log("\nSetting up...");
 
-	cloudrig.setup(function(err, serviceSetups) {
+	cloudrig.setup(userDataFileReader, userDataFileWriter, function(err, serviceSetups) {
 		
 		if(err) {
 			cb(err);

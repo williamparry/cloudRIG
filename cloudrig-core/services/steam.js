@@ -57,7 +57,7 @@ module.exports = {
 		cb(null, true);
 	},
 
-	setup: function(cb) {
+	setup: function(_userDataReader, _userDataWriter, cb) {
 		cb(null);
 	},
 

@@ -16,7 +16,7 @@ var settings = {};
 var iam;
 var ec2;
 var ssm;
-var securityKeyPairPath = process.cwd() + "/cloudrig.pem";
+var securityKeyPairName = "cloudrig.pem";
 var fleetRoleName = "cloudrig-spotfleet";
 var ssmRoleName = "cloudrig-ssm";
 var standardFilter = [{
@@ -553,9 +553,9 @@ function createImage(cb) {
 
 function getPassword(instanceId, cb) {
 
-	reporter.report(`Getting password using private key '${securityKeyPairPath}'...`)
+	reporter.report(`Getting password using private key '${securityKeyPairName}'...`)
 
-	var pem = fs.readFileSync(securityKeyPairPath);
+	var pem = userDataReader(securityKeyPairName);
 	var pkey = ursa.createPrivateKey(pem);
 
 	ec2.getPasswordData({InstanceId: instanceId}, function (err, data) {
@@ -1031,8 +1031,11 @@ module.exports = {
 	},
 
 	// also reinit
-	setup: function(cb) {
+	setup: function(_userDataReader, _userDataWriter, cb) {
 		
+		userDataReader = _userDataReader;
+		userDataWriter = _userDataWriter;
+
 		credentials = new AWS.SharedIniFileCredentials({
 			profile: config.AWSCredentialsProfile
 		});
@@ -1117,10 +1120,12 @@ module.exports = {
 					m: function(cb) {
 
 						createKeyPair((data) => {
-							reporter.report("PEM stored at " + securityKeyPairPath);
-							fs.writeFile(securityKeyPairPath, data.KeyMaterial, (err) => {
-								cb(null);
-							});
+
+							userDataWriter(securityKeyPairName, data.KeyMaterial);
+							reporter.report("PEM saved " + securityKeyPairName);
+
+							cb(null);
+							
 						})
 					}.bind(this)
 				});

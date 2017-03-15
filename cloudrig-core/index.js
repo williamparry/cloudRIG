@@ -8,6 +8,7 @@ var reporter = require('./helpers/reporter')();
 var services = [Steam, Instance, RDP, VPN];
 
 var config;
+
 /*
 if (require.main === module) {
    console.error("You can't run this on its own. Use the CLI or app");
@@ -85,12 +86,13 @@ module.exports = {
 		
 	},
 
-	setup: function(cb) {
+	setup: function(_userDataReader, _userDataWriter, cb) {
+
 		var ret = {};
 		// BUG: Callback still firing on error
 		async.parallel(services.map((service) => {
 			return function(cb) {
-				service.setup((err, state) => {
+				service.setup(_userDataReader, _userDataWriter, (err, state) => {
 					if(err) {
 						cb(err);
 						return;
