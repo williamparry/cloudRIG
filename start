@@ -1,0 +1,7 @@
+#!/bin/bash
+git pull
+cd cloudrig-core
+npm install
+cd ../cloudrig-cli
+npm install
+node app
