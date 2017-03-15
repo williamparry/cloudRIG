@@ -20,5 +20,10 @@ cd cloudrig-core
 npm install
 cd ../cloudrig-cli
 npm install
-echo "Starting..."
-node app
+if [[ "$1" = "-m" ]]; then
+   echo "Starting maintenance mode"
+   node app --m
+else
+   echo "Starting"
+   node app
+fi

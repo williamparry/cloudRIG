@@ -217,7 +217,7 @@ function maintenanceMenu() {
 		name: "cmd",
 		message: "Maintenance Menu\n",
 		type: "rawlist",
-		choices: ["Clean up Instance Profiles", "Create Security Group", "Create Key Pair", "Change Config"] // TODO: Delete old snapshots
+		choices: ["Clean up Instance Profiles", "Create Security Group", "Create Key Pair", "Change Config", "Start cloudrig"] // TODO: Delete old snapshots
 	}
 
 	]).then((answers) => {
@@ -271,6 +271,10 @@ function maintenanceMenu() {
 
 			case "Change Config":
 				configMenu(maintenanceMenu);
+			break;
+
+			case "Start cloudrig":
+				startCloudrig();
 			break;
 
 		}
@@ -568,16 +572,8 @@ function checkAndSetDefaultConfig() {
 	}
 }
 
-// INIT
-
-showIntro();
-checkAndSetDefaultConfig();
-setReporter();
-
-var bootstrap;
-
-if(!argv.m) {
-
+function startCloudrig() {
+	
 	async.series([
 
 		validateRequiredSoftware,
@@ -586,20 +582,22 @@ if(!argv.m) {
 
 	], (err) => {
 
-	if(err) {
-		console.log(cowsay.say({
-			text : `Something catastrophic went wrong...\n\n${err}`,
-			e : "oO",
-			T : "U "
-		}));
-		return;
-	}
+		if(err) {
+			console.log(cowsay.say({
+				text : `Something catastrophic went wrong...\n\n${err}`,
+				e : "oO",
+				T : "U "
+			}));
+			return;
+		}
 
-	mainMenu();
+		mainMenu();
 
-});
+	});
 
-} else {
+}
+
+function startMaintenanceMode() {
 
 	console.log("\n------------ [!] MAINTENANCE MODE [!] ------------");
 
@@ -626,3 +624,9 @@ if(!argv.m) {
 
 }
 
+// INIT
+
+showIntro();
+checkAndSetDefaultConfig();
+setReporter();
+!argv.m ? startCloudrig() : startMaintenanceMode();
