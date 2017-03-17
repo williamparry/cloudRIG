@@ -295,6 +295,7 @@ function createTags(resourceId, cb) {
 	ec2.createTags(params, function(err, data) {
 		if (err) {
 			reporter.report(err.stack, "error");
+			eb(err);
 		} else {
 			cb(null, data);
 		}
@@ -532,16 +533,7 @@ function createImage(cb) {
 
 				reporter.report("Adding tags to '" + data.ImageId + "'...");
 
-				async.series([
-					createTags.bind(null, data.ImageId),
-					findAMI
-				], (err, results) => {
-					
-					reporter.report("Adding tags to the associated snapshot too...");
-					
-					createTags(results[1].BlockDeviceMappings[0].Ebs.SnapshotId, cb);
-
-				});
+				createTags(data.ImageId, cb);
 
 			});
 
@@ -600,7 +592,6 @@ function findSnapshot(cb) {
 	var params = {
 		Filters: standardFilter
 	}
-
 
 	ec2.describeSnapshots(params, function(err, data) {
 
@@ -670,75 +661,35 @@ function snapshot(volumeId, existingSnapshotId, cb) {
 
 }
 
-function updateImage(instanceId, amiId, cb) {
-	
-	var params = {
-		InstanceId: instanceId,
-		Name: 'cloudrig-' + new Date().getTime(),
-		NoReboot: true
-	};
-
-	reporter.report("Creating image...");
-
-	ec2.createImage(params, function(err, data) {
-		
-		if (err) {
-			reporter.report(err.stack, "error");
-		} else {
-			
-			reporter.report("Waiting for image to be available...");
-
-			ec2.waitFor('imageAvailable', {
-				ImageIds: [data.ImageId]
-			}, function() {
-				
-				reporter.report("Removing tag from " + amiId);
-
-				removeTags(amiId, function() {
-
-					reporter.report("Adding tag to " + data.ImageId);
-
-					createTags(data.ImageId, function() {
-
-						cb(data);
-
-					});
-
-				});
-
-			});
-
-		}
-	
-	});
-	
-}
-
 function start(fleetRoleArn, ssmInstanceProfileArn, ImageId, SnapshotId, SecurityGroupId, KeyName, cb) {
+
+	var launchSpecification = {
+		IamInstanceProfile: {
+			Arn: ssmInstanceProfileArn
+		}, 
+		ImageId: ImageId,
+		InstanceType: "g2.2xlarge",
+		KeyName: KeyName,
+		SecurityGroups: [ { GroupId: SecurityGroupId } ]
+
+	}
+
+	if(SnapshotId) {
+
+		launchSpecification.BlockDeviceMappings = [{
+			DeviceName: "/dev/sda2",
+			Ebs: {
+				SnapshotId: SnapshotId,
+				VolumeType: "gp2"
+			}
+		}];
+
+	}
 
 	var params = {
 		SpotFleetRequestConfig: {
 			IamFleetRole: fleetRoleArn,
-			LaunchSpecifications: [
-				{
-					IamInstanceProfile: {
-						Arn: ssmInstanceProfileArn
-					}, 
-					ImageId: ImageId,
-					InstanceType: "g2.2xlarge",
-					KeyName: KeyName,
-					SecurityGroups: [ { GroupId: SecurityGroupId } ],
-					BlockDeviceMappings: [
-						{
-							DeviceName: "/dev/xvda",
-            				Ebs: {
-								SnapshotId: SnapshotId
-							}
-						}
-					]
-
-				}
-			],
+			LaunchSpecifications: [ launchSpecification ],
 			Type: "request",
 			SpotPrice: config.AWSMaxPrice || "0.4", 
 			TargetCapacity: 1
@@ -746,72 +697,47 @@ function start(fleetRoleArn, ssmInstanceProfileArn, ImageId, SnapshotId, Securit
 		
 	};
 
-	ec2.requestSpotFleet(params, function(err, data) {
+	var startFunctions = [
+		(cb) => {
 
-		if (err) {
-			reporter.report(err.stack, "error");
-		} else {
-			
-			reporter.report("Request made: " +  data.SpotFleetRequestId);
+			ec2.requestSpotFleet(params, function(err, data) {
+
+				if (err) {
+					reporter.report(err.stack, "error");
+					cb(err);
+				} else {
+				
+					reporter.report("Request made: " +  data.SpotFleetRequestId);
+					cb(null, data.SpotFleetRequestId);
+
+				}
+				
+			});
+
+		},
+		(spotFleetRequestId, cb) => {
+
 			reporter.report("Now we wait for fulfillment...");
 
 			var c = setInterval(function() {
 
-				findSpotFleetInstances(data.SpotFleetRequestId, function(err, instances) {
+				findSpotFleetInstances(spotFleetRequestId, function(err, instances) {
 					
 					if(err) {
-						reporter.report(err.stack);
+						reporter.report(err);
 						clearInterval(c);
+						cb(err);
 					} else {
 
 						if(instances.length > 0) {
+
 							clearInterval(c);
-							c = null;
 
 							var instanceId = instances[0].InstanceId;
 
 							reporter.report("Got an instance: " + instanceId);
-							reporter.report("Tagging instance...");
 							
-							createTags(instanceId, () => {
-								
-								reporter.report("Tagged 'cloudrig'");
-
-								reporter.report("Now we wait for our instance to be ready...");
-
-								var v = setInterval(function() {
-
-									getActiveInstances(function(err, instances) {
-										
-										if(instances.length > 0) {
-											
-											clearInterval(v);
-											v = null;
-
-											reporter.report("Now we wait for our instance to be OK...");
-
-											ec2.waitFor('instanceStatusOk', {
-
-												InstanceIds: [ instanceId ]
-												
-											}, function(err, data) {
-												
-												if (err) { 
-													reporter.report(err.stack, "error")
-												} else {
-													reporter.report("Ready");
-													cb(null);
-												}
-
-											});
-										}
-
-									});
-
-								}, 5000);
-
-							});
-							
+							cb(null, instanceId);
 						}
 
 					}
@@ -820,8 +746,169 @@ function start(fleetRoleArn, ssmInstanceProfileArn, ImageId, SnapshotId, Securit
 
 			}, 5000);
 
+		},
+		(instanceId, cb) => {
+
+			reporter.report("Tagging instance...");
+
+			createTags(instanceId, (err) => {
+				
+				if (err) { 
+					reporter.report(err, "error");
+					cb(err);
+				} else {
+					cb(null, instanceId);
+				}
+	
+
+			});
+
+		},
+		(instanceId, cb) => {
+
+			reporter.report("Now we wait for our instance to be ready...");
+
+			var c = setInterval(function() {
+
+				getActiveInstances(function(err, instances) {
+					
+					if(instances.length > 0) {
+						
+						clearInterval(c);
+
+						reporter.report("Now we wait for our instance to be OK...");
+
+						ec2.waitFor('instanceStatusOk', {
+							InstanceIds: [ instanceId ]
+						}, function(err, data) {
+							
+							if (err) { 
+								reporter.report(err, "error");
+								cb(err);
+							} else {
+								cb(null, instances[0]);
+							}
+
+						});
+					}
+
+				});
+
+			}, 5000);
+
+
+		},
+		(instance, cb) => {
+
+			// Wait for SSM
+			reporter.report("Waiting for SSM...");
+
+			var c = setInterval(() => {
+
+				ssm.describeInstanceInformation({
+					Filters: [{
+						Key: "InstanceIds",
+						Values: [instance.InstanceId]
+					}]
+				}, function(err, data) {
+					
+					if (err) {
+						reporter.report(err, "error");
+						cb(err);
+					} else {
+						
+						if(data.InstanceInformationList.length > 0) {
+
+							clearInterval(c);
+							cb(null, instance);
+
+						}
+
+					}
+					
+				});
+
+			}, 2000);
+
+			
 		}
-		
+	];
+
+	if(SnapshotId) {
+
+		startFunctions = startFunctions.concat([
+			
+			(instance, cb) => {
+			
+			reporter.report("Sussing out drives...");
+			
+			sendMessage([
+				// We make disk 1 (snapshot drive) online
+				// https://www.eightforums.com/tutorials/53106-disk-set-offline-online.html
+				'Set-Disk 1 -isOffline $false',
+				'Start-Sleep -m 10000', // TODO: Investigate waiting for it to finish
+				// We then switch over the drive letters
+				// https://support.microsoft.com/en-au/help/223188/how-to-restore-the-system-boot-drive-letter-in-windows
+				'Rename-ItemProperty -Path HKLM:SYSTEM\MountedDevices -Name \DosDevices\C: -NewName \DosDevices\R:',
+				'Rename-ItemProperty -Path HKLM:SYSTEM\MountedDevices -Name \DosDevices\E: -NewName \DosDevices\C:'
+				// We then reboot (in the next function)
+			], (err, resp) => {
+
+				if (err) {
+					reporter.report(err, "error");
+					cb(err);
+				} else {
+					cb(null, instance);
+				}
+
+			});
+
+		},
+		(instance, cb) => {
+
+			reporter.report("Rebooting instance...");
+
+			ec2.rebootInstances({
+				InstanceIds: [instance.InstanceId]
+			}, (err, resp) => {
+
+				if (err) {
+					reporter.report(err, "error");
+					cb(err);
+				} else {
+					
+					ec2.waitFor('instanceStatusOk', {
+						InstanceIds: [ instance.InstanceId ]
+					}, function(err, data) {
+						
+						if (err) { 
+							reporter.report(err.stack, "error");
+							cb(err);
+						} else {
+							cb(null);
+						}
+
+					});
+					
+				}
+
+			});
+			
+		}
+
+
+		])
+	}
+
+	async.waterfall(startFunctions, (err, data) => {
+
+		if (err) { 
+			reporter.report(err.stack, "error");
+			cb(err);
+		} else {
+			cb(null);
+		}
+
 	});
 
 	return params;
@@ -903,9 +990,6 @@ function sendMessage(commands, cb) {
 			}
 		};
 
-		reporter.report("Sending '" + commands.join("' ") + "' to " + state.activeInstances[0].InstanceId);
-		reporter.report(JSON.stringify(params, null, 4))
-
 		ssm.sendCommand(params, function(err, data) {
 			
 			if(err) {
@@ -915,8 +999,7 @@ function sendMessage(commands, cb) {
 
 			function check() {
 
-				reporter.report("Checking command '" + data.Command.CommandId + "'...");
-
+				
 				ssm.listCommandInvocations({
 					CommandId: data.Command.CommandId, /* required */
 					InstanceId: instanceId,
@@ -1107,7 +1190,7 @@ module.exports = {
 				settings.ImageId = image.ImageId;
 
 				if(!snapshot) {
-					cb("No Snapshot");
+					settings.SnapshotId = null; // First boot
 				} else {
 					settings.SnapshotId = snapshot.SnapshotId;
 				}
