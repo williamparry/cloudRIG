@@ -31,7 +31,7 @@ function userDataFileReader(filename) {
 
 function displayState(cb) {
 
-	console.log("\nState:");
+	console.log("State:");
 
 	cloudrig.getState(function(err, state) {
 		
@@ -47,7 +47,7 @@ function displayState(cb) {
 			"Microsoft Remote Desktop exists": state.RDP
 		}
 				
-		console.log("\n" + prettyjson.render(display, null, 4));
+		console.log(prettyjson.render(display, null, 4));
 
 		cb();
 
@@ -62,14 +62,14 @@ function mainMenu() {
 	cloudrig.getState(function(err, state) {
 		
 		if(state.AWS.activeInstances.length > 0) {
-			choices = choices.concat(["Stop CloudRig", "Open Remote Desktop", "Snapshot"]);
+			choices = choices.concat(["Stop CloudRig", "Open Remote Desktop", "Save changes"]);
 		} else {
 			choices = choices.concat(["Start CloudRig", "Setup"]);
 		}
 
 		inquirer.prompt([{
 			name: "cmd",
-			message: "bb u want 2?\n",
+			message: "bb u want 2?",
 			type: "rawlist",
 			choices: choices
 		}
@@ -101,7 +101,7 @@ function mainMenu() {
 
 					cloudrig.stop(function() {
 						
-						console.log("\nTERMINATED");
+						console.log("Stopped");
 						mainMenu();
 
 					});
@@ -120,7 +120,7 @@ function mainMenu() {
 					
 					cloudrig.openRDP(function() {
 
-						console.log("Opening...");
+						console.log("Opening");
 						mainMenu();
 
 					});
@@ -133,7 +133,7 @@ function mainMenu() {
 
 				break;
 
-				case "Snapshot":
+				case "Save changes":
 
 					inquirer.prompt([
 					{
@@ -150,21 +150,19 @@ function mainMenu() {
 							{
 								type: "confirm",
 								name: "del",
-								message: "Delete existing snapshot?",
+								message: "Delete existing image?",
 								default: true
 							}
 							]).then((answers) => {
-								cloudrig.snapshot(true, answers.del, mainMenu);
+								cloudrig.update(true, answers.del, mainMenu);
 							});
 
 						} else {
 
-							cloudrig.snapshot(false, false, mainMenu);
+							cloudrig.update(false, false, mainMenu);
 
 						}
-
 						
-
 					});
 
 				break;
@@ -215,7 +213,7 @@ function maintenanceMenu() {
 
 	inquirer.prompt([{
 		name: "cmd",
-		message: "Maintenance Menu\n",
+		message: "Maintenance Menu",
 		type: "rawlist",
 		choices: ["Clean up Instance Profiles", "Create Security Group", "Create Key Pair", "Change Config", "Start cloudrig"] // TODO: Delete old snapshots
 	}
@@ -232,7 +230,7 @@ function maintenanceMenu() {
 
 						inquirer.prompt([{
 							name: "toDelete",
-							message: "Select instance profiles to delete\n",
+							message: "Select instance profiles to delete",
 							type: "checkbox",
 							choices: data.map((profile) => {
 								return {
@@ -245,7 +243,7 @@ function maintenanceMenu() {
 							async.parallel(answers.toDelete.map((answer) => {
 								return cloudrig._Instance._deleteInstanceProfile.bind(null, answer);
 							}), (err, results) => {
-								console.log("\nDone\n");
+								console.log("Done");
 								maintenanceMenu();
 							});
 
@@ -253,7 +251,7 @@ function maintenanceMenu() {
 
 					} else {
 
-						console.log("\nNo instance profiles\n");
+						console.log("No instance profiles");
 						maintenanceMenu();
 
 					}
@@ -287,7 +285,7 @@ function advancedMenu(cb) {
 
 	inquirer.prompt([{
 		name: "cmd",
-		message: "Advanced\n",
+		message: "Advanced",
 		type: "rawlist",
 		choices: ["Back", "VPN Start", "Get Remote VPN Address", "Add Instance address to VPN", "Get Windows Password"]
 	}
@@ -348,7 +346,7 @@ function advancedMenu(cb) {
 
 function validateRequiredSoftware(cb) {
 
-	console.log("\nValidating required software...");
+	console.log("Validating required software");
 
 	cloudrig.validateRequiredSoftware((err, software) => {
 		
@@ -379,7 +377,7 @@ function validateRequiredSoftware(cb) {
 /* TODO:
 function validateRequiredConfig(cb) {
 
-	console.log("\nValidating required config...");
+	console.log("Validating required config");
 
 	cloudrig.validateRequiredConfig((err, serviceConfig) => {
 		
@@ -410,7 +408,7 @@ function validateRequiredConfig(cb) {
 
 function validateAndSetConfig(cb) {
 	
-	console.log("\nValidating and setting config...")
+	console.log("Validating and setting config")
 
 	var config = getConfigFile();
 	var configState = cloudrig.getRequiredConfig();
@@ -433,7 +431,7 @@ function validateAndSetConfig(cb) {
 	
 	if(questions.length > 0) {
 		
-		console.log("\nYou're missing some values in your config. Enter them below:\n")
+		console.log("You're missing some values in your config. Enter them below:")
 
 		inquirer.prompt(questions).then((answers) => {
 
@@ -447,7 +445,7 @@ function validateAndSetConfig(cb) {
 
 	} else {
 
-		console.log("\nSetting config:\n");
+		console.log("Setting config:");
 		var displayConfig = Object.assign({}, config);
 		displayConfig["ZeroTierAPIKey"] = "(set)";
 		
@@ -462,7 +460,7 @@ function validateAndSetConfig(cb) {
 
 function setup(cb) {
 
-	console.log("\nSetting up...");
+	console.log("Setting up");
 
 	cloudrig.setup(userDataFileReader, userDataFileWriter, function(err, serviceSetups) {
 		
@@ -494,7 +492,7 @@ function setup(cb) {
 
 		if(questions.length > 0) {
 
-			console.log("\nThere's some things that need to be set up. I can do it for you.\n")
+			console.log("There's some things that need to be set up. I can do them for you.")
 
 			inquirer.prompt(questions.map((question, i) => {
 
@@ -518,11 +516,14 @@ function setup(cb) {
 
 				if(toProcess.length > 0) {
 
-					console.log("\n");
-
 					async.parallel(toProcess, function(err, val) {
 
-						console.log("\nOK done. Redoing setup to check it's all good...");
+						if(err) {
+							cb(err);
+							return;
+						}
+
+						console.log("OK done. Redoing setup to check it's all good");
 						setup(cb);
 
 					})
@@ -567,7 +568,7 @@ function checkAndSetDefaultConfig() {
 	try {
 		getConfigFile();
 	} catch(ex) {
-		console.log("\n[!] Config file missing/broken - copying from config.sample.json")
+		console.log("[!] Config file missing/broken - copying from config.sample.json")
 		setConfigFile(JSON.parse(fs.readFileSync(process.cwd() + "/config.sample.json")));
 	}
 }
@@ -584,7 +585,7 @@ function startCloudrig() {
 
 		if(err) {
 			console.log(cowsay.say({
-				text : `Something catastrophic went wrong...\n\n${err}`,
+				text : `Something catastrophic went wrong bb:\n\n${err}`,
 				e : "oO",
 				T : "U "
 			}));
@@ -599,7 +600,7 @@ function startCloudrig() {
 
 function startMaintenanceMode() {
 
-	console.log("\n------------ [!] MAINTENANCE MODE [!] ------------");
+	console.log("------------ [!] MAINTENANCE MODE [!] ------------");
 
 	async.series([
 

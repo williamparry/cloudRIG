@@ -55,7 +55,7 @@ function makeOptions() {
 
 function addUserToVPN(vpnId, address, cb) {
 
-	reporter.report("Adding user '" + address + "' to '" + vpnId + "'...");
+	reporter.report("Adding user '" + address + "' to '" + vpnId + "'");
 
 	var newVPNOptions = makeOptions();
 	newVPNOptions.url += "network/" + vpnId + "/member/" + address
@@ -89,7 +89,7 @@ function create(cb) {
 
 		function(cb) {
 
-			reporter.report("Making VPN network...");
+			reporter.report("Making VPN network");
 
 			var options = makeOptions();
 			options.url += "network"
@@ -159,7 +159,7 @@ function create(cb) {
 		},
 		function(newVPN, cb) {
 
-			reporter.report("Adding user...");
+			reporter.report("Adding user");
 
 			var child = exec('zerotier-cli info -j');
 

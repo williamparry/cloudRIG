@@ -98,7 +98,7 @@ module.exports = {
 						return;
 					}
 					ret[service.id] = state;
-					cb()
+					cb(null)
 				})
 			}
 		}), function(err, results) {
@@ -114,11 +114,11 @@ module.exports = {
 
 	start: function(cb) {
 		
-		reporter.report("Starting instance...");
+		reporter.report("Starting instance");
 
 		return Instance.start(() => {
 
-			reporter.report("Starting VPN...");
+			reporter.report("Starting VPN");
 			VPN.start(() => {
 			
 				// Get remote info
@@ -127,11 +127,11 @@ module.exports = {
 					var address = JSON.parse(resp).address;
 
 					// Send to VPN to add to network
-					reporter.report("Adding Instance VPN address '" + address + "' to VPN...");
+					reporter.report("Adding Instance VPN address '" + address + "' to VPN");
 					VPN.addCloudrigAddressToVPN(address, () => {
 
 						// Tell instance to join
-						reporter.report("Join Instance to VPN...");
+						reporter.report("Join Instance to VPN");
 						Instance.sendMessage(VPN.getRemoteJoinCommand(), (err, resp) => {
 
 							reporter.report("Joined");
@@ -170,10 +170,52 @@ module.exports = {
 		VPN.create(cb)
 	},
 
-	snapshot: function(stop, del, cb) {
+	update: function(stop, del, cb) {
 		
-		// We need to find the existing snapshot here if we want to delete it
-		Instance.findSnapshot((err, snapshot) => {
+		Instance.getAMI((err, ami) => {
+
+			reporter.report("Updating");
+
+			Instance.updateAMI(function() {
+				
+				if(stop) {
+					async.parallel([
+						Instance.stop,
+						VPN.stop
+					], cb);
+				} else {
+
+					
+					if(del) {
+						Instance.deleteAMI(instanceId, cb);
+					} else {
+						cb(null);
+					}
+					
+				}
+
+			});
+
+		});
+
+	},
+
+	_maintenance: function(cb) {
+		Instance._maintenance(cb);
+	},
+	
+	_Instance: Instance,
+
+	_VPN: VPN,
+
+	_RDP: RDP,
+
+	_Steam: Steam
+
+}
+
+/*
+Instance.findSnapshot((err, snapshot) => {
 			
 			Instance.snapshot(snapshot.SnapshotId, () => {
 				
@@ -181,7 +223,7 @@ module.exports = {
 
 				if(stop) {
 
-					reporter.report("Stopping...");
+					reporter.report("Stopping");
 
 					async.parallel([
 						Instance.stop,
@@ -207,24 +249,4 @@ module.exports = {
 			});
 
 		});
-
-		
-	},
-
-	_maintenance: function(cb) {
-		Instance._maintenance(cb);
-	},
-	
-	_Instance: Instance,
-
-	_VPN: VPN,
-
-	_RDP: RDP,
-
-	_Steam: Steam
-
-}
-
-// Set up security group
-// Set up image id
-// Se up key
+*/

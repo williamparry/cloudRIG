@@ -10,13 +10,20 @@ var ursa = require('ursa');
 var publicIp = require('public-ip');
 var reporter = require('../helpers/reporter')();
 
+var context = this;
 var config;
 var credentials;
 var settings = {};
 var iam;
 var ec2;
 var ssm;
+var kms;
+var sts;
+var baseAMI = "ami-f0d0d293";
 var securityKeyPairName = "cloudrig.pem";
+var kmsKeyName = "cloudrig"; // Takes minimum 7 days to delete
+var winpwdName = "winpwd.txt"
+var kmsRoleName = "cloudrig-kms";
 var fleetRoleName = "cloudrig-spotfleet";
 var ssmRoleName = "cloudrig-ssm";
 var standardFilter = [{
@@ -24,9 +31,13 @@ var standardFilter = [{
 	Values: ['true']
 }];
 
-function findFleetRole(cb) {
+//--------------------------------------------------
+// Get
+//--------------------------------------------------
 
-	reporter.report("Finding fleet role...");
+function getFleetRole(cb) {
+
+	reporter.report("Finding fleet role");
 
 	iam.listRoles({}, function(err, data) {
 		
@@ -46,7 +57,7 @@ function findFleetRole(cb) {
 
 }
 
-function listInstanceProfiles(cb) {
+function getInstanceProfiles(cb) {
 
 	iam.listInstanceProfiles({}, function(err, data) {
 		
@@ -60,17 +71,28 @@ function listInstanceProfiles(cb) {
 	});
 }
 
-function deleteInstanceProfile(instanceProfileName, cb) {
+function getAMI(cb) {
 
-	iam.deleteInstanceProfile({
-		InstanceProfileName: instanceProfileName
-	}, cb);
-	
+	reporter.report("Finding AMI");
+
+	ec2.describeImages({
+		Owners: ['self'],
+		Filters: standardFilter
+	}, function(err, data) {
+		
+		if (err) {
+			cb(err); 
+		} else {
+			cb(null, data.Images[0]);
+		}
+
+	});
+
 }
 
-function findSSMRole(cb) {
+function getSSMRole(cb) {
 
-	reporter.report("Finding SSM role...");
+	reporter.report("Finding SSM role");
 
 	var ret = {};
 
@@ -103,7 +125,7 @@ function findSSMRole(cb) {
 
 		(cb) => {
 
-			listInstanceProfiles((err, instanceProfiles) => {
+			getInstanceProfiles((err, instanceProfiles) => {
 				
 				if (err) {
 					cb(err);
@@ -139,37 +161,52 @@ function findSSMRole(cb) {
 
 }
 
+function getKMSRole(cb) {
+	
+	reporter.report("Finding KMS role");
 
-function findAMI (cb) {
-
-	reporter.report("Finding AMI...");
-
-	var params = {
-		Owners: ['self'],
-		Filters: standardFilter
-	}
-
-	ec2.describeImages(params, function(err, data) {
+	iam.listRoles({}, function(err, data) {
 		
 		if (err) {
-			cb(err); 
-		} else {
-			cb(null, data.Images[0]);
+			cb(err);
+			return;
 		}
+		for(var i = 0; i < data.Roles.length; i++) {
+			
+			if(data.Roles[i].RoleName == kmsRoleName) {
+				cb(null, data.Roles[i]);
+				return;
+			}
+		}
+		cb(null);
+	
+	});
+}
+
+function getIdFromCredentials(cb) {
+
+	reporter.report("Getting ID from credentials");
+
+	sts.getCallerIdentity({}, function(err, data) {
+
+		if(err) {
+			cb(err);
+			return;
+		}
+
+		cb(null, data);
 
 	});
 
 }
 
-function findSecurityGroup(cb) {
+function getSecurityGroup(cb) {
 
-	reporter.report("Finding security group...");
+	reporter.report("Finding security group");
 
-	var params = {
+	ec2.describeSecurityGroups({
 		Filters: standardFilter
-	};
-
-	ec2.describeSecurityGroups(params, function(err, data) {
+	}, function(err, data) {
 		
 		if (err) {
 			cb(err); 
@@ -180,16 +217,13 @@ function findSecurityGroup(cb) {
 	});
 }
 
+function getKeyPair(cb) {
 
-function findKeyPair (cb) {
+	reporter.report("Finding keypair");
 
-	reporter.report("Finding keypair...");
-
-	var params = {
+	ec2.describeKeyPairs({
 		KeyNames: ["cloudrig"]
-	};
-
-	ec2.describeKeyPairs(params, function(err, data) {
+	}, function(err, data) {
 		// Error if there are no keys
 		// TODO: Warn if there's more than 1
 		if (err) {
@@ -203,17 +237,15 @@ function findKeyPair (cb) {
 
 function getActiveInstances(cb) {
 
-	var params = {
+	ec2.describeInstances({
 		Filters: standardFilter.concat([{
 			Name: 'instance-state-name',
 			Values: ['running']
 		}])
-	}
-
-	ec2.describeInstances(params, function(err, data) {
+	}, function(err, data) {
 		
 		if (err) {
-			cb(err); 
+			cb(err);
 		} else {
 			cb(null, data.Reservations[0] ? data.Reservations[0].Instances : []);
 		}
@@ -222,13 +254,11 @@ function getActiveInstances(cb) {
 
 }
 
-function findSpotFleetInstances(SpotFleetRequestId, cb) {
-	
-	var params = {
-		SpotFleetRequestId: SpotFleetRequestId
-	}
+function getSpotFleetInstances(SpotFleetRequestId, cb) {
 
-	ec2.describeSpotFleetInstances(params, function(err, data) {
+	ec2.describeSpotFleetInstances({
+		SpotFleetRequestId: SpotFleetRequestId
+	}, function(err, data) {
 		if (err) {
 			cb(err); 
 		} else {
@@ -241,14 +271,12 @@ function findSpotFleetInstances(SpotFleetRequestId, cb) {
 
 function getPendingInstances(cb) {
 
-	var params = {
+	ec2.describeInstances({
 		Filters: standardFilter.concat([{
 			Name: 'instance-state-name',
 			Values: ['pending']
 		}])
-	}
-
-	ec2.describeInstances(params, function(err, data) {
+	}, function(err, data) {
 		
 		if (err) {
 			cb(err); 
@@ -261,15 +289,13 @@ function getPendingInstances(cb) {
 }
 
 function getShuttingDownInstances(cb) {
-
-	var params = {
+	
+	ec2.describeInstances({
 		Filters: standardFilter.concat([{
 			Name: 'instance-state-name',
 			Values: ['shutting-down']
 		}])
-	}
-
-	ec2.describeInstances(params, function(err, data) {
+	}, function(err, data) {
 		
 		if (err) {
 			cb(err); 
@@ -281,40 +307,71 @@ function getShuttingDownInstances(cb) {
 
 }
 
-function createTags(resourceId, cb) {
+function getPassword(cb) {
 
-	var params = {
-		Resources: [resourceId], 
-		Tags: [{
-				Key: "cloudrig", 
-				Value: "true"
-			}
-		]
-	};
-	
-	ec2.createTags(params, function(err, data) {
-		if (err) {
-			reporter.report(err.stack, "error");
-			eb(err);
-		} else {
-			cb(null, data);
+	reporter.report(`Getting password from ${winpwdName}`);
+
+	var pwdData = userDataReader(winpwdName);
+
+	kms.decrypt({
+		CiphertextBlob: pwdData
+	}, function(err, data) {
+		if(err) {
+			cb(err);
+			return;
 		}
+		cb(null, data.Plaintext);
 	});
 
 }
 
+function getPublicDNS(cb) {
+	getState(function(err, state) {
+		if(err) {
+			cb(err);
+			return;
+		}
+		cb(null, state.activeInstances[0].PublicDnsName);
+	});
+}
+
+function getEncryptionKey(cb) {
+
+	reporter.report("Finding encryption key");
+
+	kms.listAliases({}, (err, data) => {
+
+		if(err) {
+			cb(err);
+			return;
+		}
+
+		var alias = data.Aliases.find((alias)=> { return alias.AliasName == "alias/" + kmsKeyName });
+
+		if(alias) {
+			cb(null, alias.TargetKeyId);
+		} else {
+			cb(null, null);
+		}
+
+	});
+
+}
+
+//--------------------------------------------------
+// Create
+//--------------------------------------------------
+
 function createSecurityGroup(cb) {
 	
-	reporter.report("Creating security group...");
+	reporter.report("Creating security group");
 	
 	publicIp.v4().then(function(ip) {
 
-		var params = {
+		ec2.createSecurityGroup({
 			Description: "cloudrig",
 			GroupName: "cloudrig"
-		};
-
-		ec2.createSecurityGroup(params, function(err, securityGroupData) {
+		}, function(err, securityGroupData) {
 
 			if (err) {
 
@@ -322,9 +379,8 @@ function createSecurityGroup(cb) {
 
 			} else {
 				
-				//http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_AuthorizeSecurityGroupEgress.html
-				var params = {
-					GroupId: securityGroupData.GroupId, /* required */
+				ec2.authorizeSecurityGroupIngress({
+					GroupId: securityGroupData.GroupId,
 					IpPermissions: [{
 						FromPort: -1,
 						ToPort: -1,
@@ -333,19 +389,15 @@ function createSecurityGroup(cb) {
 							{ CidrIp: ip + "/32" }
 						]
 					}]
-				};
-
-				reporter.report(params)
-				
-				ec2.authorizeSecurityGroupIngress(params, function (err, data) {
+				}, function (err, data) {
 
 					if (err) {
 
 						reporter.report(err.stack, "error");
 
 					} else {
-						reporter.report("Tagging...")
-						createTags(securityGroupData.GroupId, cb)
+						reporter.report("Tagging")
+						createTags(securityGroupData.GroupId, null, cb)
 					}
 
 				});
@@ -375,7 +427,7 @@ function createFleetRole(cb) {
 				}
 			}`;
 
-			reporter.report(`Creating fleet role '${fleetRoleName}'...`);
+			reporter.report(`Creating fleet role '${fleetRoleName}'`);
 
 			iam.createRole({
 				AssumeRolePolicyDocument: policy,
@@ -389,7 +441,7 @@ function createFleetRole(cb) {
 
 			var policy = "arn:aws:iam::aws:policy/service-role/AmazonEC2SpotFleetRole";
 
-			reporter.report(`Attaching the policy '${policy}'...`);
+			reporter.report(`Attaching the policy '${policy}'`);
 			
 			iam.attachRolePolicy({
 				PolicyArn: policy, 
@@ -402,7 +454,6 @@ function createFleetRole(cb) {
 	], cb);
 
 }
-
 
 function createSSMRole(cb) {
 	
@@ -422,15 +473,13 @@ function createSSMRole(cb) {
 				}
 			}`;
 
-			reporter.report(`Creating SSM role '${ssmRoleName}'...`);
+			reporter.report(`Creating SSM role '${ssmRoleName}'`);
 
 			iam.createRole({
 				AssumeRolePolicyDocument: policy,
 				Path: "/", 
 				RoleName: ssmRoleName
-			}, () => {
-				cb(null);
-			})
+			}, cb);
 
 		},
 
@@ -438,7 +487,7 @@ function createSSMRole(cb) {
 
 			var policy = "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM";
 
-			reporter.report(`Attaching the policy '${policy}'...`);
+			reporter.report(`Attaching the policy '${policy}'`);
 
 			iam.attachRolePolicy({
 				PolicyArn: policy, 
@@ -451,7 +500,7 @@ function createSSMRole(cb) {
 
 			var policy = "arn:aws:iam::aws:policy/AmazonSNSFullAccess";
 
-			reporter.report("Attaching the policy '" + policy + "'...");
+			reporter.report("Attaching the policy '" + policy + "'");
 
 			iam.attachRolePolicy({
 				PolicyArn: policy, 
@@ -462,7 +511,7 @@ function createSSMRole(cb) {
 
 		(cb) => {
 
-			reporter.report(`Creating instance profile '${ssmRoleName}'...`);
+			reporter.report(`Creating instance profile '${ssmRoleName}'`);
 
 			iam.createInstanceProfile({
 				InstanceProfileName: ssmRoleName
@@ -472,7 +521,7 @@ function createSSMRole(cb) {
 
 		(cb) => {
 
-			reporter.report(`Adding role '${ssmRoleName}' to instance profile '${ssmRoleName}'...`);
+			reporter.report(`Adding role '${ssmRoleName}' to instance profile '${ssmRoleName}'`);
 
 			iam.addRoleToInstanceProfile({
 				InstanceProfileName: ssmRoleName, 
@@ -485,87 +534,368 @@ function createSSMRole(cb) {
 
 }
 
+function createKMSRole(cb) {
+
+	async.series([
+
+		(cb) => {
+
+			var policy = `{
+				"Version": "2012-10-17",
+				"Statement": {
+					"Effect": "Allow",
+					"Principal": {
+						"Service": "ec2.amazonaws.com"
+					},
+					"Action": "sts:AssumeRole"
+				}
+			}`;
+
+			reporter.report(`Creating KMS role '${kmsRoleName}'`);
+
+			iam.createRole({
+				AssumeRolePolicyDocument: policy,
+				Path: "/", 
+				RoleName: kmsRoleName
+			}, cb);
+
+		},
+
+		(cb) => {
+
+			var policy = "arn:aws:iam::aws:policy/AWSKeyManagementServicePowerUser";
+
+			reporter.report(`Attaching the policy '${policy}'`);
+
+			iam.attachRolePolicy({
+				PolicyArn: policy, 
+				RoleName: kmsRoleName
+			}, cb);
+
+		},
+
+	], cb);
+
+}
+
 function createKeyPair(cb) {
 	
-	var params = {
+	ec2.createKeyPair({
 		KeyName: "cloudrig"
-	};
-
-	ec2.createKeyPair(params, function(err, data) {
+	}, function(err, data) {
 		
 		if (err) {
-
 			reporter.report(err.stack, "error");
 			cb("error");
-
 		} else {
-
 			cb(data);
-
 		}
 
 	});
 	
 }
 
-function createImage(cb) {
+function createEncryptionKey(cb) {
+	
+//http://stackoverflow.com/questions/10197784/how-can-i-deduce-the-aws-account-id-from-available-basicawscredentials
+// get credentials ARN
 
-	reporter.report("Creating image...");
+	reporter.report("Creating Encryption Key");
 
-	var params = {
-		Name: 'cloudrig',
-		SourceImageId: 'ami-f0d0d293',
-		SourceRegion: 'ap-southeast-2'
-	};
+	async.waterfall([
 
-	ec2.copyImage(params, function(err, data) {
-
-		if (err) {
-			reporter.report(err.stack, "error");
-			cb("error");
-		} else {
+		(cb) => {
 			
-			reporter.report("Waiting for image to become available...");
+			kms.createKey({
+				Tags: [{
+					TagKey: kmsKeyName, 
+					TagValue: "true"
+				}],
+				Policy: `{
+					"Id": "key-consolepolicy-3",
+					"Version": "2012-10-17",
+					"Statement": [
+						{
+						"Sid": "Enable IAM User Permissions",
+						"Effect": "Allow",
+						"Principal": {
+							"AWS": [
+								"${settings.mainUserId}"
+							]
+						},
+						"Action": "kms:*",
+						"Resource": "*"
+						},
+						{
+						"Sid": "Allow access for Key Administrators",
+						"Effect": "Allow",
+						"Principal": {
+							"AWS": [
+								"${settings.kmsRole}"
+							]
+						},
+						"Action": [
+							"kms:Create*",
+							"kms:Describe*",
+							"kms:Enable*",
+							"kms:List*",
+							"kms:Put*",
+							"kms:Update*",
+							"kms:Revoke*",
+							"kms:Disable*",
+							"kms:Get*",
+							"kms:Delete*",
+							"kms:TagResource",
+							"kms:UntagResource",
+							"kms:ScheduleKeyDeletion",
+							"kms:CancelKeyDeletion"
+						],
+						"Resource": "*"
+						},
+						{
+						"Sid": "Allow use of the key",
+						"Effect": "Allow",
+						"Principal": {
+							"AWS": [
+								"${settings.kmsRole}"
+							]
+						},
+						"Action": [
+							"kms:Encrypt",
+							"kms:Decrypt",
+							"kms:ReEncrypt*",
+							"kms:GenerateDataKey*",
+							"kms:DescribeKey"
+						],
+						"Resource": "*"
+						},
+						{
+						"Sid": "Allow attachment of persistent resources",
+						"Effect": "Allow",
+						"Principal": {
+							"AWS": [
+								"${settings.kmsRole}"
+							]
+						},
+						"Action": [
+							"kms:CreateGrant",
+							"kms:ListGrants",
+							"kms:RevokeGrant"
+						],
+						"Resource": "*",
+						"Condition": {
+							"Bool": {
+							"kms:GrantIsForAWSResource": true
+							}
+						}
+						}
+					]
+				}`
+			}, function(err, data) {
 
-			ec2.waitFor('imageAvailable', {
-				ImageIds: [data.ImageId]
-			}, function() {
+				if (err) {
+					cb(err);
+					return;
+				}
+				
+				cb(null, data.KeyMetadata.KeyId)
+				
+			});
 
-				reporter.report("Adding tags to '" + data.ImageId + "'...");
+		},
+		(keyId, cb) => {
 
-				createTags(data.ImageId, cb);
+			reporter.report("Creating Alias");
 
+			kms.createAlias({
+				AliasName: "alias/" + kmsKeyName,
+				TargetKeyId: keyId
+			}, (err, data) => {
+
+				if (err) {
+					cb(err);
+					return;
+				}
+				
+				cb(null);
+				
 			});
 
 		}
 
+	], (err, results) => {
+
+		if (err) {
+			reporter.report(err.stack, "error");
+			cb(err);
+			return;
+		}
+		
+		cb(null);
+
 	});
 
 }
 
-function getPassword(instanceId, cb) {
+function createAMI(cb) {
 
-	reporter.report(`Getting password using private key '${securityKeyPairName}'...`)
+	reporter.report("Creating AMI");
 
-	var pem = userDataReader(securityKeyPairName);
-	var pkey = ursa.createPrivateKey(pem);
+	ec2.copyImage({
+		Name: "cloudrig",
+		SourceImageId: baseAMI,
+		SourceRegion: "ap-southeast-2"
+	}, function(err, data) {
 
-	ec2.getPasswordData({InstanceId: instanceId}, function (err, data) {
+		if (err) {
+			reporter.report(err.stack, "error");
+			cb("error");
+			return;
+		} 
 		
+		reporter.report("Waiting for image to become available");
+
+		ec2.waitFor('imageAvailable', {
+			ImageIds: [data.ImageId]
+		}, function() {
+
+			reporter.report("Adding tags to '" + data.ImageId + "'");
+
+			createTags(data.ImageId, [{
+				Key: "base",
+				Value: "true"
+			}], cb);
+
+		});
+
+	});
+
+}
+
+//--------------------------------------------------
+// Helpers
+//--------------------------------------------------
+
+function createTags(resourceId, additionalTags, cb) {
+
+	var tags = [{
+		Key: "cloudrig", 
+		Value: "true"
+	}];
+
+	if(additionalTags) {
+		tags = tags.concat(additionalTags);
+	}
+
+	ec2.createTags({
+		Resources: [resourceId], 
+		Tags: tags
+	}, function(err, data) {
+		
+		if (err) {
+			reporter.report(err.stack, "error");
+			cb(err);
+			return;
+		}
+
+		cb(null, data);
+		
+	});
+
+}
+
+//--------------------------------------------------
+// Update
+//--------------------------------------------------
+
+function updateAMI(cb) {
+	
+	reporter.report("Creating image");
+
+	getState(function(err, state) {
+
 		if(err) {
 			cb(err);
 			return;
 		}
 
-		var password = pkey.decrypt(data.PasswordData, 'base64', 'utf8', ursa.RSA_PKCS1_PADDING);
+		ec2.createImage({
+			InstanceId: state.activeInstances[0].InstanceId,
+			Name: 'cloudrig-' + new Date().getTime(),
+			NoReboot: true
+		}, function(err, data) {
+			
+			if (err) {
+				reporter.report(err.stack, "error");
+				cb(err);
+				return;
+			}
+			
+			reporter.report("Waiting for image to be available");
 
-		cb(null, password);
+			var newImageId = data.ImageId;
+
+			ec2.waitFor('imageAvailable', {
+				ImageIds: [newImageId]
+			}, function() {
+				
+				reporter.report("Removing tag from " + settings.ImageId);
+
+				async.parallel([
+					deleteTags.bind(null, settings.ImageId),
+					createTags.bind(null, newImageId, null)
+				], (err) => {
+
+					if (err) {
+						reporter.report(err.stack, "error");
+						cb(err);
+						return;
+					}
+
+					cb(null)
+				});
+
+			});
+
+		
+		
+		});
 
 	});
+	
+}
+
+// TODO: Implement
+function updateSecurityGroup(cb) {
+	
+}
+
+//--------------------------------------------------
+// Delete
+//--------------------------------------------------
+
+function deleteInstanceProfile(instanceProfileName, cb) {
+
+	iam.deleteInstanceProfile({
+		InstanceProfileName: instanceProfileName
+	}, cb);
+	
+}
+
+function deleteAMI(amiId, cb) {
+
+	if(settings.fromBase) {
+		reporter.report("Can't delete the base image");
+		cb(null);
+		return;
+	}
+
+	// NOT IMPLEMENTED
+	cb(null, true);
 
 }
 
-function removeTags(resourceId, cb) {
+function deleteTags(resourceId, cb) {
 
 	var params = {
 		Resources: [resourceId], 
@@ -575,121 +905,92 @@ function removeTags(resourceId, cb) {
 		}]
 	};
 	
-	ec2.deleteTags(params, function(err, data) {
-		if (err) {
-			reporter.report(err.stack, "error");
-		} else {
-			cb(data);
-		}
-	});
-
-}
-
-function findSnapshot(cb) {
-
-	reporter.report("Finding snapshot...");
-
-	var params = {
-		Filters: standardFilter
-	}
-
-	ec2.describeSnapshots(params, function(err, data) {
-
-		if (err) {
-			cb(err); 
-		} else {
-			cb(null, data.Snapshots[0]);
-		}
-
-	});
-
-}
-
-function deleteSnapshot(snapshotId, cb) {
-
-	reporter.report(`Deleting snapshot '${snapshotId}'...`);
-
-	ec2.deleteSnapshot({
-		SnapshotId: snapshotId	
-	}, function(err, data) {
-
-		if (err) {
-			console.log("error", err);
-			cb(err); 
-		} else {
-			cb(null);
-		}
-
-	});
-
-}
-
-function snapshot(volumeId, existingSnapshotId, cb) {
-
-	reporter.report(`Making snapshot for volume '${volumeId}' with snapshot '${existingSnapshotId}'...`);
-
-	var params = {
-		VolumeId: volumeId,
-		Description: 'cloudrig-' + new Date().getTime(),
-	};
-
-	ec2.createSnapshot(params, function(err, data) {
+	ec2.deleteTags(params, (err, data) => {
 		
 		if (err) {
 			reporter.report(err.stack, "error");
 			cb(err);
-		} else {
-
-			ec2.waitFor('snapshotCompleted', {
-				SnapshotIds: [data.SnapshotId]
-			}, function() {
-
-				reporter.report("Tagging...");
-
-				createTags(data.SnapshotId, () => {
-
-					reporter.report("Removing previous tags...");
-
-					removeTags(existingSnapshotId, cb);
-
-				});
-
-			});
-		
+			return;
 		}
+
+		cb(null, data);
+		
 	});
 
 }
 
-function start(fleetRoleArn, ssmInstanceProfileArn, ImageId, SnapshotId, SecurityGroupId, KeyName, cb) {
+//--------------------------------------------------
+// IService
+//--------------------------------------------------
 
-	var launchSpecification = {
-		IamInstanceProfile: {
-			Arn: ssmInstanceProfileArn
-		}, 
-		ImageId: ImageId,
-		InstanceType: "g2.2xlarge",
-		KeyName: KeyName,
-		SecurityGroups: [ { GroupId: SecurityGroupId } ]
+function getState(cb) {
+	
+	async.parallel([
+		
+		getActiveInstances,
+		getPendingInstances,
+		getShuttingDownInstances
 
+	], (err, results) => {
+		
+		if(err) {
+			cb(err);
+			return;
+		}
+
+		cb(null, {
+			activeInstances: results[0],
+			pendingInstances: results[1],
+			shuttingDownInstances: results[2]
+		});
+
+	});
+
+}
+
+function getRequiredConfig() {
+	return ["AWSCredentialsProfile", "AWSMaxPrice", "AWSRegion"]
+}
+
+function validateRequiredConfig(configValues, cb) {
+
+	var testCredentials = new AWS.SharedIniFileCredentials({
+		profile: configValues[0]
+	});
+	
+	if(!credentials.accessKeyId) {
+		cb(null, ["AWS profile not found"]);
+	} else {
+		cb(null, true);
 	}
 
-	if(SnapshotId) {
+}
 
-		launchSpecification.BlockDeviceMappings = [{
-			DeviceName: "/dev/sda2",
-			Ebs: {
-				SnapshotId: SnapshotId,
-				VolumeType: "gp2"
-			}
-		}];
+function validateRequiredSoftware(cb) {
+	cb(null, true);
+}
 
-	}
+//--------------------------------------------------
+// Instance
+//--------------------------------------------------
+
+function start(cb) {
 
 	var params = {
 		SpotFleetRequestConfig: {
-			IamFleetRole: fleetRoleArn,
-			LaunchSpecifications: [ launchSpecification ],
+			IamFleetRole: settings.fleetRole,
+			LaunchSpecifications: [{
+				IamInstanceProfile: {
+					Arn: settings.ssmInstanceProfile
+				}, 
+				ImageId: settings.ImageId,
+				InstanceType: "g2.2xlarge",
+				KeyName: settings.KeyName,
+				SecurityGroups: [{
+					GroupId: settings.SecurityGroupId
+				}]
+
+			}],
 			Type: "request",
 			SpotPrice: config.AWSMaxPrice || "0.4", 
 			TargetCapacity: 1
@@ -717,11 +1018,11 @@ function start(fleetRoleArn, ssmInstanceProfileArn, ImageId, SnapshotId, Securit
 		},
 		(spotFleetRequestId, cb) => {
 
-			reporter.report("Now we wait for fulfillment...");
+			reporter.report("Waiting for fulfillment");
 
 			var c = setInterval(function() {
 
-				findSpotFleetInstances(spotFleetRequestId, function(err, instances) {
+				getSpotFleetInstances(spotFleetRequestId, function(err, instances) {
 					
 					if(err) {
 						reporter.report(err);
@@ -735,8 +1036,6 @@ function start(fleetRoleArn, ssmInstanceProfileArn, ImageId, SnapshotId, Securit
 
 							var instanceId = instances[0].InstanceId;
 
-							reporter.report("Got an instance: " + instanceId);
-							
 							cb(null, instanceId);
 						}
 
@@ -749,9 +1048,9 @@ function start(fleetRoleArn, ssmInstanceProfileArn, ImageId, SnapshotId, Securit
 		},
 		(instanceId, cb) => {
 
-			reporter.report("Tagging instance...");
+			reporter.report("Tagging instance");
 
-			createTags(instanceId, (err) => {
+			createTags(instanceId, null, (err) => {
 				
 				if (err) { 
 					reporter.report(err, "error");
@@ -766,7 +1065,7 @@ function start(fleetRoleArn, ssmInstanceProfileArn, ImageId, SnapshotId, Securit
 		},
 		(instanceId, cb) => {
 
-			reporter.report("Now we wait for our instance to be ready...");
+			reporter.report("Waiting for our instance to be ready");
 
 			var c = setInterval(function() {
 
@@ -776,7 +1075,7 @@ function start(fleetRoleArn, ssmInstanceProfileArn, ImageId, SnapshotId, Securit
 						
 						clearInterval(c);
 
-						reporter.report("Now we wait for our instance to be OK...");
+						reporter.report("Waiting for our instance to be OK");
 
 						ec2.waitFor('instanceStatusOk', {
 							InstanceIds: [ instanceId ]
@@ -800,8 +1099,7 @@ function start(fleetRoleArn, ssmInstanceProfileArn, ImageId, SnapshotId, Securit
 		},
 		(instance, cb) => {
 
-			// Wait for SSM
-			reporter.report("Waiting for SSM...");
+			reporter.report("Waiting for SSM");
 
 			var c = setInterval(() => {
 
@@ -830,74 +1128,59 @@ function start(fleetRoleArn, ssmInstanceProfileArn, ImageId, SnapshotId, Securit
 
 			}, 2000);
 
-			
 		}
+
 	];
 
-	if(SnapshotId) {
+	if(settings.fromBase) {
 
-		startFunctions = startFunctions.concat([
-			
-			(instance, cb) => {
-			
-			reporter.report("Sussing out drives...");
-			
-			sendMessage([
-				// We make disk 1 (snapshot drive) online
-				// https://www.eightforums.com/tutorials/53106-disk-set-offline-online.html
-				'Set-Disk 1 -isOffline $false',
-				'Start-Sleep -m 10000', // TODO: Investigate waiting for it to finish
-				// We then switch over the drive letters
-				// https://support.microsoft.com/en-au/help/223188/how-to-restore-the-system-boot-drive-letter-in-windows
-				'Rename-ItemProperty -Path HKLM:SYSTEM\MountedDevices -Name \DosDevices\C: -NewName \DosDevices\R:',
-				'Rename-ItemProperty -Path HKLM:SYSTEM\MountedDevices -Name \DosDevices\E: -NewName \DosDevices\C:'
-				// We then reboot (in the next function)
-			], (err, resp) => {
+		startFunctions.push((instance, cb) => {
 
-				if (err) {
-					reporter.report(err, "error");
+			reporter.report("First AMI from base image so sussing out the password");
+
+			// Because this is from the base instance, we use the keypair to get the password
+			// We then use KMS to store and retrieve it from then on because you can't use the keypair
+			// after the base AMI is copied (PasswordData is blank)
+			// See README.md for more on the drama of snapshot vs persistent storage vs updating AMI
+
+			reporter.report(`Getting password using private key '${securityKeyPairName}'`)
+
+			var pem = userDataReader(securityKeyPairName);
+			var pkey = ursa.createPrivateKey(pem);
+
+			ec2.getPasswordData({InstanceId: instance.InstanceId}, function (err, data) {
+				
+				if(err) {
 					cb(err);
-				} else {
-					cb(null, instance);
+					return;
 				}
+
+				var password = pkey.decrypt(data.PasswordData, 'base64', 'utf8', ursa.RSA_PKCS1_PADDING);
+
+				reporter.report("Encrypting and setting this password");
+
+				kms.encrypt({
+					KeyId: settings.encryptionKey,
+					Plaintext: password
+				}, (err, data) => {
+
+					if(err) {
+						cb(err);
+						return;
+					}
+
+					reporter.report(`Saving encrypted password to ${winpwdName}`);
+
+					userDataWriter(winpwdName, data.CiphertextBlob);
+
+					cb(null);
+
+				});
 
 			});
 
-		},
-		(instance, cb) => {
+		});
 
-			reporter.report("Rebooting instance...");
-
-			ec2.rebootInstances({
-				InstanceIds: [instance.InstanceId]
-			}, (err, resp) => {
-
-				if (err) {
-					reporter.report(err, "error");
-					cb(err);
-				} else {
-					
-					ec2.waitFor('instanceStatusOk', {
-						InstanceIds: [ instance.InstanceId ]
-					}, function(err, data) {
-						
-						if (err) { 
-							reporter.report(err.stack, "error");
-							cb(err);
-						} else {
-							cb(null);
-						}
-
-					});
-					
-				}
-
-			});
-			
-		}
-
-
-		])
 	}
 
 	async.waterfall(startFunctions, (err, data) => {
@@ -905,9 +1188,10 @@ function start(fleetRoleArn, ssmInstanceProfileArn, ImageId, SnapshotId, Securit
 		if (err) { 
 			reporter.report(err.stack, "error");
 			cb(err);
-		} else {
-			cb(null);
+			return;
 		}
+		
+		cb(null);
 
 	});
 
@@ -915,59 +1199,59 @@ function start(fleetRoleArn, ssmInstanceProfileArn, ImageId, SnapshotId, Securit
 
 }
 
-function stop(spotFleetRequestId, instanceId, cb) {
+function stop(cb) {
 
-	reporter.report("Stopping: \t" + spotFleetRequestId);
+	getState(function(err, state) {
 
-	var params = {
-		SpotFleetRequestIds: [spotFleetRequestId], 
-		TerminateInstances: true
-	};
-
-	ec2.cancelSpotFleetRequests(params, function(err, data) {
-		
-		if (err) {
-			reporter.report(err.stack, "error"); 
-		} else {
-
-			reporter.report("Waiting for instance to be terminated...");
-
-			ec2.waitFor('instanceTerminated', {
-				
-				InstanceIds: [instanceId]
-
-			}, function() {
-
-				reporter.report("Terminated");
-				cb();
-
-			});
-			
+		if(err) {
+			cb(err);
+			return;
 		}
 
+		var id;
+		
+		state.activeInstances[0].Tags.forEach(function(tag) {
+
+			if(tag.Key === "aws:ec2spot:fleet-request-id") {
+				id = tag.Value;
+			}
+		});
+
+		reporter.report("Stopping: \t" + id);
+
+		ec2.cancelSpotFleetRequests({
+			SpotFleetRequestIds: [id], 
+			TerminateInstances: true
+		}, function(err, data) {
+			
+			if (err) {
+				reporter.report(err.stack, "error");
+				cb(err);
+			} else {
+
+				reporter.report("Waiting for instance to be terminated");
+
+				ec2.waitFor('instanceTerminated', {
+					
+					InstanceIds: [state.activeInstances[0].InstanceId]
+
+				}, function() {
+
+					reporter.report("Terminated");
+					cb(null);
+
+				});
+				
+			}
+
+		});
+
+
+
 	});
 
 }
 
-function getRequiredConfig() {
-	return ["AWSCredentialsProfile", "AWSMaxPrice", "AWSRegion"]
-}
-
-function validateRequiredConfig(configValues, cb) {
-
-	var testCredentials = new AWS.SharedIniFileCredentials({
-		profile: configValues[0]
-	});
-	
-	if(!credentials.accessKeyId) {
-		cb(null, ["AWS profile not found"]);
-	} else {
-		cb(null, true);
-	}
-
-}
-
-// http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/SSM.html#sendCommand-property
 function sendMessage(commands, cb) {
 
 	getState(function(err, state) {
@@ -1001,7 +1285,7 @@ function sendMessage(commands, cb) {
 
 				
 				ssm.listCommandInvocations({
-					CommandId: data.Command.CommandId, /* required */
+					CommandId: data.Command.CommandId,
 					InstanceId: instanceId,
 					Details: true
 				}, function(err, data) {
@@ -1012,7 +1296,6 @@ function sendMessage(commands, cb) {
 						return;
 					}
 					
-					// https://github.com/aws/aws-sdk-net/issues/535
 					if(
 						data.CommandInvocations && 
 						data.CommandInvocations.length > 0 && 
@@ -1041,52 +1324,17 @@ function sendMessage(commands, cb) {
 
 }
 
-function getState(cb) {
-	
-	async.parallel([
-		
-		getActiveInstances,
-		getPendingInstances,
-		getShuttingDownInstances
-
-	], function(err, results) {
-		
-		if(err) {
-			cb(err);
-			return;
-		}
-
-		cb(null, {
-			activeInstances: results[0],
-			pendingInstances: results[1],
-			shuttingDownInstances: results[2]
-		});
-
-	});
-
-}
-
-
 module.exports = {
 	
 	id: "AWS",
 
-	_maintenance: function(cb) {
+	//--------------------------------------------------
+	// IService
+	//--------------------------------------------------
 
-		credentials = new AWS.SharedIniFileCredentials({
-			profile: config.AWSCredentialsProfile
-		});
-		
-		AWS.config.credentials = credentials;
-		AWS.config.region = config.AWSRegion;
+	getRequiredConfig: getRequiredConfig,
 
-		iam = new AWS.IAM();
-		ec2 = new AWS.EC2();
-		ssm = new AWS.SSM();
-
-		cb(null);
-
-	},
+	getState: getState,
 
 	setConfig: function(_config) {
 		config = _config;
@@ -1096,24 +1344,10 @@ module.exports = {
 		reporter.set(_reporter, "AWS");
 	},
 
-	getPassword: function(cb) {
+	validateRequiredConfig: validateRequiredConfig,
 
-		getState(function(err, state) {
+	validateRequiredSoftware: validateRequiredSoftware,
 
-			if(err) {
-				cb(err);
-				return;
-			}
-
-			var instanceId = state.activeInstances[0].InstanceId;
-
-			getPassword(instanceId, cb);
-
-		});
-
-	},
-
-	// also reinit
 	setup: function(_userDataReader, _userDataWriter, cb) {
 		
 		userDataReader = _userDataReader;
@@ -1129,14 +1363,18 @@ module.exports = {
 		iam = new AWS.IAM();
 		ec2 = new AWS.EC2();
 		ssm = new AWS.SSM();
+		kms = new AWS.KMS();
+		sts = new AWS.STS();
 		
 		async.parallel([
-			findFleetRole,
-			findSSMRole,
-			findAMI,
-			findSnapshot,
-			findSecurityGroup,
-			findKeyPair
+			getFleetRole,
+			getSSMRole,
+			getAMI,
+			getSecurityGroup,
+			getKeyPair,
+			getEncryptionKey,
+			getKMSRole,
+			getIdFromCredentials,
 		], function(err, results) {
 
 			if(err) {
@@ -1144,20 +1382,16 @@ module.exports = {
 				return;
 			}
 
-			// http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/IAM.html#createRole-property
 			var fleetRole = results[0];
-
 			var ssmRole = results[1];
+			var ami = results[2];
+			var securityGroup = results[3];
+			var keyPair = results[4];
+			var encryptionKey = results[5];
+			var kmsRole = results[6];
+			var mainUserId = results[7];
 
-			var image = results[2];
-
-			var snapshot = results[3];
-
-			// http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/EC2.html#createSecurityGroup-property
-			var securityGroup = results[4];
-
-			// http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/EC2.html#createKeyPair-property
-			var keyPair = results[5];
+			settings.mainUserId = mainUserId.Arn;
 			
 			var questions = [];
 
@@ -1180,21 +1414,16 @@ module.exports = {
 				settings.ssmRole = ssmRole.Role.Arn;
 			}
 
-			if(!image) {
+			if(!ami) {
 				questions.push({
 					q: "Shall I make an AMI based off the stock 'cloudrig' AMI?",
-					m: createImage.bind(this)
+					m: createAMI.bind(this)
 				});
 			} else {
-
-				settings.ImageId = image.ImageId;
-
-				if(!snapshot) {
-					settings.SnapshotId = null; // First boot
-				} else {
-					settings.SnapshotId = snapshot.SnapshotId;
+				if(ami.Tags.some((tag) => { return tag.Key == "base"})) {
+					settings.fromBase = true;	
 				}
-
+				settings.ImageId = ami.ImageId;
 			}
 
 			if(!keyPair) {
@@ -1219,10 +1448,28 @@ module.exports = {
 			if(!securityGroup) {
 				questions.push({
 					q: "Shall I make a CloudRig security group for you?",
-					m: createImage.bind(this)
+					m: createAMI.bind(this)
 				});
 			} else {
 				settings.SecurityGroupId = securityGroup.GroupId;
+			}
+
+			if(!kmsRole) {
+				questions.push({
+					q: "Shall I make a role called '" + kmsRoleName + "' for KMS (key management)?",
+					m: createKMSRole.bind(this)
+				});
+			} else {
+				settings.kmsRole = kmsRole.Arn;
+			}
+
+			if(kmsRole && !encryptionKey) {
+				questions.push({
+					q: "Shall I make an encryption key for you? It's for retrieving your Windows password",
+					m: createEncryptionKey.bind(this)
+				});
+			} else {
+				settings.encryptionKey = encryptionKey;
 			}
 			
 			cb(null, questions, settings);
@@ -1231,80 +1478,56 @@ module.exports = {
 
 	},
 
-	sendMessage: sendMessage,
+	_maintenance: function(cb) {
 
-	getRequiredConfig: getRequiredConfig,
+		credentials = new AWS.SharedIniFileCredentials({
+			profile: config.AWSCredentialsProfile
+		});
+		
+		AWS.config.credentials = credentials;
+		AWS.config.region = config.AWSRegion;
 
-	validateRequiredConfig: validateRequiredConfig,
+		iam = new AWS.IAM();
+		ec2 = new AWS.EC2();
+		ssm = new AWS.SSM();
+		kms = new AWS.KMS();
 
-	validateRequiredSoftware: function(cb) {
-		cb(null, true);
+		cb(null);
+
 	},
 
-	getState: getState,
+	// TODO: Implement
+	_execInternal: function(method, callback) {
+		method.apply(context, callback);
+	},
 
+	//--------------------------------------------------
+	// Instance
+	//--------------------------------------------------
+	
 	getActive: getActiveInstances,
 
 	getPending: getPendingInstances,
 
 	getShuttingDownInstances: getShuttingDownInstances,
 
-	start: function(cb) {
-		return start(settings.fleetRole, settings.ssmInstanceProfile, settings.ImageId, settings.SnapshotId, settings.SecurityGroupId, settings.KeyName, cb);
-	},
+	getPublicDNS: getPublicDNS,
 
-	stop: function(cb) {
+	getPassword: getPassword,
 
-		getState(function(err, state) {
+	getAMI: getAMI,
 
-			if(err) {
-				cb(err);
-				return;
-			}
+	start: start,
 
-			var id;
-			
-			state.activeInstances[0].Tags.forEach(function(tag) {
+	stop: stop,
 
-				if(tag.Key === "aws:ec2spot:fleet-request-id") {
-					id = tag.Value;
-				}
-			});
+	deleteAMI: deleteAMI,
 
-			stop(id, state.activeInstances[0].InstanceId, cb);
+	updateAMI: updateAMI,
 
-		});
-		
-		
-	},
+	sendMessage: sendMessage,
 
-	getPublicDNS: function(cb) {
-
-		getState(function(err, state) {
-			if(err) {
-				cb(err);
-				return;
-			}
-			cb(null, state.activeInstances[0].PublicDnsName);
-		});
-
-	},
-
-	snapshot: function(existingSnapshotId, cb) {
-
-		getState(function(err, state) {
-			
-			snapshot(state.activeInstances[0].BlockDeviceMappings[0].Ebs.VolumeId, existingSnapshotId, cb);
-
-		});
-
-	},
-
-	findSnapshot: findSnapshot,
-
-	deleteSnapshot: deleteSnapshot,
-
-	_listInstanceProfiles: listInstanceProfiles,
+	_getInstanceProfiles: getInstanceProfiles,
 
 	_deleteInstanceProfile: deleteInstanceProfile,
 	
