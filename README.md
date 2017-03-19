@@ -6,6 +6,8 @@
 
 ![Image of CloudRig boot screen](http://i.imgur.com/vvTtmw6.png)
 
+**Note:** Steam must be loaded from an initial boot. There is a bug whereby if you open, close and then reopen steam it fails to bind the requisite port (27036) for streaming. Pretty rubbish, really.
+
 ## Setup
 
 ### ZeroTier
@@ -25,14 +27,15 @@ cloudrig will offer to make a VPN for you using the API, and handle the joining 
 
 cloudrig will offer to set up all the AWS infrastructure needed for cloudrig. You will be asked to confirm each step.
 
-## To install and run
+## Running
 
-    $ start
+    node app [-m]
 
-## To run in maintenance mode
+m = maintenance mode
 
-    cd cloudrig-cli
-    node app -m
+## Maintenance mode
+
+If you're tinkering with IAM roles you can use maintenance mode to clear out old instance profiles.
 
 # Attempts at optimising AWS
 

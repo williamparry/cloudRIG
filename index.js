@@ -1,11 +1,11 @@
 var fs = require('fs');
 var async = require('async');
-var cloudrig = require('../cloudrig-core');
 var inquirer = require('inquirer');
 var prettyjson = require('prettyjson');
 var figlet = require('figlet');
 var cowsay = require('cowsay');
 var argv = require('yargs').argv;
+var cloudrig = require('./lib');
 var homedir = require('os').homedir();
 var cloudrigDir = homedir + "/.cloudrig/";
 
@@ -224,7 +224,7 @@ function maintenanceMenu() {
 
 			case "Clean up Instance Profiles":
 				
-				cloudrig._Instance._listInstanceProfiles((err, data) => {
+				cloudrig._Instance._getInstanceProfiles((err, data) => {
 					
 					if(data.length > 0) {
 
