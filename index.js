@@ -1,3 +1,5 @@
+"use strict";
+
 var fs = require('fs');
 var async = require('async');
 var inquirer = require('inquirer');
@@ -10,7 +12,7 @@ var homedir = require('os').homedir();
 var cloudrigDir = homedir + "/.cloudrig/";
 
 if (!fs.existsSync(cloudrigDir)) {
-	fs.mkdirSync(cloudrigDir)
+	fs.mkdirSync(cloudrigDir);
 }
 
 function getConfigFile() {
@@ -38,14 +40,14 @@ function displayState(cb) {
 		var display = {
 
 			"Instances": {
-				"Active": state.AWS.activeInstances.length > 0 ? state.AWS.activeInstances.map(function(f) { return f.PublicDnsName }) : 0,
+				"Active": state.AWS.activeInstances.length > 0 ? state.AWS.activeInstances.map(function(f) { return f.PublicDnsName; }) : 0,
 				"Pending": state.AWS.pendingInstances.length,
 				"Shutting down": state.AWS.shuttingDownInstances.length
 			},
 			"ZeroTier": state.VPN,
 			"Steam": state.Steam,
 			"Microsoft Remote Desktop exists": state.RDP
-		}
+		};
 				
 		console.log(prettyjson.render(display, null, 4));
 
@@ -193,9 +195,9 @@ function configMenu(cb) {
 
 	inquirer.prompt(questions).then((answers) => {
 
-		if(Object.keys(answers).filter((v) => { return !v }).length > 0) {
+		if(Object.keys(answers).filter((v) => { return !v; }).length > 0) {
 			console.log("You have an empty value. Gotta have all dem values mate");
-			setupMenu(cb);
+			configMenu(cb);
 		} else {
 
 			Object.assign(config, answers);
@@ -205,7 +207,7 @@ function configMenu(cb) {
 
 		}
 	
-	})
+	});
 
 }
 
@@ -235,7 +237,7 @@ function maintenanceMenu() {
 							choices: data.map((profile) => {
 								return {
 									name: profile.InstanceProfileName
-								}
+								};
 							})
 
 						}]).then((answers) => {
@@ -256,7 +258,7 @@ function maintenanceMenu() {
 
 					}
 
-				})
+				});
 			break;
 
 			case "Create Security Group":
@@ -299,7 +301,7 @@ function advancedMenu(cb) {
 			break;
 			
 			case "VPN Start":
-				cloudrig._VPN.start(cb)
+				cloudrig._VPN.start(cb);
 			break;
 
 			case "Get Remote VPN Address":
@@ -334,7 +336,7 @@ function advancedMenu(cb) {
 					console.log("Password: " + password);
 					console.log("---------------------------------");
 					advancedMenu(cb);
-				})
+				});
 
 			break;
 			
@@ -408,7 +410,7 @@ function validateRequiredConfig(cb) {
 
 function validateAndSetConfig(cb) {
 	
-	console.log("Validating and setting config")
+	console.log("Validating and setting config");
 
 	var config = getConfigFile();
 	var configState = cloudrig.getRequiredConfig();
@@ -423,15 +425,15 @@ function validateAndSetConfig(cb) {
 					type: "input",
 					name: serviceConfigKey,
 					message: "Enter " + serviceConfigKey
-				})
+				});
 			}
-		})
+		});
 
 	});
 	
 	if(questions.length > 0) {
 		
-		console.log("You're missing some values in your config. Enter them below:")
+		console.log("You're missing some values in your config. Enter them below:");
 
 		inquirer.prompt(questions).then((answers) => {
 
@@ -447,7 +449,7 @@ function validateAndSetConfig(cb) {
 
 		console.log("Setting config:");
 		var displayConfig = Object.assign({}, config);
-		displayConfig["ZeroTierAPIKey"] = "(set)";
+		displayConfig.ZeroTierAPIKey = "(set)";
 		
 		console.log(prettyjson.render(displayConfig, null, 4));
 		cloudrig.setConfig(config);
@@ -492,7 +494,7 @@ function setup(cb) {
 
 		if(questions.length > 0) {
 
-			console.log("There's some things that need to be set up. I can do them for you.")
+			console.log("There's some things that need to be set up. I can do them for you.");
 
 			inquirer.prompt(questions.map((question, i) => {
 
@@ -500,7 +502,7 @@ function setup(cb) {
 					type: "confirm",
 					name: "q-" + i,
 					message: question.text
-				}
+				};
 
 			})).then((answers) => {
 				
@@ -509,10 +511,10 @@ function setup(cb) {
 				Object.keys(answers).forEach((answer, i) => {
 
 					if(answers[answer]) {
-						toProcess.push(questions[i].func)
+						toProcess.push(questions[i].func);
 					}
 
-				})
+				});
 
 				if(toProcess.length > 0) {
 
@@ -526,15 +528,15 @@ function setup(cb) {
 						console.log("OK done. Redoing setup to check it's all good");
 						setup(cb);
 
-					})
+					});
 
 				}
 
-			})
+			});
 
 		} else {
 
-			cb(null)
+			cb(null);
 
 		}
 			
@@ -568,7 +570,7 @@ function checkAndSetDefaultConfig() {
 	try {
 		getConfigFile();
 	} catch(ex) {
-		console.log("[!] Config file missing/broken - copying from config.sample.json")
+		console.log("[!] Config file missing/broken - copying from config.sample.json");
 		setConfigFile(JSON.parse(fs.readFileSync(process.cwd() + "/config.sample.json")));
 	}
 }
@@ -630,4 +632,4 @@ function startMaintenanceMode() {
 showIntro();
 checkAndSetDefaultConfig();
 setReporter();
-!argv.m ? startCloudrig() : startMaintenanceMode();
+(!argv.m ? startCloudrig : startMaintenanceMode)();
