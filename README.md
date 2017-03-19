@@ -4,7 +4,7 @@
 
 **Don't forget to turn it off**
 
-![Image of CloudRig boot screen](http://i.imgur.com/vvTtmw6.png)
+![Image of CloudRig boot screen](http://i.imgur.com/xmAH2Zt.png)
 
 **Note:** Steam must be loaded from an initial boot. There is a bug whereby if you open, close and then reopen steam it fails to bind the requisite port (27036) for streaming. Pretty rubbish, really.
 
@@ -29,7 +29,7 @@ cloudrig will offer to set up all the AWS infrastructure needed for cloudrig. Yo
 
 ## Running
 
-    node app [-m]
+    node index [-m]
 
 m = maintenance mode
 
