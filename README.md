@@ -37,7 +37,7 @@ m = maintenance mode
 
 If you're tinkering with IAM roles you can use maintenance mode to clear out old instance profiles.
 
-# Attempts at optimising AWS
+## Attempts at optimising AWS
 
 * A user should be able to remote into their machine
 * A user should not have to log in each time (it should remember them)
@@ -51,11 +51,11 @@ Could not mount as primary drive so tried to mount it as secondary drive, use Po
 
 2. Using a fixed EBS volume and symlinking the Steam and My Games folder
 
-Set hard links "mklink /J souce dest" but it did not persist steam login (even though looked through config). Looks as though there are registry entries. Messing around with registry copying etc probably wouldn't end well.
+Set hard links "mklink /J source dest" but it did not persist steam login (even though looked through config). Looks as though there are registry entries. Messing around with registry copying etc probably wouldn't end well.
 
 One option is to write a batch script that generates a shortcut to steam that has the username and password set as flags, but that would mean storing the creds in their EBS volume.
 
-## Solution
+### Solution
 
 1. Copy base AMI
 2. Get password using KeyPair
