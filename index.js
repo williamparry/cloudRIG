@@ -64,9 +64,9 @@ function mainMenu() {
 	cloudrig.getState(function(err, state) {
 		
 		if(state.AWS.activeInstances.length > 0) {
-			choices = choices.concat(["Stop CloudRig", "Open Remote Desktop", "Save changes"]);
+			choices = choices.concat(["Stop cloudRIG", "Open Remote Desktop", "Save changes"]);
 		} else {
-			choices = choices.concat(["Start CloudRig", "Setup"]);
+			choices = choices.concat(["Start cloudRIG", "Setup"]);
 		}
 
 		inquirer.prompt([{
@@ -86,7 +86,7 @@ function mainMenu() {
 
 				break;
 
-				case "Start CloudRig":
+				case "Start cloudRIG":
 
 					var start = cloudrig.start(function() {
 
@@ -99,7 +99,7 @@ function mainMenu() {
 
 				break;
 
-				case "Stop CloudRig":
+				case "Stop cloudRIG":
 
 					cloudrig.stop(function() {
 						
@@ -217,7 +217,7 @@ function maintenanceMenu() {
 		name: "cmd",
 		message: "Maintenance Menu",
 		type: "rawlist",
-		choices: ["Clean up Instance Profiles", "Create Security Group", "Create Key Pair", "Change Config", "Start cloudrig"] // TODO: Delete old snapshots
+		choices: ["Clean up Instance Profiles", "Create Security Group", "Create Key Pair", "Change Config", "Start cloudRIG"] // TODO: Delete old snapshots
 	}
 
 	]).then((answers) => {
@@ -273,7 +273,7 @@ function maintenanceMenu() {
 				configMenu(maintenanceMenu);
 			break;
 
-			case "Start cloudrig":
+			case "Start cloudRIG":
 				startCloudrig();
 			break;
 
@@ -447,7 +447,7 @@ function validateAndSetConfig(cb) {
 
 	} else {
 
-		console.log("Setting config:");
+		console.log("Setting config");
 		var displayConfig = Object.assign({}, config);
 		displayConfig.ZeroTierAPIKey = "(set)";
 		
@@ -550,14 +550,16 @@ function setReporter() {
 
 function showIntro() {
 
-	console.log(figlet.textSync('CloudRig', {
+	console.log(figlet.textSync('cloudRIG', {
 		font: 'Standard',
 		horizontalLayout: 'default',
 		verticalLayout: 'default'
 	}));
 
+	console.log("https://www.cloudrig.io");
+
 	console.log(cowsay.say({
-		text : "u know toilet duck\nor whatever\ni got some on my lip today\ncleaning the toilt\nit burned like fuck\ndon't recommend",
+		text : ["u know toilet duck\nor whatever\ni got some on my lip today\ncleaning the toilt\nit burned like fuck\ndon't recommend", "literally slept wiht like a drumstick of tandoori chicken\nand it stained my good sheets, my duvet inner, and my matress protector\nso i don't want to talk about it"][1],
 		e : "oO",
 		T : "U "
 	}));
