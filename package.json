@@ -18,7 +18,7 @@
     "async": "^2.1.4",
     "aws-sdk": "^2.6.15",
     "command-exists": "^1.0.2",
-    "cowsay": "^1.1.8",
+    "cowsay": "^1.1.9",
     "figlet": "^1.2.0",
     "inquirer": "^1.2.3",
     "prettyjson": "^1.2.1",
