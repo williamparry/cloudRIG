@@ -64,14 +64,14 @@ function mainMenu() {
 	cloudrig.getState(function(err, state) {
 		
 		if(state.AWS.activeInstances.length > 0) {
-			choices = choices.concat(["Stop cloudRIG", "Open Remote Desktop", "Save changes"]);
+			choices = choices.concat(["Stop cloudRIG", "Open Remote Desktop", "Save changes", "Set Steam auto login"]);
 		} else {
 			choices = choices.concat(["Start cloudRIG", "Setup"]);
 		}
 
 		inquirer.prompt([{
 			name: "cmd",
-			message: "bb u want 2?",
+			message: "Hello.",
 			type: "rawlist",
 			choices: choices
 		}
@@ -165,6 +165,51 @@ function mainMenu() {
 
 						}
 						
+					});
+
+				break;
+
+				case "Set Steam auto login":
+
+					console.log("----------");
+					console.log("[i] You should only need to do this once. The transport & packet inside is encrypted on your own cloudRIG.");
+					console.log("----------");
+					
+					inquirer.prompt([
+					{
+						type: "input",
+						name: "username",
+						message: "Steam ID"
+					},
+
+					{
+						type: "password",
+						name: "password",
+						message: "Steam password"
+					}
+					]).then((answers) => {
+
+						cloudrig.createSteamShortcut(answers.username, answers.password, () => {
+
+							inquirer.prompt([
+								{
+									type: "confirm",
+									name: "login",
+									message: "Log into Steam now?",
+									default: false
+								}
+							]).then((answers) => {
+
+								if(answers.login) {
+									login(mainMenu);
+									return;
+								}
+								mainMenu();
+
+							});
+
+						});
+
 					});
 
 				break;
