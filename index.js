@@ -59,12 +59,12 @@ function displayState(cb) {
 
 function mainMenu() {
 
-	var choices = ["Get State", "Advanced"];
+	var choices = ["Get State"];
 
 	cloudrig.getState(function(err, state) {
 		
 		if(state.AWS.activeInstances.length > 0) {
-			choices = choices.concat(["Stop cloudRIG", "Open Remote Desktop", "Save changes", "Set Steam auto login"]);
+			choices = choices.concat(["Stop cloudRIG", "Open cloudRIG", "Save changes"]);
 		} else {
 			choices = choices.concat(["Start cloudRIG", "Setup"]);
 		}
@@ -79,12 +79,6 @@ function mainMenu() {
 		]).then((answers) => {
 
 			switch(answers.cmd) {
-
-				case "Advanced":
-
-					advancedMenu(mainMenu);
-
-				break;
 
 				case "Start cloudRIG":
 
@@ -118,7 +112,7 @@ function mainMenu() {
 
 				break;
 
-				case "Open Remote Desktop":
+				case "Open cloudRIG":
 					
 					cloudrig.openRDP(function() {
 
@@ -165,51 +159,6 @@ function mainMenu() {
 
 						}
 						
-					});
-
-				break;
-
-				case "Set Steam auto login":
-
-					console.log("----------");
-					console.log("[i] You should only need to do this once. The transport & packet inside is encrypted on your own cloudRIG.");
-					console.log("----------");
-					
-					inquirer.prompt([
-					{
-						type: "input",
-						name: "username",
-						message: "Steam ID"
-					},
-
-					{
-						type: "password",
-						name: "password",
-						message: "Steam password"
-					}
-					]).then((answers) => {
-
-						cloudrig.createSteamShortcut(answers.username, answers.password, () => {
-
-							inquirer.prompt([
-								{
-									type: "confirm",
-									name: "login",
-									message: "Log into Steam now?",
-									default: false
-								}
-							]).then((answers) => {
-
-								if(answers.login) {
-									login(mainMenu);
-									return;
-								}
-								mainMenu();
-
-							});
-
-						});
-
 					});
 
 				break;
@@ -328,23 +277,30 @@ function maintenanceMenu() {
 
 }
 
-function advancedMenu(cb) {
+function advancedMenu() {
 
 	inquirer.prompt([{
 		name: "cmd",
 		message: "Advanced",
 		type: "rawlist",
-		choices: ["Back", "VPN Start", "Get Remote VPN Address", "Add Instance address to VPN", "Get Windows Password"]
+		choices: ["Ad hoc", "VPN Start", "Get Remote VPN Address", "Add Instance address to VPN", "Get Windows Password", "Start cloudRIG"]
 	}
 
 	]).then((answers) => {
 
 		switch(answers.cmd) {
-
-			case "Back":
-				cb();
-			break;
 			
+			case "Ad hoc":
+
+				console.log("Sending Ad Hoc");
+
+				cloudrig._Instance._sendAdHoc((err, d) => {
+					console.log("Response");
+					console.log(d);
+					advancedMenu()
+				});
+			break;
+
 			case "VPN Start":
 				cloudrig._VPN.start(cb);
 			break;
@@ -353,7 +309,7 @@ function advancedMenu(cb) {
 
 				cloudrig._Instance.sendMessage(cloudrig._VPN.getRemoteInfoCommand(), (err, resp) => {
 					console.log(JSON.parse(resp).address);
-					advancedMenu(cb);
+					advancedMenu();
 				});
 
 			break;
@@ -367,7 +323,7 @@ function advancedMenu(cb) {
 					cloudrig._VPN.addCloudrigAddressToVPN(address, () => {
 						cloudrig._Instance.sendMessage(cloudrig._VPN.getRemoteJoinCommand(), (err, resp) => {
 							console.log("Done");
-							advancedMenu(cb);
+							advancedMenu();
 						});
 					});
 				});
@@ -380,9 +336,13 @@ function advancedMenu(cb) {
 					console.log("---------------------------------");
 					console.log("Password: " + password);
 					console.log("---------------------------------");
-					advancedMenu(cb);
+					advancedMenu();
 				});
 
+			break;
+
+			case "Start cloudRIG":
+				startCloudrig();
 			break;
 			
 		}
@@ -649,7 +609,7 @@ function startCloudrig() {
 
 function startMaintenanceMode() {
 
-	console.log("------------ [!] MAINTENANCE MODE [!] ------------");
+	console.log("\n------------ [!] MAINTENANCE MODE [!] ------------\n");
 
 	async.series([
 
@@ -674,9 +634,27 @@ function startMaintenanceMode() {
 
 }
 
+function startAdvancedMode() {
+
+	console.log("\n------------ [!] ADVANCED MODE [!] ------------\n");
+
+	async.series([
+
+		validateRequiredSoftware,
+		validateAndSetConfig,
+		setup
+
+	], (err) => {
+
+		advancedMenu();
+
+	});
+
+}
+
 // INIT
 
 showIntro();
 checkAndSetDefaultConfig();
 setReporter();
-(!argv.m ? startCloudrig : startMaintenanceMode)();
+(argv.m ? startMaintenanceMode : argv.a ? startAdvancedMode : startCloudrig)();
