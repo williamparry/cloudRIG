@@ -76,7 +76,7 @@ function mainMenu() {
 			choices: choices
 		}
 
-		]).then((answers) => {
+		]).then(function(answers) {
 
 			switch(answers.cmd) {
 
@@ -106,7 +106,7 @@ function mainMenu() {
 
 				case "Setup":
 
-					configMenu(() => {
+					configMenu(function() {
 						setup(mainMenu);
 					});
 
@@ -138,7 +138,7 @@ function mainMenu() {
 						message: "Stop cloudrig?",
 						default: false
 					}
-					]).then((answers) => {
+					]).then(function(answers) {
 						
 						if(answers.shutdown) {
 
@@ -149,7 +149,7 @@ function mainMenu() {
 								message: "Delete existing image?",
 								default: true
 							}
-							]).then((answers) => {
+							]).then(function(answers) {
 								cloudrig.update(true, answers.del, mainMenu);
 							});
 
@@ -176,7 +176,7 @@ function configMenu(cb) {
 	var config = getConfigFile();
 	var questions = [];
 
-	Object.keys(config).forEach((configKey) => {
+	Object.keys(config).forEach(function(configKey) {
 
 		questions.push({
 			type: "input",
@@ -187,9 +187,9 @@ function configMenu(cb) {
 	
 	});
 
-	inquirer.prompt(questions).then((answers) => {
+	inquirer.prompt(questions).then(function(answers) {
 
-		if(Object.keys(answers).filter((v) => { return !v; }).length > 0) {
+		if(Object.keys(answers).filter(function(v) { return !v; }).length > 0) {
 			console.log("You have an empty value. Gotta have all dem values mate");
 			configMenu(cb);
 		} else {
@@ -214,13 +214,13 @@ function maintenanceMenu() {
 		choices: ["Clean up Instance Profiles", "Create Security Group", "Create Key Pair", "Change Config", "Start cloudRIG"] // TODO: Delete old snapshots
 	}
 
-	]).then((answers) => {
+	]).then(function(answers) {
 
 		switch(answers.cmd) {
 
 			case "Clean up Instance Profiles":
 				
-				cloudrig._Instance._getInstanceProfiles((err, data) => {
+				cloudrig._Instance._getInstanceProfiles(function(err, data) {
 					
 					if(data.length > 0) {
 
@@ -228,17 +228,17 @@ function maintenanceMenu() {
 							name: "toDelete",
 							message: "Select instance profiles to delete",
 							type: "checkbox",
-							choices: data.map((profile) => {
+							choices: data.map(function(profile) {
 								return {
 									name: profile.InstanceProfileName
 								};
 							})
 
-						}]).then((answers) => {
+						}]).then(function(answers) {
 
-							async.parallel(answers.toDelete.map((answer) => {
+							async.parallel(answers.toDelete.map(function(answer) {
 								return cloudrig._Instance._deleteInstanceProfile.bind(null, answer);
-							}), (err, results) => {
+							}), function(err, results) {
 								console.log("Done");
 								maintenanceMenu();
 							});
@@ -286,7 +286,7 @@ function advancedMenu() {
 		choices: ["Ad hoc", "VPN Start", "Get Remote VPN Address", "Add Instance address to VPN", "Get Windows Password", "Start cloudRIG"]
 	}
 
-	]).then((answers) => {
+	]).then(function(answers) {
 
 		switch(answers.cmd) {
 			
@@ -294,7 +294,7 @@ function advancedMenu() {
 
 				console.log("Sending Ad Hoc");
 
-				cloudrig._Instance._sendAdHoc((err, d) => {
+				cloudrig._Instance._sendAdHoc(function(err, d) {
 					console.log("Response");
 					console.log(d);
 					advancedMenu()
@@ -307,7 +307,7 @@ function advancedMenu() {
 
 			case "Get Remote VPN Address":
 
-				cloudrig._Instance.sendMessage(cloudrig._VPN.getRemoteInfoCommand(), (err, resp) => {
+				cloudrig._Instance.sendMessage(cloudrig._VPN.getRemoteInfoCommand(), function(err, resp) {
 					console.log(JSON.parse(resp).address);
 					advancedMenu();
 				});
@@ -316,12 +316,12 @@ function advancedMenu() {
 
 			case "Add Instance address to VPN":
 
-				cloudrig._Instance.sendMessage(cloudrig._VPN.getRemoteInfoCommand(), (err, resp) => {
+				cloudrig._Instance.sendMessage(cloudrig._VPN.getRemoteInfoCommand(), function(err, resp) {
 					console.log(resp);
 					var address = JSON.parse(resp).address;
 					console.log(address);
-					cloudrig._VPN.addCloudrigAddressToVPN(address, () => {
-						cloudrig._Instance.sendMessage(cloudrig._VPN.getRemoteJoinCommand(), (err, resp) => {
+					cloudrig._VPN.addCloudrigAddressToVPN(address, function() {
+						cloudrig._Instance.sendMessage(cloudrig._VPN.getRemoteJoinCommand(), function(err, resp) {
 							console.log("Done");
 							advancedMenu();
 						});
@@ -332,7 +332,7 @@ function advancedMenu() {
 
 			case "Get Windows Password":
 	
-				cloudrig._Instance.getPassword((err, password) => {
+				cloudrig._Instance.getPassword(function(err, password) {
 					console.log("---------------------------------");
 					console.log("Password: " + password);
 					console.log("---------------------------------");
@@ -355,7 +355,7 @@ function validateRequiredSoftware(cb) {
 
 	console.log("Validating required software");
 
-	cloudrig.validateRequiredSoftware((err, software) => {
+	cloudrig.validateRequiredSoftware(function(err, software) {
 		
 		if(err) {
 			cb(err);
@@ -364,7 +364,7 @@ function validateRequiredSoftware(cb) {
 
 		var errors = [];
 		
-		Object.keys(software).forEach((key) => {
+		Object.keys(software).forEach(function(key) {
 			if(!software[key]) {
 				errors.push(key + " is missing");
 			}
@@ -421,9 +421,9 @@ function validateAndSetConfig(cb) {
 	var configState = cloudrig.getRequiredConfig();
 	var questions = [];
 
-	Object.keys(configState).forEach((serviceName) => {
+	Object.keys(configState).forEach(function(serviceName) {
 
-		configState[serviceName].forEach((serviceConfigKey) => {
+		configState[serviceName].forEach(function(serviceConfigKey) {
 
 			if(!config[serviceConfigKey]) {
 				questions.push({
@@ -440,7 +440,7 @@ function validateAndSetConfig(cb) {
 		
 		console.log("You're missing some values in your config. Enter them below:");
 
-		inquirer.prompt(questions).then((answers) => {
+		inquirer.prompt(questions).then(function(answers) {
 
 			// TODO: cloudrig.validateRequiredConfig()
 
@@ -478,13 +478,13 @@ function setup(cb) {
 
 		var questions = [];
 
-		Object.keys(serviceSetups).forEach((serviceSetup) => {
+		Object.keys(serviceSetups).forEach(function(serviceSetup) {
 
 			var serviceSetupQuestions = serviceSetups[serviceSetup];
 
 			if(serviceSetupQuestions) {
 
-				serviceSetupQuestions.forEach((question) => {
+				serviceSetupQuestions.forEach(function(question) {
 
 					questions.push({
 						text: "[" + serviceSetup + "] " + question.q,
@@ -501,7 +501,7 @@ function setup(cb) {
 
 			console.log("There's some things that need to be set up. I can do them for you.");
 
-			inquirer.prompt(questions.map((question, i) => {
+			inquirer.prompt(questions.map(function(question, i) {
 
 				return {
 					type: "confirm",
@@ -509,11 +509,11 @@ function setup(cb) {
 					message: question.text
 				};
 
-			})).then((answers) => {
+			})).then(function(answers) {
 				
 				var toProcess = [];
 				
-				Object.keys(answers).forEach((answer, i) => {
+				Object.keys(answers).forEach(function(answer, i) {
 
 					if(answers[answer]) {
 						toProcess.push(questions[i].func);
@@ -590,7 +590,7 @@ function startCloudrig() {
 		validateAndSetConfig,
 		setup
 
-	], (err) => {
+	], function(err) {
 
 		if(err) {
 			console.log(cowsay.say({
@@ -617,7 +617,7 @@ function startMaintenanceMode() {
 		validateAndSetConfig,
 		cloudrig._maintenance
 
-	], (err) => {
+	], function(err) {
 
 		if(err) {
 			console.log(cowsay.say({
@@ -644,7 +644,7 @@ function startAdvancedMode() {
 		validateAndSetConfig,
 		setup
 
-	], (err) => {
+	], function(err) {
 
 		advancedMenu();
 
