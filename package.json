@@ -31,7 +31,6 @@
     "simple-plist": "^0.2.1",
     "socket.io": "^1.7.3",
     "token-substitute": "^1.1.1",
-    "ursa": "^0.9.4",
     "uuid": "^3.0.1",
     "yargs": "^7.0.1"
   }
