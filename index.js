@@ -10,6 +10,13 @@ var argv = require('yargs').argv;
 var cloudrig = require('./lib');
 var homedir = require('os').homedir();
 var cloudrigDir = homedir + "/.cloudrig/";
+var AWSCredsDir = homedir + "/.aws";
+var Nightmare = require('nightmare');		
+var nightmare = Nightmare({
+	show: true,
+	//openDevTools: true,
+	waitTimeout: 60000
+});
 
 if (!fs.existsSync(cloudrigDir)) {
 	fs.mkdirSync(cloudrigDir);
@@ -582,6 +589,69 @@ function checkAndSetDefaultConfig() {
 	}
 }
 
+function setAWSCreds(cb) {
+
+	// TODO: Make this more robust - remove fixed waits
+	nightmare
+	.viewport(1024, 768)
+	.goto('https://console.aws.amazon.com/iam/home?region=ap-southeast-2#/users$new?step=details')
+	.wait('#ap_email')
+	.evaluate(function () {
+		var el = document.createElement("div");
+		el.innerHTML = "Please log in. The wizard will do the rest."
+		el.style.position = "absolute";
+		el.style.top = "0";
+		el.style.left = "0";
+		el.style.zIndex = "10";
+		el.style.background = "orange";
+		el.style.width = "100%";
+		document.body.appendChild(el);
+		
+		return true;
+	})
+	.wait('#awsui-textfield-3')
+	.type('#awsui-textfield-3', 'cloudrig')
+	.wait(1000)
+	.click('awsui-checkbox[name=accessKey] label')
+	.wait(1000)
+	.click('awsui-button[text^=Next] button')
+	.wait(5000)
+	//.wait('[data-item-id] awsui-checkbox label')
+	.click('[data-item-id] awsui-checkbox label')
+	.wait(5000)
+	.click('.wizard-next-button')
+	//.wait('.permissions-summary')
+	.wait(1000)
+	.click('.wizard-next-button')
+	.wait('hide-credential a')
+	.click('hide-credential a')
+	.evaluate(function() {
+		return {
+			aws_access_key_id: document.querySelector('.access-key-id span').innerHTML.trim(),
+			aws_secret_access_key: document.querySelector('hide-credential .credential').innerHTML
+		}
+	})
+	.end()
+	.then(function (result) {
+		
+		var creds = `[cloudrig]
+aws_access_key_id = ${result.aws_access_key_id}
+aws_secret_access_key = ${result.aws_secret_access_key}`.trim();
+
+		if(fs.existsSync(AWSCredsDir + "/credentials")) {
+			var contents = fs.appendFileSync(AWSCredsDir + "/credentials", creds);
+		} else {
+			fs.writeFileSync(AWSCredsDir + "/credentials", creds);
+		}
+		cb(null);
+
+	})
+	.catch(function (err) {
+		cb(err);
+	});
+
+}
+
 function startCloudrig() {
 	
 	async.series([
@@ -652,9 +722,69 @@ function startAdvancedMode() {
 
 }
 
+function start() {
+	(argv.m ? startMaintenanceMode : argv.a ? startAdvancedMode : startCloudrig)();
+}
+
+function init() {
+
+	var credsExist = fs.existsSync(AWSCredsDir + "/credentials");
+
+	function done(err) {
+		if(err) {
+			console.log("Something went wrong, or timed out.");
+			console.log(err)
+			return;
+		}
+		
+		console.log("Done. Wait for 10s for it to propagate.");
+		setTimeout(start, 10000);
+		
+	}
+
+	if(!credsExist) {
+
+		inquirer.prompt([{
+			type: "confirm",
+			name: "startwizard",
+			message: "I can't find your AWS credentials file in ~/.aws/credentials. Start the cloudrig credentials wizard?",
+			default: true
+		}]).then(function(answers) {
+			if(answers.startwizard) {
+				setAWSCreds(done);
+			} else {
+				console.log("OK, when you've set it try again.")
+			}
+		});
+
+	} else if(fs.readFileSync(AWSCredsDir + "/credentials").toString().indexOf("[cloudrig]") === -1) {
+
+		console.log("[!] BACK UP YOUR EXISTING CREDENTIALS FILE FIRST [!]");
+		console.log("[!] BACK UP YOUR EXISTING CREDENTIALS FILE FIRST [!]");
+		console.log("[!] BACK UP YOUR EXISTING CREDENTIALS FILE FIRST [!]");
+
+		inquirer.prompt([{
+			type: "confirm",
+			name: "startwizard",
+			message: "Looks like your have a credentials file but no 'cloudrig' profile. Shall I make one?",
+			default: true
+		}]).then(function(answers) {
+			if(answers.startwizard) {
+				setAWSCreds(done);
+			} else {
+				console.log("OK, when cloudrig configuration starts, you can use another profile such as 'default'");
+				start();
+			}
+		});
+
+	} else {
+		start();
+	}
+}
+
 // INIT
 
 showIntro();
 checkAndSetDefaultConfig();
 setReporter();
-(argv.m ? startMaintenanceMode : argv.a ? startAdvancedMode : startCloudrig)();
+init();

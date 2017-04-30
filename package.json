@@ -24,6 +24,7 @@
     "external-ip": "^0.2.4",
     "figlet": "^1.2.0",
     "inquirer": "^1.2.2",
+    "nightmare": "^2.10.0",
     "node-rdpjs": "^0.3.0",
     "open": "0.0.5",
     "prettyjson": "^1.1.3",
