@@ -1,4 +1,4 @@
-# CloudRig
+# cloudRIG
 
 **Only tested on Mac so far**
 
@@ -32,6 +32,7 @@ cloudrig will offer to set up all the AWS infrastructure needed for cloudrig. Yo
     node index [--m][--a]
 
 m = maintenance mode
+
 a = advanced mode
 
 ## Maintenance mode
