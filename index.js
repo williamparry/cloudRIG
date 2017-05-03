@@ -11,7 +11,9 @@ var cloudrig = require('./lib');
 var homedir = require('os').homedir();
 var cloudrigDir = homedir + "/.cloudrig/";
 var AWSCredsDir = homedir + "/.aws";
+var AWSCredsFile = AWSCredsDir + "/credentials";
 var Nightmare = require('nightmare');		
+var open = require("open");
 var nightmare = Nightmare({
 	show: true,
 	//openDevTools: true,
@@ -52,8 +54,7 @@ function displayState(cb) {
 				"Shutting down": state.AWS.shuttingDownInstances.length
 			},
 			"ZeroTier": state.VPN,
-			"Steam": state.Steam,
-			"Microsoft Remote Desktop exists": state.RDP
+			"Steam": state.Steam
 		};
 				
 		console.log(prettyjson.render(display, null, 4));
@@ -197,15 +198,15 @@ function configMenu(cb) {
 	inquirer.prompt(questions).then(function(answers) {
 
 		if(Object.keys(answers).filter(function(v) { return !v; }).length > 0) {
-			console.log("You have an empty value. Gotta have all dem values mate");
+			console.log("You have an empty value. Gotta have all dem values mate.");
 			configMenu(cb);
 		} else {
 
 			Object.assign(config, answers);
 			setConfigFile(config);
 
-			cb();
-
+			validateAndSetConfig(cb);
+			
 		}
 	
 	});
@@ -636,12 +637,12 @@ function setAWSCreds(cb) {
 		
 		var creds = `[cloudrig]
 aws_access_key_id = ${result.aws_access_key_id}
-aws_secret_access_key = ${result.aws_secret_access_key}`.trim();
+aws_secret_access_key = ${result.aws_secret_access_key}`;
 
-		if(fs.existsSync(AWSCredsDir + "/credentials")) {
-			var contents = fs.appendFileSync(AWSCredsDir + "/credentials", creds);
+		if(fs.existsSync(AWSCredsFile)) {
+			var contents = fs.appendFileSync(AWSCredsFile, creds);
 		} else {
-			fs.writeFileSync(AWSCredsDir + "/credentials", creds);
+			fs.writeFileSync(AWSCredsFile, creds);
 		}
 		cb(null);
 
@@ -649,6 +650,12 @@ aws_secret_access_key = ${result.aws_secret_access_key}`.trim();
 	.catch(function (err) {
 		cb(err);
 	});
+
+}
+
+function setZeroTierKey(cb) {
+
+	//https://my.zerotier.com/
 
 }
 
@@ -728,58 +735,111 @@ function start() {
 
 function init() {
 
-	var credsExist = fs.existsSync(AWSCredsDir + "/credentials");
+	async.series([
 
-	function done(err) {
+		function(cb) {
+
+			var credsExist = fs.existsSync(AWSCredsFile);
+
+			function done(err) {
+				if(err) {
+					cb(err);
+					return;
+				}
+				
+				console.log("Done. Wait for 10s for it to propagate.");
+				setTimeout(start, 10000);
+				
+			}
+
+			if(!credsExist) {
+
+				inquirer.prompt([{
+					type: "confirm",
+					name: "startwizard",
+					message: "I can't find your AWS credentials file in ~/.aws/credentials. Start the cloudrig credentials wizard?",
+					default: true
+				}]).then(function(answers) {
+					if(answers.startwizard) {
+						setAWSCreds(done);
+					} else {
+						console.log("OK, when you've set it try again.")
+					}
+				});
+
+			} else if(fs.readFileSync(AWSCredsFile).toString().indexOf("[cloudrig]") === -1) {
+
+				console.log("\n");
+				console.log("[!] BACK UP YOUR EXISTING CREDENTIALS FILE FIRST [!]");
+				console.log("[!] BACK UP YOUR EXISTING CREDENTIALS FILE FIRST [!]");
+				console.log("[!] BACK UP YOUR EXISTING CREDENTIALS FILE FIRST [!]");
+				console.log("\n");
+
+				inquirer.prompt([{
+					type: "confirm",
+					name: "startwizard",
+					message: "Looks like your have a credentials file but no 'cloudrig' profile. Shall I make one?",
+					default: true
+				}]).then(function(answers) {
+					if(answers.startwizard) {
+						setAWSCreds(done);
+					} else {
+						console.log("OK, when cloudrig configuration starts, you can use another profile such as 'default'");
+						cb();
+					}
+				});
+
+			} else {
+				cb();
+			}
+		},
+
+		function(cb) {
+
+			var zeroTierAPIKey = getConfigFile().ZeroTierAPIKey;
+			
+			if(!zeroTierAPIKey) {
+
+				inquirer.prompt([{
+					type: "confirm",
+					name: "haszerotier",
+					message: "Do you a ZeroTier account and an API key?",
+					default: true
+				}]).then(function(answers) {
+
+					if(answers.haszerotier) {
+						
+						console.log("OK great, when it sets up next you will be asked to put in your API key");
+
+					} else {
+						
+						console.log("OK, make an account or login here and click \"[show]\" under \"API Access Tokens\"");
+						open("https://my.zerotier.com/");
+						
+
+					}
+
+					setTimeout(cb, 3000);
+
+				});
+
+			} else {
+				cb();
+			}
+
+		}
+	], function(err) {
+
 		if(err) {
 			console.log("Something went wrong, or timed out.");
-			console.log(err)
+			console.log(err);
 			return;
 		}
-		
-		console.log("Done. Wait for 10s for it to propagate.");
-		setTimeout(start, 10000);
-		
-	}
 
-	if(!credsExist) {
-
-		inquirer.prompt([{
-			type: "confirm",
-			name: "startwizard",
-			message: "I can't find your AWS credentials file in ~/.aws/credentials. Start the cloudrig credentials wizard?",
-			default: true
-		}]).then(function(answers) {
-			if(answers.startwizard) {
-				setAWSCreds(done);
-			} else {
-				console.log("OK, when you've set it try again.")
-			}
-		});
-
-	} else if(fs.readFileSync(AWSCredsDir + "/credentials").toString().indexOf("[cloudrig]") === -1) {
-
-		console.log("[!] BACK UP YOUR EXISTING CREDENTIALS FILE FIRST [!]");
-		console.log("[!] BACK UP YOUR EXISTING CREDENTIALS FILE FIRST [!]");
-		console.log("[!] BACK UP YOUR EXISTING CREDENTIALS FILE FIRST [!]");
-
-		inquirer.prompt([{
-			type: "confirm",
-			name: "startwizard",
-			message: "Looks like your have a credentials file but no 'cloudrig' profile. Shall I make one?",
-			default: true
-		}]).then(function(answers) {
-			if(answers.startwizard) {
-				setAWSCreds(done);
-			} else {
-				console.log("OK, when cloudrig configuration starts, you can use another profile such as 'default'");
-				start();
-			}
-		});
-
-	} else {
 		start();
-	}
+
+	});
+
 }
 
 // INIT
