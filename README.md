@@ -4,7 +4,7 @@
 
 **Don't forget to turn it off**
 
-![Image of CloudRig boot screen](http://i.imgur.com/xmAH2Zt.png)
+![Image of CloudRig boot screen](http://i.imgur.com/Y9RUrcE.png)
 
 **Note:** Steam must be loaded from an initial boot. There is a bug whereby if you open, close and then reopen steam it fails to bind the requisite port (27036) for streaming. Pretty rubbish, really.
 
