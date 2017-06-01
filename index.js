@@ -816,7 +816,6 @@ function init() {
 						console.log("OK, make an account or login here and click \"[show]\" under \"API Access Tokens\"");
 						open("https://my.zerotier.com/");
 						
-
 					}
 
 					setTimeout(cb, 3000);
