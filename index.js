@@ -7,18 +7,13 @@ var prettyjson = require('prettyjson');
 var figlet = require('figlet');
 var cowsay = require('cowsay');
 var argv = require('yargs').argv;
+var open = require("open");
 var cloudrig = require('./lib');
 var homedir = require('os').homedir();
 var cloudrigDir = homedir + "/.cloudrig/";
 var AWSCredsDir = homedir + "/.aws";
-var AWSCredsFile = AWSCredsDir + "/credentials";
-var Nightmare = require('nightmare');		
-var open = require("open");
-var nightmare = Nightmare({
-	show: true,
-	//openDevTools: true,
-	waitTimeout: 60000
-});
+var AWSCredsFile = AWSCredsDir + "/credentials";	
+
 
 if (!fs.existsSync(cloudrigDir)) {
 	fs.mkdirSync(cloudrigDir);
@@ -305,12 +300,12 @@ function advancedMenu() {
 				cloudrig._Instance._sendAdHoc(function(err, d) {
 					console.log("Response");
 					console.log(d);
-					advancedMenu()
+					advancedMenu();
 				});
 			break;
 
 			case "VPN Start":
-				cloudrig._VPN.start(cb);
+				cloudrig._VPN.start(advancedMenu);
 			break;
 
 			case "Get Remote VPN Address":
@@ -548,7 +543,6 @@ function setup(cb) {
 			});
 
 		} else {
-
 			cb(null);
 
 		}
@@ -586,11 +580,24 @@ function checkAndSetDefaultConfig() {
 		getConfigFile();
 	} catch(ex) {
 		console.log("[!] Config file missing/broken - copying from config.sample.json");
-		setConfigFile(JSON.parse(fs.readFileSync(process.cwd() + "/config.sample.json")));
+		setConfigFile(JSON.parse(fs.readFileSync(process.cwd() + "/lib/config.sample.json")));
 	}
 }
 
 function setAWSCreds(cb) {
+
+	console.log("Installing the wizard...");
+	var child_process = require('child_process');
+	child_process.execSync("npm install nightmare");
+
+	console.log("Done. Starting wizard...");
+	var Nightmare = require('nightmare');
+	var nightmare = Nightmare({
+		show: true,
+		//openDevTools: true,
+		waitTimeout: 60000
+	});
+
 
 	// TODO: Make this more robust - remove fixed waits
 	nightmare
@@ -598,8 +605,9 @@ function setAWSCreds(cb) {
 	.goto('https://console.aws.amazon.com/iam/home?region=ap-southeast-2#/users$new?step=details')
 	.wait('#ap_email')
 	.evaluate(function () {
+		/*jshint browser: true */
 		var el = document.createElement("div");
-		el.innerHTML = "Please log in. The wizard will do the rest."
+		el.innerHTML = "Please log in. The wizard will do the rest.";
 		el.style.position = "absolute";
 		el.style.top = "0";
 		el.style.left = "0";
@@ -630,7 +638,7 @@ function setAWSCreds(cb) {
 		return {
 			aws_access_key_id: document.querySelector('.access-key-id span').innerHTML.trim(),
 			aws_secret_access_key: document.querySelector('hide-credential .credential').innerHTML
-		}
+		};
 	})
 	.end()
 	.then(function (result) {
@@ -650,12 +658,6 @@ aws_secret_access_key = ${result.aws_secret_access_key}`;
 	.catch(function (err) {
 		cb(err);
 	});
-
-}
-
-function setZeroTierKey(cb) {
-
-	//https://my.zerotier.com/
 
 }
 
@@ -763,7 +765,7 @@ function init() {
 					if(answers.startwizard) {
 						setAWSCreds(done);
 					} else {
-						console.log("OK, when you've set it try again.")
+						console.log("OK, when you've set it try again.");
 					}
 				});
 
@@ -842,7 +844,6 @@ function init() {
 }
 
 // INIT
-
 showIntro();
 checkAndSetDefaultConfig();
 setReporter();

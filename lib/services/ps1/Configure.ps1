@@ -35,4 +35,4 @@ foreach ($service in $services) {
     Stop-Service $service -force
 }
 
-return 1
+return $LASTEXITCODE

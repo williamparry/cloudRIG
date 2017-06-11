@@ -1,2 +1,4 @@
 node_modules
 _AdHoc.ps1
+.jshint
+*.log

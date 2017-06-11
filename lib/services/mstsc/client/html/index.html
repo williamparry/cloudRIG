@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 
 <head>
@@ -6,56 +6,54 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
-	<meta name="description" content="">
-	<meta name="author" content="">
-	<link rel="icon" href="./img/favicon.ico">
 	<style>
+	html, body {
+		height: 100%;
+	}
 	body {
 		margin: 0;
-		background: url('./img/bg.png') no-repeat center center;
-		background-size: cover;
+		background-color: #4a6bb6;
+		background-image: url('data:image/png;base64,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'), linear-gradient(to right, #4a6bb6 0%,#192949 100%);
+		background-repeat: no-repeat, no-repeat;
+		background-position: center center, top left;
 	}
 	</style>
 
 	<title></title>
 
-	<script type="text/javascript" src="./socket.io/socket.io.js"></script>
-	<script type="text/javascript" src="./js/mstsc.js"></script>
-	<script type="text/javascript" src="./js/keyboard.js"></script>
-	<script type="text/javascript" src="./js/rle.js"></script>
-	<script type="text/javascript" src="./js/client.js"></script>
-	<script type="text/javascript" src="./js/canvas.js"></script>
+	<script src="./socket.io/socket.io.js"></script>
+	<script src="./js/mstsc.js"></script>
+	<script src="./js/keyboard.js"></script>
+	<script src="./js/rle.js"></script>
+	<script src="./js/client.js"></script>
+	<script src="./js/canvas.js"></script>
 	
 	<script>
-		
-		var client = null;
 
-		window.onload = function() {
+	var client = null;
 
-			var main = document.getElementById("main");
-			var canvas = document.getElementById("canvas");
+	window.onload = function() {
 
-			client = Mstsc.client.create(canvas);
+		var main = document.getElementById("main");
+		var canvas = document.getElementById("canvas");
 
-			canvas.style.display = 'inline';
-			canvas.width = window.innerWidth;
-			canvas.height = window.innerHeight;
+		client = Mstsc.client.create(canvas);
 
-			client.connect(function (err) {
-				window.close();
-			});
+		canvas.width = window.innerWidth;
+		canvas.height = window.innerHeight;
 
+		client.connect(function (err) {
+			window.close();
+		});
 
-		}
+	}
 
 	</script>
 
 </head>
 
 <body>
-	
-	<canvas id="canvas">
-
+	<canvas id="canvas"></canvas>
 </body>
 
 </html>
