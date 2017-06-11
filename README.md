@@ -6,7 +6,7 @@
 
 ![Image of CloudRig boot screen](http://i.imgur.com/Y9RUrcE.png)
 
-**Note:** Steam must be loaded from an initial boot. There is a bug whereby if you open, close and then reopen steam it fails to bind the requisite port (27036) for streaming. Pretty rubbish, really.
+**Note:** El Capitan has an issue with port 27036 not binding again if you close and open Steam (Steam must be loaded from an initial boot).
 
 ## Setup
 
@@ -29,7 +29,7 @@ cloudrig will offer to set up all the AWS infrastructure needed for cloudrig. Yo
 
 ## Running
 
-    node index [--m][--a]
+    node index [--m || --a]
 
 m = maintenance mode
 
