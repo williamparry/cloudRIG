@@ -17,16 +17,19 @@
 		background-repeat: no-repeat, no-repeat;
 		background-position: center center, top left;
 	}
+	canvas {
+		display: block;
+	}
 	</style>
 
 	<title></title>
 
-	<script src="./socket.io/socket.io.js"></script>
-	<script src="./js/mstsc.js"></script>
-	<script src="./js/keyboard.js"></script>
-	<script src="./js/rle.js"></script>
-	<script src="./js/client.js"></script>
-	<script src="./js/canvas.js"></script>
+	<script src="/socket.io/socket.io.js"></script>
+	<script src="/js/mstsc.js"></script>
+	<script src="/js/keyboard.js"></script>
+	<script src="/js/rle.js"></script>
+	<script src="/js/client.js"></script>
+	<script src="/js/canvas.js"></script>
 	
 	<script>
 
@@ -39,13 +42,18 @@
 
 		client = Mstsc.client.create(canvas);
 
-		canvas.width = window.innerWidth;
-		canvas.height = window.innerHeight;
+		canvas.width = document.body.clientWidth;
+		canvas.height = document.body.clientHeight;
 
 		client.connect(function (err) {
 			window.close();
 		});
 
+	}
+
+	window.onresize = function() {
+		canvas.width = document.body.clientWidth;
+		canvas.height = document.body.clientHeight;
 	}
 
 	</script>

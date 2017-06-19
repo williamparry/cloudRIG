@@ -22,6 +22,7 @@
     "express": "^4.15.2",
     "external-ip": "^0.2.4",
     "figlet": "^1.2.0",
+    "forever-monitor": "^1.7.1",
     "inquirer": "^1.2.2",
     "node-rdpjs": "github:williamparry/node-rdpjs",
     "open": "0.0.5",
