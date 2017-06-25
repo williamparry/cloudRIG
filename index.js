@@ -76,7 +76,7 @@ function mainMenu() {
 		var choices;
 
 		if(state.AWS.activeInstances.length > 0) {
-			choices = ["Stop cloudRIG", "Open cloudRIG"];
+			choices = ["Open cloudRIG", "Stop cloudRIG"];
 		} else {
 			choices = ["Start cloudRIG", "Setup"];
 		}
@@ -244,7 +244,7 @@ function advancedMenu(cb) {
 				break;
 
 				case "Join Host to VPN":
-					cloudrig._VPN.start(advancedMenu);
+					cloudrig._VPN.start(advancedMenu.bind(null, cb));
 				break;
 
 				case "Join Remote to VPN":
@@ -305,7 +305,7 @@ function advancedMenu(cb) {
 									return cloudrig._Instance._deleteInstanceProfile.bind(null, answer);
 								}), function(err, results) {
 									console.log("Done");
-									advancedMenu();
+									advancedMenu(cb);
 								});
 
 							});
@@ -313,7 +313,7 @@ function advancedMenu(cb) {
 						} else {
 
 							console.log("No instance profiles");
-							advancedMenu();
+							advancedMenu(cb);
 
 						}
 
@@ -321,11 +321,11 @@ function advancedMenu(cb) {
 				break;
 
 				case "Create Security Group":
-					cloudrig._Instance._createSecurityGroup(advancedMenu);
+					cloudrig._Instance._createSecurityGroup(advancedMenu.bind(null, cb));
 				break;
 
 				case "Create Key Pair":
-					cloudrig._Instance._createKeyPair(advancedMenu);
+					cloudrig._Instance._createKeyPair(advancedMenu.bind(null, cb));
 				break;
 				
 			}
