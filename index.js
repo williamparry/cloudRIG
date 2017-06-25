@@ -7,9 +7,13 @@ var prettyjson = require('prettyjson');
 var figlet = require('figlet');
 var cowsay = require('cowsay');
 var argv = require('yargs').argv;
+var open = require("open");
 var cloudrig = require('./lib');
 var homedir = require('os').homedir();
 var cloudrigDir = homedir + "/.cloudrig/";
+var AWSCredsDir = homedir + "/.aws";
+var AWSCredsFile = AWSCredsDir + "/credentials";	
+
 
 if (!fs.existsSync(cloudrigDir)) {
 	fs.mkdirSync(cloudrigDir);
@@ -45,8 +49,7 @@ function displayState(cb) {
 				"Shutting down": state.AWS.shuttingDownInstances.length
 			},
 			"ZeroTier": state.VPN,
-			"Steam": state.Steam,
-			"Microsoft Remote Desktop exists": state.RDP
+			"Steam": state.Steam
 		};
 				
 		console.log(prettyjson.render(display, null, 4));
@@ -190,15 +193,15 @@ function configMenu(cb) {
 	inquirer.prompt(questions).then(function(answers) {
 
 		if(Object.keys(answers).filter(function(v) { return !v; }).length > 0) {
-			console.log("You have an empty value. Gotta have all dem values mate");
+			console.log("You have an empty value. Gotta have all dem values mate.");
 			configMenu(cb);
 		} else {
 
 			Object.assign(config, answers);
 			setConfigFile(config);
 
-			cb();
-
+			validateAndSetConfig(cb);
+			
 		}
 	
 	});
@@ -297,12 +300,12 @@ function advancedMenu() {
 				cloudrig._Instance._sendAdHoc(function(err, d) {
 					console.log("Response");
 					console.log(d);
-					advancedMenu()
+					advancedMenu();
 				});
 			break;
 
 			case "VPN Start":
-				cloudrig._VPN.start(cb);
+				cloudrig._VPN.start(advancedMenu);
 			break;
 
 			case "Get Remote VPN Address":
@@ -540,7 +543,6 @@ function setup(cb) {
 			});
 
 		} else {
-
 			cb(null);
 
 		}
@@ -578,8 +580,85 @@ function checkAndSetDefaultConfig() {
 		getConfigFile();
 	} catch(ex) {
 		console.log("[!] Config file missing/broken - copying from config.sample.json");
-		setConfigFile(JSON.parse(fs.readFileSync(process.cwd() + "/config.sample.json")));
+		setConfigFile(JSON.parse(fs.readFileSync(process.cwd() + "/lib/config.sample.json")));
 	}
+}
+
+function setAWSCreds(cb) {
+
+	console.log("Installing the wizard...");
+	var child_process = require('child_process');
+	child_process.execSync("npm install nightmare");
+
+	console.log("Done. Starting wizard...");
+	var Nightmare = require('nightmare');
+	var nightmare = Nightmare({
+		show: true,
+		//openDevTools: true,
+		waitTimeout: 60000
+	});
+
+
+	// TODO: Make this more robust - remove fixed waits
+	nightmare
+	.viewport(1024, 768)
+	.goto('https://console.aws.amazon.com/iam/home?region=ap-southeast-2#/users$new?step=details')
+	.wait('#ap_email')
+	.evaluate(function () {
+		/*jshint browser: true */
+		var el = document.createElement("div");
+		el.innerHTML = "Please log in. The wizard will do the rest.";
+		el.style.position = "absolute";
+		el.style.top = "0";
+		el.style.left = "0";
+		el.style.zIndex = "10";
+		el.style.background = "orange";
+		el.style.width = "100%";
+		document.body.appendChild(el);
+		
+		return true;
+	})
+	.wait('#awsui-textfield-3')
+	.type('#awsui-textfield-3', 'cloudrig')
+	.wait(1000)
+	.click('awsui-checkbox[name=accessKey] label')
+	.wait(1000)
+	.click('awsui-button[text^=Next] button')
+	.wait(5000)
+	//.wait('[data-item-id] awsui-checkbox label')
+	.click('[data-item-id] awsui-checkbox label')
+	.wait(5000)
+	.click('.wizard-next-button')
+	//.wait('.permissions-summary')
+	.wait(1000)
+	.click('.wizard-next-button')
+	.wait('hide-credential a')
+	.click('hide-credential a')
+	.evaluate(function() {
+		return {
+			aws_access_key_id: document.querySelector('.access-key-id span').innerHTML.trim(),
+			aws_secret_access_key: document.querySelector('hide-credential .credential').innerHTML
+		};
+	})
+	.end()
+	.then(function (result) {
+		
+		var creds = `[cloudrig]
+aws_access_key_id = ${result.aws_access_key_id}
+aws_secret_access_key = ${result.aws_secret_access_key}`;
+
+		if(fs.existsSync(AWSCredsFile)) {
+			var contents = fs.appendFileSync(AWSCredsFile, creds);
+		} else {
+			fs.writeFileSync(AWSCredsFile, creds);
+		}
+		cb(null);
+
+	})
+	.catch(function (err) {
+		cb(err);
+	});
+
 }
 
 function startCloudrig() {
@@ -652,9 +731,120 @@ function startAdvancedMode() {
 
 }
 
-// INIT
+function start() {
+	(argv.m ? startMaintenanceMode : argv.a ? startAdvancedMode : startCloudrig)();
+}
 
+function init() {
+
+	async.series([
+
+		function(cb) {
+
+			var credsExist = fs.existsSync(AWSCredsFile);
+
+			function done(err) {
+				if(err) {
+					cb(err);
+					return;
+				}
+				
+				console.log("Done. Wait for 10s for it to propagate.");
+				setTimeout(start, 10000);
+				
+			}
+
+			if(!credsExist) {
+
+				inquirer.prompt([{
+					type: "confirm",
+					name: "startwizard",
+					message: "I can't find your AWS credentials file in ~/.aws/credentials. Start the cloudrig credentials wizard?",
+					default: true
+				}]).then(function(answers) {
+					if(answers.startwizard) {
+						setAWSCreds(done);
+					} else {
+						console.log("OK, when you've set it try again.");
+					}
+				});
+
+			} else if(fs.readFileSync(AWSCredsFile).toString().indexOf("[cloudrig]") === -1) {
+
+				console.log("\n");
+				console.log("[!] BACK UP YOUR EXISTING CREDENTIALS FILE FIRST [!]");
+				console.log("[!] BACK UP YOUR EXISTING CREDENTIALS FILE FIRST [!]");
+				console.log("[!] BACK UP YOUR EXISTING CREDENTIALS FILE FIRST [!]");
+				console.log("\n");
+
+				inquirer.prompt([{
+					type: "confirm",
+					name: "startwizard",
+					message: "Looks like your have a credentials file but no 'cloudrig' profile. Shall I make one?",
+					default: true
+				}]).then(function(answers) {
+					if(answers.startwizard) {
+						setAWSCreds(done);
+					} else {
+						console.log("OK, when cloudrig configuration starts, you can use another profile such as 'default'");
+						cb();
+					}
+				});
+
+			} else {
+				cb();
+			}
+		},
+
+		function(cb) {
+
+			var zeroTierAPIKey = getConfigFile().ZeroTierAPIKey;
+			
+			if(!zeroTierAPIKey) {
+
+				inquirer.prompt([{
+					type: "confirm",
+					name: "haszerotier",
+					message: "Do you a ZeroTier account and an API key?",
+					default: true
+				}]).then(function(answers) {
+
+					if(answers.haszerotier) {
+						
+						console.log("OK great, when it sets up next you will be asked to put in your API key");
+
+					} else {
+						
+						console.log("OK, make an account or login here and click \"[show]\" under \"API Access Tokens\"");
+						open("https://my.zerotier.com/");
+						
+					}
+
+					setTimeout(cb, 3000);
+
+				});
+
+			} else {
+				cb();
+			}
+
+		}
+	], function(err) {
+
+		if(err) {
+			console.log("Something went wrong, or timed out.");
+			console.log(err);
+			return;
+		}
+
+		start();
+
+	});
+
+}
+
+// INIT
 showIntro();
 checkAndSetDefaultConfig();
 setReporter();
-(argv.m ? startMaintenanceMode : argv.a ? startAdvancedMode : startCloudrig)();
+init();

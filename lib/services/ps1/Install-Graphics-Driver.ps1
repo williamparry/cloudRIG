@@ -5,4 +5,4 @@ $driverversion = $($drivers -match '<td class="gridItem">R.*\((.*)\)</td>' | Out
 (New-Object System.Net.WebClient).DownloadFile("http://us.download.nvidia.com/Windows/Quadro_Certified/$driverversion/$driverversion-quadro-grid-desktop-notebook-win10-64bit-international-whql.exe", "c:\crsetup\nvidia.exe")
 & c:\crsetup\nvidia.exe -s -clean -noreboot -noeula | Out-Null
 
-$LASTEXITCODE
+return $LASTEXITCODE
