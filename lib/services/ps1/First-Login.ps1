@@ -9,21 +9,22 @@ Set-ItemProperty $key HideDrivesWithNoMedia 0
 Set-ItemProperty $key Hidden 1
 Set-ItemProperty $key AutoCheckSelect 0
 $Shortcut = (New-Object -ComObject WScript.Shell).CreateShortcut("$home\Desktop\Disconnect.lnk")
-$Shortcut.TargetPath = "C:\Windows\System32\cmd.exe"
+$Shortcut.TargetPath = "C:\Windows\System32\tscon.exe"
 $Shortcut.Arguments = @'
-/c "for /F "tokens=1 delims=^> " %i in ('""%windir%\system32\qwinsta.exe" | "%windir%\system32\find.exe" /I "^>rdp-tcp#""') do "%windir%\system32\tscon.exe" %i /dest:console"
+%sessionname% /dest:console"
 '@
 $Shortcut.Save()
 $bytes = [System.IO.File]::ReadAllBytes("$home\Desktop\Disconnect.lnk")
 $bytes[0x15] = $bytes[0x15] -bor 0x20
 [System.IO.File]::WriteAllBytes("$home\Desktop\Disconnect.lnk", $bytes)
+
 Install-PackageProvider -Name NuGet -Force
+
 (New-Object System.Net.WebClient).DownloadFile("https://gallery.technet.microsoft.com/Device-Management-7fad2388/file/65051/2/DeviceManagement.zip", "c:\crsetup\DeviceManagement.zip")
 Expand-Archive -LiteralPath "c:\crsetup\DeviceManagement.zip" -DestinationPath "c:\crsetup\DeviceManagement"
 Move-Item "c:\crsetup\DeviceManagement\Release" $PSHOME\Modules\DeviceManagement
-(Get-Content "$PSHOME\Modules\DeviceManagement\DeviceManagement.psd1").replace("PowerShellHostVersion = '3.0'", "PowerShellHostVersion = ''") | Out-File "$PSHOME\Modules\DeviceManagement\DeviceManagement.psd1"
 Import-Module DeviceManagement
 Get-Device | where Name -eq "Microsoft Basic Display Adapter" | Disable-Device
 takeown /f C:\Windows\System32\Drivers\BasicDisplay.sys
-icacls C:\Windows\System32\Drivers\BasicDisplay.sys /grant "$env:username\`:F"
+icacls C:\Windows\System32\Drivers\BasicDisplay.sys /grant "$env:username`:F"
 move C:\Windows\System32\Drivers\BasicDisplay.sys C:\Windows\System32\Drivers\BasicDisplay.old

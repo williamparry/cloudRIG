@@ -19,6 +19,15 @@ if (!fs.existsSync(cloudrigDir)) {
 	fs.mkdirSync(cloudrigDir);
 }
 
+function criticalError(err) {
+	console.log(cowsay.say({
+		text : 'Something went wrong:',
+		e : "oO",
+		T : "U "
+	}));
+	console.log(prettyjson.render(err, null, 4));
+}
+
 function getConfigFile() {
 	return JSON.parse(userDataFileReader("config.json"));
 }
@@ -46,10 +55,10 @@ function displayState(cb) {
 			"Instances": {
 				"Active": state.AWS.activeInstances.length > 0 ? state.AWS.activeInstances.map(function(f) { return f.PublicDnsName; }) : 0,
 				"Pending": state.AWS.pendingInstances.length,
-				"Shutting down": state.AWS.shuttingDownInstances.length
+				"Shutting down": state.AWS.shuttingDownInstances.length,
+				"Stopped": state.AWS.stoppedInstances.length
 			},
-			"ZeroTier": state.VPN,
-			"Steam": state.Steam
+			"ZeroTier": state.VPN
 		};
 				
 		console.log(prettyjson.render(display, null, 4));
@@ -62,19 +71,21 @@ function displayState(cb) {
 
 function mainMenu() {
 
-	var choices = ["Get State"];
-
 	cloudrig.getState(function(err, state) {
 		
+		var choices;
+
 		if(state.AWS.activeInstances.length > 0) {
-			choices = choices.concat(["Stop cloudRIG", "Open cloudRIG", "Save changes"]);
+			choices = ["Stop cloudRIG", "Open cloudRIG"];
 		} else {
-			choices = choices.concat(["Start cloudRIG", "Setup"]);
+			choices = ["Start cloudRIG", "Setup"];
 		}
+
+		choices.push("Get State", "Advanced");
 
 		inquirer.prompt([{
 			name: "cmd",
-			message: "Hello.",
+			message: "Command:",
 			type: "rawlist",
 			choices: choices
 		}
@@ -85,14 +96,17 @@ function mainMenu() {
 
 				case "Start cloudRIG":
 
-					var start = cloudrig.start(function() {
+					cloudrig.start(function(err) {
 
+						if(err) {
+							criticalError(err);
+							mainMenu();
+							return;
+						}
 						console.log("K done");
 						mainMenu();
 
 					});
-
-					console.log(prettyjson.render(start, null, 4));
 
 				break;
 
@@ -132,36 +146,10 @@ function mainMenu() {
 
 				break;
 
-				case "Save changes":
+				case "Advanced":
 
-					inquirer.prompt([
-					{
-						type: "confirm",
-						name: "shutdown",
-						message: "Stop cloudrig?",
-						default: false
-					}
-					]).then(function(answers) {
-						
-						if(answers.shutdown) {
-
-							inquirer.prompt([
-							{
-								type: "confirm",
-								name: "del",
-								message: "Delete existing image?",
-								default: true
-							}
-							]).then(function(answers) {
-								cloudrig.update(true, answers.del, mainMenu);
-							});
-
-						} else {
-
-							cloudrig.update(false, false, mainMenu);
-
-						}
-						
+					advancedMenu(function() {
+						setup(mainMenu);
 					});
 
 				break;
@@ -208,147 +196,141 @@ function configMenu(cb) {
 
 }
 
-function maintenanceMenu() {
+function advancedMenu(cb) {
 
-	inquirer.prompt([{
-		name: "cmd",
-		message: "Maintenance Menu",
-		type: "rawlist",
-		choices: ["Clean up Instance Profiles", "Create Security Group", "Create Key Pair", "Change Config", "Start cloudRIG"] // TODO: Delete old snapshots
-	}
+	cloudrig.getState(function(err, state) {
 
-	]).then(function(answers) {
+		var choices = ["« Back"];
 
-		switch(answers.cmd) {
-
-			case "Clean up Instance Profiles":
-				
-				cloudrig._Instance._getInstanceProfiles(function(err, data) {
-					
-					if(data.length > 0) {
-
-						inquirer.prompt([{
-							name: "toDelete",
-							message: "Select instance profiles to delete",
-							type: "checkbox",
-							choices: data.map(function(profile) {
-								return {
-									name: profile.InstanceProfileName
-								};
-							})
-
-						}]).then(function(answers) {
-
-							async.parallel(answers.toDelete.map(function(answer) {
-								return cloudrig._Instance._deleteInstanceProfile.bind(null, answer);
-							}), function(err, results) {
-								console.log("Done");
-								maintenanceMenu();
-							});
-
-						});
-
-					} else {
-
-						console.log("No instance profiles");
-						maintenanceMenu();
-
-					}
-
-				});
-			break;
-
-			case "Create Security Group":
-				cloudrig._Instance._createSecurityGroup(maintenanceMenu);
-			break;
-
-			case "Create Key Pair":
-				cloudrig._Instance._createKeyPair(maintenanceMenu);
-			break;
-
-			case "Change Config":
-				configMenu(maintenanceMenu);
-			break;
-
-			case "Start cloudRIG":
-				startCloudrig();
-			break;
-
+		if(state.AWS.activeInstances.length > 0) {
+			choices.push(
+				"Send Command",
+				"Join Remote to VPN",
+				"Get Remote VPN Address"
+			);
 		}
 
-	});
+		choices.push(
+			"Join Host to VPN",
+			"Get Windows Password",
+			"Create Key Pair",
+			"Clean up Instance Profiles"
+		);
 
-}
+		inquirer.prompt([{
+			name: "cmd",
+			message: "Advanced",
+			type: "rawlist",
+			choices: choices
+		}
 
-function advancedMenu() {
+		]).then(function(answers) {
 
-	inquirer.prompt([{
-		name: "cmd",
-		message: "Advanced",
-		type: "rawlist",
-		choices: ["Ad hoc", "VPN Start", "Get Remote VPN Address", "Add Instance address to VPN", "Get Windows Password", "Start cloudRIG"]
-	}
+			switch(answers.cmd) {
+				
+				case "« Back":
+					cb();
+				break;
 
-	]).then(function(answers) {
+				case "Send command":
 
-		switch(answers.cmd) {
-			
-			case "Ad hoc":
+					console.log("Sending Ad Hoc");
 
-				console.log("Sending Ad Hoc");
+					cloudrig._Instance._sendAdHoc(function(err, d) {
+						console.log("Response");
+						console.log(d);
+						advancedMenu();
+					});
+				break;
 
-				cloudrig._Instance._sendAdHoc(function(err, d) {
-					console.log("Response");
-					console.log(d);
-					advancedMenu();
-				});
-			break;
+				case "Join Host to VPN":
+					cloudrig._VPN.start(advancedMenu);
+				break;
 
-			case "VPN Start":
-				cloudrig._VPN.start(advancedMenu);
-			break;
+				case "Join Remote to VPN":
 
-			case "Get Remote VPN Address":
-
-				cloudrig._Instance.sendMessage(cloudrig._VPN.getRemoteInfoCommand(), function(err, resp) {
-					console.log(JSON.parse(resp).address);
-					advancedMenu();
-				});
-
-			break;
-
-			case "Add Instance address to VPN":
-
-				cloudrig._Instance.sendMessage(cloudrig._VPN.getRemoteInfoCommand(), function(err, resp) {
-					console.log(resp);
-					var address = JSON.parse(resp).address;
-					console.log(address);
-					cloudrig._VPN.addCloudrigAddressToVPN(address, function() {
-						cloudrig._Instance.sendMessage(cloudrig._VPN.getRemoteJoinCommand(), function(err, resp) {
-							console.log("Done");
-							advancedMenu();
+					cloudrig._Instance.sendMessage(cloudrig._VPN.getRemoteInfoCommand(), function(err, resp) {
+						console.log(resp);
+						var address = JSON.parse(resp).address;
+						console.log(address);
+						cloudrig._VPN.addCloudrigAddressToVPN(address, function() {
+							cloudrig._Instance.sendMessage(cloudrig._VPN.getRemoteJoinCommand(), function(err, resp) {
+								console.log("Done");
+								advancedMenu();
+							});
 						});
 					});
-				});
 
-			break;
+				break;
 
-			case "Get Windows Password":
-	
-				cloudrig._Instance.getPassword(function(err, password) {
-					console.log("---------------------------------");
-					console.log("Password: " + password);
-					console.log("---------------------------------");
-					advancedMenu();
-				});
+				case "Get Remote VPN Address":
 
-			break;
+					cloudrig._Instance.sendMessage(cloudrig._VPN.getRemoteInfoCommand(), function(err, resp) {
+						console.log(JSON.parse(resp).address);
+						advancedMenu();
+					});
 
-			case "Start cloudRIG":
-				startCloudrig();
-			break;
-			
-		}
+				break;
+				
+				case "Get Windows Password":
+		
+					cloudrig._Instance.getPassword(function(err, password) {
+						console.log("---------------------------------");
+						console.log("Password: " + password);
+						console.log("---------------------------------");
+						advancedMenu();
+					});
+
+				break;
+
+				case "Clean up Instance Profiles":
+					
+					cloudrig._Instance._getInstanceProfiles(function(err, data) {
+						
+						if(data.length > 0) {
+
+							inquirer.prompt([{
+								name: "toDelete",
+								message: "Select instance profiles to delete",
+								type: "checkbox",
+								choices: data.map(function(profile) {
+									return {
+										name: profile.InstanceProfileName
+									};
+								})
+
+							}]).then(function(answers) {
+
+								async.parallel(answers.toDelete.map(function(answer) {
+									return cloudrig._Instance._deleteInstanceProfile.bind(null, answer);
+								}), function(err, results) {
+									console.log("Done");
+									advancedMenu();
+								});
+
+							});
+
+						} else {
+
+							console.log("No instance profiles");
+							advancedMenu();
+
+						}
+
+					});
+				break;
+
+				case "Create Security Group":
+					cloudrig._Instance._createSecurityGroup(advancedMenu);
+				break;
+
+				case "Create Key Pair":
+					cloudrig._Instance._createKeyPair(advancedMenu);
+				break;
+				
+			}
+
+		});
 
 	});
 
@@ -672,11 +654,7 @@ function startCloudrig() {
 	], function(err) {
 
 		if(err) {
-			console.log(cowsay.say({
-				text : `Something catastrophic went wrong bb:\n\n${err}`,
-				e : "oO",
-				T : "U "
-			}));
+			criticalError(err);
 			return;
 		}
 
@@ -684,55 +662,6 @@ function startCloudrig() {
 
 	});
 
-}
-
-function startMaintenanceMode() {
-
-	console.log("\n------------ [!] MAINTENANCE MODE [!] ------------\n");
-
-	async.series([
-
-		validateRequiredSoftware,
-		validateAndSetConfig,
-		cloudrig._maintenance
-
-	], function(err) {
-
-		if(err) {
-			console.log(cowsay.say({
-				text : "Something catastrophic went wrong.",
-				e : "oO",
-				T : "U "
-			}));
-			return;
-		}
-
-		maintenanceMenu();
-
-	});
-
-}
-
-function startAdvancedMode() {
-
-	console.log("\n------------ [!] ADVANCED MODE [!] ------------\n");
-
-	async.series([
-
-		validateRequiredSoftware,
-		validateAndSetConfig,
-		setup
-
-	], function(err) {
-
-		advancedMenu();
-
-	});
-
-}
-
-function start() {
-	(argv.m ? startMaintenanceMode : argv.a ? startAdvancedMode : startCloudrig)();
 }
 
 function init() {
@@ -837,7 +766,7 @@ function init() {
 			return;
 		}
 
-		start();
+		startCloudrig();
 
 	});
 
