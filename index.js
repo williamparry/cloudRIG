@@ -232,15 +232,27 @@ function advancedMenu(cb) {
 					cb();
 				break;
 
-				case "Send command":
+				case "Send Command":
 
 					console.log("Sending Ad Hoc");
 
-					cloudrig._Instance._sendAdHoc(function(err, d) {
-						console.log("Response");
-						console.log(d);
-						advancedMenu();
+					inquirer.prompt([{
+						name: "sendCMD",
+						message: "Command (empty will run .adhoc.ps1)",
+						type: "input"
+					}]).then(function(answers) {
+						
+						cloudrig._Instance._sendAdHoc(function(err, d) {
+
+							console.log("Response");
+							console.log(d);
+							
+							advancedMenu();
+
+						}, answers.sendCMD);
+					
 					});
+					
 				break;
 
 				case "Join Host to VPN":
