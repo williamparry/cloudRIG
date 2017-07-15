@@ -268,7 +268,7 @@ function advancedMenu(cb) {
 						cloudrig._VPN.addCloudrigAddressToVPN(address, function() {
 							cloudrig._Instance.sendMessage(cloudrig._VPN.getRemoteJoinCommand(), function(err, resp) {
 								console.log("Done");
-								advancedMenu();
+								advancedMenu(cb);
 							});
 						});
 					});
@@ -279,7 +279,7 @@ function advancedMenu(cb) {
 
 					cloudrig._Instance.sendMessage(cloudrig._VPN.getRemoteInfoCommand(), function(err, resp) {
 						console.log(JSON.parse(resp).address);
-						advancedMenu();
+						advancedMenu(cb);
 					});
 
 				break;
@@ -290,7 +290,7 @@ function advancedMenu(cb) {
 						console.log("---------------------------------");
 						console.log("Password: " + password);
 						console.log("---------------------------------");
-						advancedMenu();
+						advancedMenu(cb);
 					});
 
 				break;
