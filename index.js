@@ -559,12 +559,6 @@ function showIntro() {
 
 	console.log("https://www.cloudrig.io");
 
-	console.log(cowsay.say({
-		text : ["u know toilet duck\nor whatever\ni got some on my lip today\ncleaning the toilt\nit burned like fuck\ndon't recommend", "literally slept wiht like a drumstick of tandoori chicken\nand it stained my good sheets, my duvet inner, and my matress protector\nso i don't want to talk about it"][1],
-		e : "oO",
-		T : "U "
-	}));
-
 }
 
 function checkAndSetDefaultConfig() {
