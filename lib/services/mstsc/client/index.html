@@ -45,16 +45,25 @@
 
 		canvas.width = document.body.clientWidth;
 		canvas.height = document.body.clientHeight;
-
+		
 		client.connect(function (err) {
 			window.close();
 		});
 
 	}
 
+	var d;
+
 	window.onresize = function() {
-		canvas.width = document.body.clientWidth;
-		canvas.height = document.body.clientHeight;
+
+		clearTimeout(d);
+		
+		d = setTimeout(function() {
+
+			window.location.reload();
+
+		}, 1000);
+
 	}
 
 	</script>

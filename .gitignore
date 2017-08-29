@@ -2,3 +2,4 @@ node_modules
 .adhoc.ps1
 .jshint
 *.log
+.DS_STORE
