@@ -8,6 +8,7 @@ cloudRIG manages the VPN and requisite AWS setup for you after you've configured
 
 This was built upon excellent work here by these folks:
 
+* https://nexus.vert.gg/gaming-on-amazon-s-ec2-83b178f47a34
 * https://lg.io/2015/07/05/revised-and-much-faster-run-your-own-highend-cloud-gaming-service-on-ec2.html
 * https://github.com/lg/cloudy-gamer
 
