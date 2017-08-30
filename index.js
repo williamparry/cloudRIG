@@ -247,7 +247,7 @@ function advancedMenu(cb) {
 							console.log("Response");
 							console.log(d);
 							
-							advancedMenu();
+							advancedMenu(cb);
 
 						}, answers.sendCMD);
 					
@@ -556,8 +556,12 @@ function showIntro() {
 		horizontalLayout: 'default',
 		verticalLayout: 'default'
 	}));
-
-	console.log("https://www.cloudrig.io");
+	
+	console.log(cowsay.say({
+		text : "https://www.cloudrig.io",
+		e : "oO",
+		T : "U "
+	}));
 
 }
 

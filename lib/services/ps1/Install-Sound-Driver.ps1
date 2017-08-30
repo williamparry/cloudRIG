@@ -8,4 +8,4 @@ Expand-Archive -LiteralPath "c:\crsetup\vbcable.zip" -DestinationPath "c:\crsetu
 Import-Certificate -FilePath "c:\crsetup\vbcable\vbcable.cer" -CertStoreLocation 'Cert:\LocalMachine\TrustedPublisher'
 & c:\crsetup\vbcable\VBCABLE_Setup_x64.exe -i | Out-Null
 
-return $LASTEXITCODE
+return "ok"
