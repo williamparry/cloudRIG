@@ -576,83 +576,6 @@ function checkAndSetDefaultConfig() {
 	}
 }
 
-function setAWSCreds(cb) {
-
-	console.log("Installing the wizard...");
-	var child_process = require('child_process');
-	child_process.execSync("npm install nightmare");
-
-	console.log("Done. Starting wizard...");
-	var Nightmare = require('nightmare');
-	var nightmare = Nightmare({
-		show: true,
-		//openDevTools: true,
-		waitTimeout: 60000
-	});
-
-
-	// TODO: Make this more robust - remove fixed waits
-	nightmare
-	.viewport(1024, 768)
-	.goto('https://console.aws.amazon.com/iam/home?region=ap-southeast-2#/users$new?step=details')
-	.wait('#ap_email')
-	.evaluate(function () {
-		/*jshint browser: true */
-		var el = document.createElement("div");
-		el.innerHTML = "Please log in. The wizard will do the rest.";
-		el.style.position = "absolute";
-		el.style.top = "0";
-		el.style.left = "0";
-		el.style.zIndex = "10";
-		el.style.background = "orange";
-		el.style.width = "100%";
-		document.body.appendChild(el);
-		
-		return true;
-	})
-	.wait('#awsui-textfield-3')
-	.type('#awsui-textfield-3', 'cloudrig')
-	.wait(1000)
-	.click('awsui-checkbox[name=accessKey] label')
-	.wait(1000)
-	.click('awsui-button[text^=Next] button')
-	.wait(5000)
-	//.wait('[data-item-id] awsui-checkbox label')
-	.click('[data-item-id] awsui-checkbox label')
-	.wait(5000)
-	.click('.wizard-next-button')
-	//.wait('.permissions-summary')
-	.wait(1000)
-	.click('.wizard-next-button')
-	.wait('hide-credential a')
-	.click('hide-credential a')
-	.evaluate(function() {
-		return {
-			aws_access_key_id: document.querySelector('.access-key-id span').innerHTML.trim(),
-			aws_secret_access_key: document.querySelector('hide-credential .credential').innerHTML
-		};
-	})
-	.end()
-	.then(function (result) {
-		
-		var creds = `[cloudrig]
-aws_access_key_id = ${result.aws_access_key_id}
-aws_secret_access_key = ${result.aws_secret_access_key}`;
-
-		if(fs.existsSync(AWSCredsFile)) {
-			var contents = fs.appendFileSync(AWSCredsFile, creds);
-		} else {
-			fs.writeFileSync(AWSCredsFile, creds);
-		}
-		cb(null);
-
-	})
-	.catch(function (err) {
-		cb(err);
-	});
-
-}
-
 function startCloudrig() {
 	
 	async.series([
@@ -697,12 +620,12 @@ function init() {
 
 				inquirer.prompt([{
 					type: "confirm",
-					name: "startwizard",
-					message: "I can't find your AWS credentials file in ~/.aws/credentials. Start the cloudrig credentials wizard?",
+					name: "openconsole",
+					message: "I can't find your AWS credentials file in ~/.aws/credentials. Open AWS console?",
 					default: true
 				}]).then(function(answers) {
-					if(answers.startwizard) {
-						setAWSCreds(done);
+					if(answers.openconsole) {
+						open("https://console.aws.amazon.com/");
 					} else {
 						console.log("OK, when you've set it try again.");
 					}
@@ -718,12 +641,12 @@ function init() {
 
 				inquirer.prompt([{
 					type: "confirm",
-					name: "startwizard",
-					message: "Looks like your have a credentials file but no 'cloudrig' profile. Shall I make one?",
+					name: "openconsole",
+					message: "Looks like your have a credentials file but no 'cloudrig' profile. Open AWS console?",
 					default: true
 				}]).then(function(answers) {
-					if(answers.startwizard) {
-						setAWSCreds(done);
+					if(answers.openconsole) {
+						open("https://console.aws.amazon.com/");
 					} else {
 						console.log("OK, when cloudrig configuration starts, you can use another profile such as 'default'");
 						cb();
