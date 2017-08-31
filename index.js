@@ -115,7 +115,7 @@ function mainMenu() {
 					cloudrig.stop(function() {
 						
 						console.log("Stopped");
-						mainMenu();
+						setup(mainMenu);
 
 					});
 
@@ -205,6 +205,7 @@ function advancedMenu(cb) {
 		if(state.AWS.activeInstances.length > 0) {
 			choices.push(
 				"Send Command",
+				"Restart Remote Steam",
 				"Join Remote to VPN",
 				"Get Remote VPN Address"
 			);
@@ -240,6 +241,11 @@ function advancedMenu(cb) {
 						name: "sendCMD",
 						message: "Command (empty will run .adhoc.ps1)",
 						type: "input"
+					}, {
+						type: "confirm",
+						name: "asAdmin",
+						message: "As logged-in Administrator user?",
+						default: false
 					}]).then(function(answers) {
 						
 						cloudrig._Instance._sendAdHoc(function(err, d) {
@@ -249,10 +255,16 @@ function advancedMenu(cb) {
 							
 							advancedMenu(cb);
 
-						}, answers.sendCMD);
+						}, answers.sendCMD, answers.asAdmin);
 					
 					});
 					
+				break;
+
+				case "Restart Remote Steam":
+					
+					cloudrig._Instance._restartSteam(cb);
+									
 				break;
 
 				case "Join Host to VPN":

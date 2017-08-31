@@ -47,7 +47,7 @@ Write-Host "You should see that this computer is available for streaming.`n`nPre
 
 $host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
 
-& "C:\Users\Administrator\Desktop\Disconnect.lnk" | Out-Null' -Force
+& "C:\Users\Administrator\Desktop\Disconnect.lnk"' -Force
 
 Set-Content -Path "C:\Users\Administrator\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\First-Logon.bat" -Value '@echo off
 PowerShell.exe -File c:\crsetup\First-Logon.ps1
