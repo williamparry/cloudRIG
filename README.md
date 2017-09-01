@@ -6,6 +6,8 @@ cloudRIG manages the VPN and requisite AWS setup for you after you've configured
 
 ![cloudRIG boot screen](https://user-images.githubusercontent.com/348091/29874010-a503a848-8d95-11e7-8afb-b61ab34fc4ad.png)
 
+![cloudRIG open screen](https://user-images.githubusercontent.com/348091/29967259-1b26157a-8f16-11e7-86c3-7354624c5c02.png)
+
 ## History
 
 This was built upon excellent work by these folks:
