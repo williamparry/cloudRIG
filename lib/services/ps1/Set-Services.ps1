@@ -1,7 +1,3 @@
-# Set Services
-
-New-Item -ItemType directory -Path "c:\crsetup" -Force
-
 # Disable some more scheduled tasks
 Disable-ScheduledTask -TaskName 'ServerManager' -TaskPath '\Microsoft\Windows\Server Manager'
 Disable-ScheduledTask -TaskName 'ScheduledDefrag' -TaskPath '\Microsoft\Windows\Defrag'

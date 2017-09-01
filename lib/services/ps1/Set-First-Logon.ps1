@@ -1,4 +1,6 @@
-Set-Content -Path "c:\crsetup\First-Logon.ps1" -Value 'Write-Host "Welcome to cloudRIG one-time setup" -BackgroundColor Black
+New-Item -ItemType directory -Path "c:\cloudRIG\Setup\First-Logon" -Force | Out-Null
+
+Set-Content -Path "c:\cloudRIG\Setup\First-Logon\First-Logon.ps1" -Value 'Write-Host "Welcome to cloudRIG one-time setup" -BackgroundColor Black
 
 Write-Host "`nConfiguring..."
 
@@ -50,7 +52,7 @@ $host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
 & "C:\Users\Administrator\Desktop\Disconnect.lnk"' -Force
 
 Set-Content -Path "C:\Users\Administrator\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\First-Logon.bat" -Value '@echo off
-PowerShell.exe -File c:\crsetup\First-Logon.ps1
+PowerShell.exe -File c:\cloudRIG\Setup\First-Logon\First-Logon.ps1
 (goto) 2>nul & del "%~f0"' -Force
 
 return "ok"
