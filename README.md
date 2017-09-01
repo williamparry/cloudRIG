@@ -14,6 +14,8 @@ This was built upon excellent work by these folks:
 * https://lg.io/2015/07/05/revised-and-much-faster-run-your-own-highend-cloud-gaming-service-on-ec2.html
 * https://github.com/lg/cloudy-gamer
 
+If cloudRIG doesn't do it for you, check out cloudy-gamer; a whole lot of the Powershell in cloudRIG is by the author of it.
+
 ## Cost
 
 Originally cloudRIG was built to use AWS Spot Fleet instances, but the price was consistently too high so I changed it to be on-demand with a more stable $1USD/hr-ish (best to check beforehand).
@@ -23,8 +25,6 @@ There's the cost of storing the machine when it's off and maybe other costs invo
 ## Performance
 
 Varies wildly. Check http://www.cloudping.info/ for the best region to use.
-
-
 
 ## Notice
 
@@ -43,9 +43,22 @@ cloudRIG will offer to make a VPN for you using the API, and handle the joining 
 
 ### AWS
 
-* You can use your existing credentials if you want, or make an IAM user
+* You can use your existing credentials if you want, or make an IAM user with Administrator privileges. This is so that cloudRIG can make the requisite AWS infrastructure.
 * Use the [shared credentials file](http://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/loading-node-credentials-shared.html)
     * Make a note of it, you will need it for the first run
 * You will need to apply for the EC2 g2.2xlarge instance type limit increase. Only takes a minute.
 
 cloudRIG will offer to set up all the AWS infrastructure needed for cloudrig. You will be asked to confirm each step.
+
+### Running
+
+    npm install
+    node index
+
+### Errors
+
+You may see on the first boot an error:
+
+> You have requested more instances (1) than your current instance limit of 0 allows for the specified instance type. Please visit http://aws.amazon.com/contact-us/ec2-request to request an adjustment to this limit.
+
+Just follow those instructions and try again afterwards.
