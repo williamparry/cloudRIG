@@ -1,12 +1,20 @@
 # cloudRIG
 
-This sets up a gaming computer on AWS for you to use with Steam Home Streaming. It sets up a g2.2xlarge on-demand instance on AWS and a VPN using ZeroTier.
+This sets up a gaming computer on AWS for you to use with Steam Home Streaming. It sets up a g2.2xlarge spot instance on AWS and a VPN using ZeroTier.
 
 cloudRIG manages the VPN and requisite AWS setup for you after you've configured it with your AWS credentials and ZeroTier API Key.
 
 ![cloudRIG boot screen](https://user-images.githubusercontent.com/348091/29874010-a503a848-8d95-11e7-8afb-b61ab34fc4ad.png)
 
 ![cloudRIG open screen](https://user-images.githubusercontent.com/348091/29967259-1b26157a-8f16-11e7-86c3-7354624c5c02.png)
+
+## Features
+
+* Sets up gaming rig from stock Windows 2016 image
+* Choosest cheapest Availability Zone based on your region
+* Auto-saves your rig when you stop or are booted off
+* Configures VPN for you
+* Administer using RDP in your browser
 
 ## History
 
@@ -20,7 +28,7 @@ If cloudRIG doesn't do it for you, check out cloudy-gamer; a whole lot of the Po
 
 ## Cost
 
-Originally cloudRIG was built to use AWS Spot Fleet instances, but the price was consistently too high so I changed it to be on-demand with a more stable $1USD/hr-ish (best to check beforehand).
+Pretty cheap. cloudRIG will find the cheapest Availability Zone for your region
 
 There's the cost of storing the machine when it's off and maybe other costs involved, so just be careful and **don't forget to turn it off when you're done gaming!**
 
