@@ -378,31 +378,22 @@ function setup(cb) {
 
 	cloudrig.setup(userDataFileReader, userDataFileWriter, function(err, serviceSetups) {
 		
-		if(err) {
-			cb(err);
-			return;
-		}
+		if(err) { cb(err); return; }
 
 		var questions = [];
 
-		Object.keys(serviceSetups).forEach(function(serviceSetup) {
+		if(serviceSetups) {
 
-			var serviceSetupQuestions = serviceSetups[serviceSetup];
+			serviceSetups.forEach(function(question) {
 
-			if(serviceSetupQuestions) {
-
-				serviceSetupQuestions.forEach(function(question) {
-
-					questions.push({
-						text: "[" + serviceSetup + "] " + question.q,
-						func: question.m
-					});
-
+				questions.push({
+					text: question.q,
+					func: question.m
 				});
 
-			}
+			});
 
-		});
+		}
 
 		if(questions.length > 0) {
 
