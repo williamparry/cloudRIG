@@ -4,6 +4,8 @@ This sets up a gaming computer on AWS for you to use with Steam Home Streaming. 
 
 cloudRIG manages the VPN and requisite AWS setup for you after you've configured it with your AWS credentials and ZeroTier API Key.
 
+NOTE: There is a [version for Parsec](https://github.com/williamparry/cloudRIG/tree/parsec)
+
 ![cloudRIG boot screen](https://user-images.githubusercontent.com/348091/29874010-a503a848-8d95-11e7-8afb-b61ab34fc4ad.png)
 
 ![cloudRIG open screen](https://user-images.githubusercontent.com/348091/29967259-1b26157a-8f16-11e7-86c3-7354624c5c02.png)
