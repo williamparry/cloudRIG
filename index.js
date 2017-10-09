@@ -14,7 +14,6 @@ var cloudrigDir = homedir + "/.cloudrig/";
 var AWSCredsDir = homedir + "/.aws";
 var AWSCredsFile = AWSCredsDir + "/credentials";	
 
-
 if (!fs.existsSync(cloudrigDir)) {
 	fs.mkdirSync(cloudrigDir);
 }
@@ -49,16 +48,15 @@ function displayState(cb) {
 	console.log("State:");
 
 	cloudrig.getState(function(err, state) {
-		
+		console.log(state)
 		var display = {
 
 			"Instances": {
-				"Active": state.AWS.activeInstances.length > 0 ? state.AWS.activeInstances.map(function(f) { return f.PublicDnsName; }) : 0,
-				"Pending": state.AWS.pendingInstances.length,
-				"Shutting down": state.AWS.shuttingDownInstances.length,
-				"Stopped": state.AWS.stoppedInstances.length
-			},
-			"ZeroTier": state.VPN
+				"Active": state.activeInstances.length > 0 ? state.activeInstances.map(function(f) { return f.PublicDnsName; }) : 0,
+				"Pending": state.pendingInstances.length,
+				"Shutting down": state.shuttingDownInstances.length,
+				"Stopped": state.stoppedInstances.length
+			}
 		};
 				
 		console.log(prettyjson.render(display, null, 4));
@@ -75,8 +73,8 @@ function mainMenu() {
 		
 		var choices;
 
-		if(state.AWS.activeInstances.length > 0) {
-			choices = ["Open cloudRIG", "Stop cloudRIG"];
+		if(state.activeInstances.length > 0) {
+			choices = ["Stop cloudRIG"];
 		} else {
 			choices = ["Start cloudRIG", "Setup"];
 		}
@@ -125,17 +123,6 @@ function mainMenu() {
 
 					configMenu(function() {
 						setup(mainMenu);
-					});
-
-				break;
-
-				case "Open cloudRIG":
-					
-					cloudrig.openRDP(function() {
-
-						console.log("Opening");
-						mainMenu();
-
 					});
 
 				break;
@@ -202,19 +189,13 @@ function advancedMenu(cb) {
 
 		var choices = ["« Back"];
 
-		if(state.AWS.activeInstances.length > 0) {
+		if(state.activeInstances.length > 0) {
 			choices.push(
-				"Send Command",
-				"Restart Remote Steam",
-				"Join Remote to VPN",
-				"Get Remote VPN Address"
+				"Send Command"
 			);
 		}
 
 		choices.push(
-			"Join Host to VPN",
-			"Get Windows Password",
-			"Create Key Pair",
 			"Clean up Instance Profiles"
 		);
 
@@ -248,7 +229,7 @@ function advancedMenu(cb) {
 						default: false
 					}]).then(function(answers) {
 						
-						cloudrig._Instance._sendAdHoc(function(err, d) {
+						cloudrig._sendAdHoc(function(err, d) {
 
 							console.log("Response");
 							console.log(d);
@@ -261,55 +242,9 @@ function advancedMenu(cb) {
 					
 				break;
 
-				case "Restart Remote Steam":
-					
-					cloudrig._Instance._restartSteam(cb);
-									
-				break;
-
-				case "Join Host to VPN":
-					cloudrig._VPN.start(advancedMenu.bind(null, cb));
-				break;
-
-				case "Join Remote to VPN":
-
-					cloudrig._Instance.sendMessage(cloudrig._VPN.getRemoteInfoCommand(), function(err, resp) {
-						console.log(resp);
-						var address = JSON.parse(resp).address;
-						console.log(address);
-						cloudrig._VPN.addCloudrigAddressToVPN(address, function() {
-							cloudrig._Instance.sendMessage(cloudrig._VPN.getRemoteJoinCommand(), function(err, resp) {
-								console.log("Done");
-								advancedMenu(cb);
-							});
-						});
-					});
-
-				break;
-
-				case "Get Remote VPN Address":
-
-					cloudrig._Instance.sendMessage(cloudrig._VPN.getRemoteInfoCommand(), function(err, resp) {
-						console.log(JSON.parse(resp).address);
-						advancedMenu(cb);
-					});
-
-				break;
-				
-				case "Get Windows Password":
-		
-					cloudrig._Instance.getPassword(function(err, password) {
-						console.log("---------------------------------");
-						console.log("Password: " + password);
-						console.log("---------------------------------");
-						advancedMenu(cb);
-					});
-
-				break;
-
 				case "Clean up Instance Profiles":
 					
-					cloudrig._Instance._getInstanceProfiles(function(err, data) {
+					cloudrig._getInstanceProfiles(function(err, data) {
 						
 						if(data.length > 0) {
 
@@ -326,7 +261,7 @@ function advancedMenu(cb) {
 							}]).then(function(answers) {
 
 								async.parallel(answers.toDelete.map(function(answer) {
-									return cloudrig._Instance._deleteInstanceProfile.bind(null, answer);
+									return cloudrig._deleteInstanceProfile.bind(null, answer);
 								}), function(err, results) {
 									console.log("Done");
 									advancedMenu(cb);
@@ -345,46 +280,12 @@ function advancedMenu(cb) {
 				break;
 
 				case "Create Security Group":
-					cloudrig._Instance._createSecurityGroup(advancedMenu.bind(null, cb));
-				break;
-
-				case "Create Key Pair":
-					cloudrig._Instance._createKeyPair(advancedMenu.bind(null, cb));
+					cloudrig._createSecurityGroup(advancedMenu.bind(null, cb));
 				break;
 				
 			}
 
 		});
-
-	});
-
-}
-
-function validateRequiredSoftware(cb) {
-
-	console.log("Validating required software");
-
-	cloudrig.validateRequiredSoftware(function(err, software) {
-		
-		if(err) {
-			cb(err);
-			return;
-		}
-
-		var errors = [];
-		
-		Object.keys(software).forEach(function(key) {
-			if(!software[key]) {
-				errors.push(key + " is missing");
-			}
-		});
-
-		if(errors.length > 0) {
-			console.log(prettyjson.render(errors, null, 4));
-			cb(true);
-		} else {
-			cb(null);
-		}
 
 	});
 
@@ -430,19 +331,16 @@ function validateAndSetConfig(cb) {
 	var configState = cloudrig.getRequiredConfig();
 	var questions = [];
 
-	Object.keys(configState).forEach(function(serviceName) {
 
-		configState[serviceName].forEach(function(serviceConfigKey) {
+	configState.forEach(function(configKey) {
 
-			if(!config[serviceConfigKey]) {
-				questions.push({
-					type: "input",
-					name: serviceConfigKey,
-					message: "Enter " + serviceConfigKey
-				});
-			}
-		});
-
+		if(!config[configKey]) {
+			questions.push({
+				type: "input",
+				name: configKey,
+				message: "Enter " + configKey
+			});
+		}
 	});
 	
 	if(questions.length > 0) {
@@ -463,7 +361,7 @@ function validateAndSetConfig(cb) {
 
 		console.log("Setting config");
 		var displayConfig = Object.assign({}, config);
-		displayConfig.ZeroTierAPIKey = "(set)";
+		displayConfig.ParsecServerId = "(set)";
 		
 		console.log(prettyjson.render(displayConfig, null, 4));
 		cloudrig.setConfig(config);
@@ -591,8 +489,7 @@ function checkAndSetDefaultConfig() {
 function startCloudrig() {
 	
 	async.series([
-
-		validateRequiredSoftware,
+		
 		validateAndSetConfig,
 		setup
 
@@ -672,29 +569,29 @@ function init() {
 
 		function(cb) {
 
-			var zeroTierAPIKey = getConfigFile().ZeroTierAPIKey;
+			var parsecServerId = getConfigFile().ParsecServerId;
 			
-			if(!zeroTierAPIKey) {
+			if(!parsecServerId) {
 
 				inquirer.prompt([{
 					type: "confirm",
-					name: "haszerotier",
-					message: "Do you a ZeroTier account and an API key?",
+					name: "hasparsec",
+					message: "Do you have a Parsec account and server key?",
 					default: true
 				}]).then(function(answers) {
 
-					if(answers.haszerotier) {
+					if(answers.hasparsec) {
 						
-						console.log("OK great, when it sets up next you will be asked to put in your API key");
+						console.log("OK great, when it sets up next you will be asked to put in your server key");
 
 					} else {
 						
-						console.log("OK, make an account or login here and click \"[show]\" under \"API Access Tokens\"");
-						open("https://my.zerotier.com/");
+						console.log("OK, make an account or login here and get the server_key");
+						open("https://parsec.tv/account/#self-host");
 						
 					}
 
-					setTimeout(cb, 3000);
+					cb();
 
 				});
 
@@ -720,5 +617,4 @@ function init() {
 // INIT
 showIntro();
 checkAndSetDefaultConfig();
-setReporter();
 init();
