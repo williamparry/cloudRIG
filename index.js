@@ -459,7 +459,7 @@ function showIntro() {
 	}));
 	
 	console.log(cowsay.say({
-		text : "https://www.cloudrig.io",
+		text : "This version of Parsec/cloudRIG/Spotfleet is unstable (but cool), so please check your AWS console to ensure start/stop etc has worked.",
 		e : "oO",
 		T : "U "
 	}));
