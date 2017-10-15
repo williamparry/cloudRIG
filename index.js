@@ -122,7 +122,7 @@ function mainMenu() {
 				case "Setup":
 
 					configMenu(function() {
-						setup(mainMenu);
+						validateAndSetConfig(setup.bind(null, mainMenu));
 					});
 
 				break;
@@ -167,18 +167,11 @@ function configMenu(cb) {
 
 	inquirer.prompt(questions).then(function(answers) {
 
-		if(Object.keys(answers).filter(function(v) { return !v; }).length > 0) {
-			console.log("You have an empty value. Gotta have all dem values mate.");
-			configMenu(cb);
-		} else {
+		Object.assign(config, answers);
+		setConfigFile(config);
 
-			Object.assign(config, answers);
-			setConfigFile(config);
-
-			validateAndSetConfig(cb);
+		cb();
 			
-		}
-	
 	});
 
 }
@@ -291,41 +284,9 @@ function advancedMenu(cb) {
 
 }
 
-/* TODO:
-function validateRequiredConfig(cb) {
-
-	console.log("Validating required config");
-
-	cloudrig.validateRequiredConfig((err, serviceConfig) => {
-		
-		if(err) {
-			cb(err);
-			return;
-		}
-
-		var errors = [];
-		
-		Object.keys(software).forEach((key) => {
-			if(!software[key]) {
-				errors.push(key + " is missing");
-			}
-		});
-
-		if(errors.length > 0) {
-			console.log(prettyjson.render(errors, null, 4));
-			cb(true);
-		} else {
-			cb(null);
-		}
-
-	});
-
-}
-*/
-
 function validateAndSetConfig(cb) {
 	
-	console.log("Validating and setting config");
+	console.log("Getting config");
 
 	var config = getConfigFile();
 	var configState = cloudrig.getRequiredConfig();
@@ -349,8 +310,6 @@ function validateAndSetConfig(cb) {
 
 		inquirer.prompt(questions).then(function(answers) {
 
-			// TODO: cloudrig.validateRequiredConfig()
-
 			Object.assign(config, answers);
 			setConfigFile(config);
 			validateAndSetConfig(cb);
@@ -359,15 +318,30 @@ function validateAndSetConfig(cb) {
 
 	} else {
 
-		console.log("Setting config");
-		var displayConfig = Object.assign({}, config);
-		displayConfig.ParsecServerId = "(set)";
+		console.log("Validating config");
+
+		cloudrig.validateRequiredConfig(config, function(err) {
+
+			if(err) {
+
+				console.log("Invalid AWS credentials. Please check your configuration");
+				configMenu(validateAndSetConfig.bind(null, cb));
+
+			} else {
+
+				console.log("Setting config");
+				var displayConfig = Object.assign({}, config);
+				displayConfig.ParsecServerId = "(set)";
+				
+				console.log(prettyjson.render(displayConfig, null, 4));
+				cloudrig.setConfig(config);
 		
-		console.log(prettyjson.render(displayConfig, null, 4));
-		cloudrig.setConfig(config);
+				cb();
 
-		cb(null);
+			}
 
+		});
+		
 	}
 
 }
@@ -438,7 +412,7 @@ function setup(cb) {
 			});
 
 		} else {
-			cb(null);
+			cb();
 
 		}
 			
