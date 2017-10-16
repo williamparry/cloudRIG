@@ -2,7 +2,8 @@
 
 [Powered by Parsec](https://parsec.tv), but there is an old [ZeroTier + Steam Home Streaming branch](https://github.com/williamparry/cloudRIG/tree/zerotier-steamstreaming)
 
-<img width="633" alt="cloudRIG boot screen" src="https://user-images.githubusercontent.com/348091/31599523-1df1ff3e-b253-11e7-9afc-22b37d4cec04.png">
+<img width="600" alt="cloudRIG boot screen" src="https://user-images.githubusercontent.com/348091/31599523-1df1ff3e-b253-11e7-9afc-22b37d4cec04.png">
+<img width="600" alt="Parsec Screen" src="https://user-images.githubusercontent.com/348091/31599767-06218612-b254-11e7-951e-5d9b4f9f106d.png">
 
 ## Features
 
