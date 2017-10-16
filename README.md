@@ -2,6 +2,8 @@
 
 [Powered by Parsec](https://parsec.tv), but there is an old [ZeroTier + Steam Home Streaming branch](https://github.com/williamparry/cloudRIG/tree/zerotier-steamstreaming)
 
+<img width="633" alt="cloudRIG boot screen" src="https://user-images.githubusercontent.com/348091/31599523-1df1ff3e-b253-11e7-9afc-22b37d4cec04.png">
+
 ## Features
 
 * Play using Parsec for around $0.10c / hour
