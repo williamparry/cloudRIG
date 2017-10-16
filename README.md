@@ -1,6 +1,6 @@
 # cloudRIG
 
-[Powered by Parsec](https://parsec.tv)
+[Powered by Parsec](https://parsec.tv), but there is an old [ZeroTier + Steam Home Streaming branch](https://github.com/williamparry/cloudRIG/tree/zerotier-steamstreaming)
 
 ## Features
 
