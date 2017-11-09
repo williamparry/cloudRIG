@@ -1,6 +1,4 @@
-# Set folder and computer name
-
 New-Item -ItemType directory -Path "c:\cloudRIG" -Force
 Rename-Computer -NewName "cloudRIG"
 
-return $LASTEXITCODE
+return "ok"

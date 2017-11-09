@@ -1,6 +1,7 @@
 {
 	"AWSCredentialsProfile": "",
 	"AWSRegion": "",
+	"AWSAvailabilityZone": "",
 	"AWSMaxPrice": "",
 	"ParsecServerId": ""
 }

@@ -215,11 +215,6 @@ function advancedMenu(cb) {
 						name: "sendCMD",
 						message: "Command (empty will run .adhoc.ps1)",
 						type: "input"
-					}, {
-						type: "confirm",
-						name: "asAdmin",
-						message: "As logged-in Administrator user?",
-						default: false
 					}]).then(function(answers) {
 						
 						cloudrig._sendAdHoc(function(err, d) {
@@ -229,7 +224,7 @@ function advancedMenu(cb) {
 							
 							advancedMenu(cb);
 
-						}, answers.sendCMD, answers.asAdmin);
+						}, answers.sendCMD);
 					
 					});
 					
