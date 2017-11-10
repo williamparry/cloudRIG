@@ -36,6 +36,10 @@ You will also have a separate EBS volume for storing games, which is around $10/
 
 cloudRIG will offer to set up all the AWS infrastructure needed for cloudrig. You will be asked to confirm each step.
 
+### Software
+
+* NodeJS
+
 ### Running
 
     npm install
