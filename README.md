@@ -24,7 +24,9 @@ You will also have a separate EBS volume for storing games, which is around $10/
 
 * Make a Parsec account
 * Download the Parsec client
-* Get the self-hosting key
+* [Get the self-hosting key](https://parsec.tv/add-computer/own)
+
+![click on 'click here to see extra steps' and then in the element that appears, find the server_key](https://user-images.githubusercontent.com/348091/32673294-ef117400-c64e-11e7-949f-a34344b1368e.jpg)
 
 ### AWS
 
@@ -33,6 +35,10 @@ You will also have a separate EBS volume for storing games, which is around $10/
     * Make a note of it, you will need it for the first run
 
 cloudRIG will offer to set up all the AWS infrastructure needed for cloudrig. You will be asked to confirm each step.
+
+### Software
+
+* NodeJS
 
 ### Running
 
