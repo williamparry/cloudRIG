@@ -102,6 +102,7 @@ function mainMenu() {
 							return;
 						}
 						console.log("K done");
+						open("parsec:server_id=")
 						mainMenu();
 
 					});
@@ -112,7 +113,7 @@ function mainMenu() {
 
 					cloudrig.stop(function() {
 						
-						console.log("Stopped");
+						console.log("k done");
 						setup(mainMenu);
 
 					});
