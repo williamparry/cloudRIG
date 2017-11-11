@@ -428,7 +428,7 @@ function showIntro() {
 	}));
 	
 	console.log(cowsay.say({
-		text : "This version of Parsec/cloudRIG/Spotfleet is unstable (but cool), so \nplease check your AWS console to ensure start/stop etc has worked.",
+		text : "Dynamic 'best availability zone' is disabled in this version, sorry.\nAlso, please check your AWS console to ensure start/stop etc has worked.",
 		e : "oO",
 		T : "U "
 	}));

@@ -3,3 +3,4 @@ node_modules
 .jshint
 *.log
 .DS_STORE
+.vscode
