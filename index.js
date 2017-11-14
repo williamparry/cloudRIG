@@ -507,7 +507,7 @@ function showIntro() {
 	}));
 	
 	console.log(cowsay.say({
-		text : "Dynamic 'best availability zone' is disabled in this version, sorry.\nAlso, please check your AWS console to ensure start/stop etc has worked.",
+		text : "This is alpha software - please use an isolated AWS account.\nDynamic 'best availability zone' is disabled in this version, sorry.\nAlso, please check your AWS console to ensure start/stop etc has worked.",
 		e : "oO",
 		T : "U "
 	}));
