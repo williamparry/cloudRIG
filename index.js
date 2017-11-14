@@ -48,14 +48,15 @@ function displayState(cb) {
 	console.log("State:");
 
 	cloudrig.getState(function(err, state) {
-		console.log(state)
+		
 		var display = {
 
 			"Instances": {
 				"Active": state.activeInstances.length > 0 ? state.activeInstances.map(function(f) { return f.PublicDnsName; }) : 0,
 				"Pending": state.pendingInstances.length,
 				"Shutting down": state.shuttingDownInstances.length,
-				"Stopped": state.stoppedInstances.length
+				"Stopped": state.stoppedInstances.length,
+				"Scheduled stop": !!state.scheduledStop
 			}
 		};
 				
@@ -74,9 +75,15 @@ function mainMenu() {
 		var choices;
 
 		if(state.activeInstances.length > 0) {
-			choices = ["Stop cloudRIG"];
+
+			if(!state.scheduledStop) {
+				choices = ["Stop"];
+			} else {
+				choices = ["Get remaining time", "Cancel Scheduled Stop"];
+			}
+
 		} else {
-			choices = ["Start cloudRIG", "Setup"];
+			choices = ["Start", "Setup"];
 		}
 
 		choices.push("Get State", "Advanced");
@@ -92,7 +99,7 @@ function mainMenu() {
 
 			switch(answers.cmd) {
 
-				case "Start cloudRIG":
+				case "Start":
 
 					cloudrig.start(function(err) {
 
@@ -109,12 +116,83 @@ function mainMenu() {
 
 				break;
 
-				case "Stop cloudRIG":
+				case "Cancel Scheduled Stop":
 
-					cloudrig.stop(function() {
+					cloudrig.cancelScheduledStop(function(err) {
+
+						if(err) { criticalError(err); return; }
+
+						console.log("Cancelled");
+
+						mainMenu();
+
+					});
+
+				break;
+
+				case "Get remaining time":
+
+					cloudrig.getRemainingTime(function(err, data) {
+
+						if(err) { criticalError(err); return; }
+
+						console.log(`You have ${data.remainingMinutes} mins left`);
+
+						mainMenu();
+
+					});
+
+				break;
+
+				case "Stop":
+
+					cloudrig.getRemainingTime(function(err, data) {
 						
-						console.log("k done");
-						setup(mainMenu);
+						if(err) { criticalError(err); return; }
+						
+						var choices = ["« Back", "Stop Now"];
+
+						choices.push(`Stop in ${data.remainingMinutes} mins (AWS charges for the full hour anyway)`);
+
+						inquirer.prompt([{
+							name: "cmd",
+							message: "Command:",
+							type: "rawlist",
+							choices: choices
+						}
+				
+						]).then(function(answers) {
+
+							switch(answers.cmd) {
+
+								case "« Back":
+
+									mainMenu();
+
+								break;
+
+								case "Stop Now":
+
+									cloudrig.stop(function(err) {
+										if(err) { criticalError(err); return; }
+										setup(mainMenu);
+									});
+
+								break;
+
+								default: 
+
+									cloudrig.scheduleStop(function(err) {
+										if(err) { criticalError(err); return; }
+										console.log("Scheduled");
+										mainMenu();
+									});
+
+								break;
+
+							}
+
+						});
 
 					});
 
@@ -548,7 +626,7 @@ function init() {
 					} else {
 						
 						console.log("OK, make an account or login here and get the server_key");
-						open("https://parsec.tv/account/#self-host");
+						open("https://parsec.tv/add-computer/own");
 						
 					}
 
