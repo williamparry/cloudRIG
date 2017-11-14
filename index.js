@@ -172,7 +172,7 @@ function mainMenu() {
 								break;
 
 								case "Stop Now":
-
+									
 									cloudrig.stop(function(err) {
 										if(err) { criticalError(err); return; }
 										setup(mainMenu);
@@ -181,7 +181,7 @@ function mainMenu() {
 								break;
 
 								default: 
-
+									
 									cloudrig.scheduleStop(function(err) {
 										if(err) { criticalError(err); return; }
 										console.log("Scheduled");
