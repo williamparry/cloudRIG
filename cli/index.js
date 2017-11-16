@@ -8,15 +8,7 @@ var figlet = require('figlet');
 var cowsay = require('cowsay');
 var argv = require('yargs').argv;
 var open = require("open");
-var cloudrig = require('./lib');
-var homedir = require('os').homedir();
-var cloudrigDir = homedir + "/.cloudrig/";
-var AWSCredsDir = homedir + "/.aws";
-var AWSCredsFile = AWSCredsDir + "/credentials";	
-
-if (!fs.existsSync(cloudrigDir)) {
-	fs.mkdirSync(cloudrigDir);
-}
+var cloudrig = require('cloudriglib');
 
 function criticalError(err) {
 	console.log(cowsay.say({
@@ -25,22 +17,6 @@ function criticalError(err) {
 		T : "U "
 	}));
 	console.log(prettyjson.render(err, null, 4));
-}
-
-function getConfigFile() {
-	return JSON.parse(userDataFileReader("config.json"));
-}
-
-function setConfigFile(config) {
-	userDataFileWriter("config.json", JSON.stringify(config));
-}
-
-function userDataFileWriter(filename, content) {
-	fs.writeFileSync(cloudrigDir + filename, content);
-}
-
-function userDataFileReader(filename) {
-	return fs.readFileSync(cloudrigDir + filename);
 }
 
 function displayState(cb) {
@@ -230,7 +206,7 @@ function mainMenu() {
 
 function configMenu(cb) {
 
-	var config = getConfigFile();
+	var config = cloudrig.getConfigFile();
 	var questions = [];
 
 	Object.keys(config).forEach(function(configKey) {
@@ -247,7 +223,7 @@ function configMenu(cb) {
 	inquirer.prompt(questions).then(function(answers) {
 
 		Object.assign(config, answers);
-		setConfigFile(config);
+		cloudrig.setConfigFile(config);
 
 		cb();
 			
@@ -362,10 +338,9 @@ function validateAndSetConfig(cb) {
 	
 	console.log("Getting config");
 
-	var config = getConfigFile();
+	var config = cloudrig.getConfigFile();
 	var configState = cloudrig.getRequiredConfig();
 	var questions = [];
-
 
 	configState.forEach(function(configKey) {
 
@@ -385,7 +360,7 @@ function validateAndSetConfig(cb) {
 		inquirer.prompt(questions).then(function(answers) {
 
 			Object.assign(config, answers);
-			setConfigFile(config);
+			cloudrig.setConfigFile(config);
 			validateAndSetConfig(cb);
 
 		});
@@ -424,7 +399,7 @@ function setup(cb) {
 
 	console.log("Setting up");
 
-	cloudrig.setup(userDataFileReader, userDataFileWriter, function(err, serviceSetups) {
+	cloudrig.setup(function(err, serviceSetups) {
 		
 		if(err) { cb(err); return; }
 
@@ -494,10 +469,6 @@ function setup(cb) {
 
 }
 
-function setReporter() {
-	cloudrig.setReporter(console);
-}
-
 function showIntro() {
 
 	console.log(figlet.textSync('cloudRIG', {
@@ -512,17 +483,6 @@ function showIntro() {
 		T : "U "
 	}));
 
-}
-
-function checkAndSetDefaultConfig() {
-	// TODO: Make this safer for already existing config file
-	// fs.existsSync
-	try {
-		getConfigFile();
-	} catch(ex) {
-		console.log("[!] Config file missing/broken - copying from config.sample.json");
-		setConfigFile(JSON.parse(fs.readFileSync(process.cwd() + "/lib/config.sample.json")));
-	}
 }
 
 function startCloudrig() {
@@ -547,11 +507,13 @@ function startCloudrig() {
 
 function init() {
 
+	cloudrig.init(console.log);
+
 	async.series([
 
 		function(cb) {
 
-			var credsExist = fs.existsSync(AWSCredsFile);
+			var credentials = cloudrig.getCredentials().toString();
 
 			function done(err) {
 				if(err) {
@@ -564,7 +526,7 @@ function init() {
 				
 			}
 
-			if(!credsExist) {
+			if(!credentials) {
 
 				inquirer.prompt([{
 					type: "confirm",
@@ -579,7 +541,7 @@ function init() {
 					}
 				});
 
-			} else if(fs.readFileSync(AWSCredsFile).toString().indexOf("[cloudrig]") === -1) {
+			} else if(credentials.indexOf("[cloudrig]") === -1) {
 
 				console.log("\n");
 				console.log("[!] BACK UP YOUR EXISTING CREDENTIALS FILE FIRST [!]");
@@ -608,7 +570,7 @@ function init() {
 
 		function(cb) {
 
-			var parsecServerId = getConfigFile().ParsecServerId;
+			var parsecServerId = cloudrig.getConfigFile().ParsecServerId;
 			
 			if(!parsecServerId) {
 
@@ -655,5 +617,4 @@ function init() {
 
 // INIT
 showIntro();
-checkAndSetDefaultConfig();
 init();

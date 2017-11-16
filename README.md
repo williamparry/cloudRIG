@@ -40,10 +40,19 @@ cloudRIG will offer to set up all the AWS infrastructure needed for cloudrig. Yo
 
 * NodeJS
 
-### Running
+### Running CLI
 
+    cd cli
     npm install
     node index
+
+### Running GUI
+
+This is a work in progress
+
+    cd cli
+    npm install
+    BROWSER=none npm start
 
 ## Notice
 
