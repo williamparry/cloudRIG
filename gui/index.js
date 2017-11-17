@@ -42,6 +42,14 @@ ipcMain.on('cmd', (event, op, data) => {
 
 		break;
 
+		case 'getConfigurationValidity':
+
+			cloudrig.validateRequiredConfig(cloudrig.getConfigFile(), function(err) {
+				event.sender.send('getConfigurationValidity', !err)
+			})
+
+		break;
+
 		case 'saveConfiguration':
 
 			cloudrig.validateRequiredConfig(data, function(err) {
@@ -50,17 +58,59 @@ ipcMain.on('cmd', (event, op, data) => {
 					return;
 				}
 				cloudrig.setConfigFile(data);
-				event.sender.send('savedConfig', 'pong')
+				event.sender.send('getConfigurationValidity', true)
 			});
 			
 
 		break;
 
+		case 'setConfiguration':
+
+			cloudrig.setConfig(cloudrig.getConfigFile())
+			event.returnValue = true;
+
+		break;
+
 		case 'setup':
 		
-			cloudrig.setup(function (err, serviceSetups) {
-				event.returnValue = serviceSetups
+			cloudrig.setup(function (err, setups) {
+				if(err) {
+					event.sender.send('cmd', 'errorSetup')
+					return;
+				}
+				if(setups.length > 0) {
+
+					event.sender.send('setups', setups);
+					return;
+				}
+
+				event.sender.send('setupValid', true)
+				
 			});
+
+		break;
+
+		case 'start':
+
+			cloudrig.start(function(err) {
+				if(err) {
+					event.sender.send('errorPlay', err)
+					return;
+				}
+				event.sender.send('started')
+			})
+
+		break;
+
+		case 'stop':
+
+			cloudrig.stop(function(err) {
+				if(err) {
+					event.sender.send('errorStop')
+					return;
+				}
+				event.sender.send('stopped')
+			})
 
 		break;
 

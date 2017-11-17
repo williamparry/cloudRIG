@@ -5,3 +5,7 @@ html, body {
 .ui.grid, #root {
   height: 100%;
 }
+
+.stretched-segment {
+  height: calc(100% - 69px)
+}
