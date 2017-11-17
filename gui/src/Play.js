@@ -10,9 +10,16 @@ class Play extends Component {
 		super();
 
 		this.state = {
+			isLoading: true,
 			isStarting: false,
 			hasStarted: false,
-			errorMessage: ""
+			errorMessage: "",
+			cloudRIGState: {
+				activeInstances: [],
+				pendingInstances: [],
+				shuttingDownInstances: [],
+				stoppedInstances: []
+			}
 		}
 
 		ipcRenderer.on('started', (event) => {
@@ -38,6 +45,36 @@ class Play extends Component {
 			})
 		});
 
+		ipcRenderer.on('gotState', (event, state) => {
+			
+			this.setState({
+				isLoading: false,
+				cloudRIGState: state
+			})
+
+			ipcRenderer.send('cmd', 'log', 'Ready')
+
+		});
+
+		ipcRenderer.on('startRunning', (event, isRunning) => {
+			
+			this.setState({
+				isStarting: true,
+				hasStarted: false
+			})
+
+		})
+
+	}
+
+	componentWillUnmount() {
+
+		ipcRenderer.removeAllListeners('startRunning')
+		ipcRenderer.removeAllListeners('gotState')
+		ipcRenderer.removeAllListeners('stopped')
+		ipcRenderer.removeAllListeners('started')
+
+
 	}
 
 	handleDismiss = () => {
@@ -55,12 +92,39 @@ class Play extends Component {
 		ipcRenderer.send('cmd', 'stop')
 	}
 
+	componentDidMount() {
+
+		this.setState({
+			isLoading: true
+		});
+
+		ipcRenderer.send('cmd', 'getState')
+
+	}
+	
+
 	render() {
 		
-		const button = 
-			!this.state.isStarting ? <Button content='Start' icon='play' labelPosition='right' onClick={this.start.bind(this)} /> :
-			this.state.isStarting ? <Button content='Starting...' icon='play' labelPosition='right' disabled /> :
-			<Button content='Stop' icon='stop' labelPosition='right' onClick={this.stop.bind(this)} />;
+		let actionButtons;
+
+		if(this.state.cloudRIGState.activeInstances.length > 0) {
+			
+			actionButtons = 
+			<div>
+				<Button content='Stop' icon='stop' labelPosition='right' onClick={this.stop.bind(this)} />
+				<Button content='Schedule stop' icon='stop' labelPosition='right' onClick={this.stop.bind(this)} disabled />
+			</div>
+			
+
+		} else {
+			
+			if(!this.state.isStarting) {
+				actionButtons = <Button content='Start' icon='play' labelPosition='right' onClick={this.start.bind(this)} />
+			} else {
+				actionButtons = <Button content='Starting...' icon='play' labelPosition='right' disabled />
+			}
+
+		}
 
 		let message = ""
 
@@ -72,13 +136,27 @@ class Play extends Component {
 			/>
 		}
 
-		return(
-			
-			<div>
-				{message}
-				{button}
-			</div>
-		)
+		if(this.state.isLoading) {
+
+			return(
+
+				<div>
+					
+				</div>
+			)
+
+		} else {
+
+			return(
+
+				<div>
+					{message}
+					{actionButtons}
+				</div>
+			)
+		}
+
+		
 
 	}
 

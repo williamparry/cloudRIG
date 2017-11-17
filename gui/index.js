@@ -30,6 +30,12 @@ ipcMain.on('cmd', (event, op, data) => {
 	
 	switch(op) {
 
+		case 'log':
+
+			event.sender.send('log', data)
+
+		break;
+
 		case 'getCredentials':
 
 			event.returnValue = cloudrig.getCredentials().toString()
@@ -90,14 +96,39 @@ ipcMain.on('cmd', (event, op, data) => {
 
 		break;
 
-		case 'start':
+		case 'getState':
 
-			cloudrig.start(function(err) {
+			cloudrig.getState(function(err, data) {
+
 				if(err) {
 					event.sender.send('errorPlay', err)
 					return;
 				}
+
+				if(data.activeInstances.length > 0) {
+					event.sender.send('startRunning', true)
+				}
+
+				event.sender.send('gotState', data)
+			})
+
+		break;
+
+		case 'start':
+
+			event.sender.send('startRunning', true)
+
+			cloudrig.start(function(err) {
+
+				event.sender.send('startRunning', false)
+
+				if(err) {
+					event.sender.send('errorPlay', err)
+					return;
+				}
+
 				event.sender.send('started')
+				
 			})
 
 		break;
@@ -110,6 +141,7 @@ ipcMain.on('cmd', (event, op, data) => {
 					return;
 				}
 				event.sender.send('stopped')
+				event.sender.send('startRunning', false)
 			})
 
 		break;

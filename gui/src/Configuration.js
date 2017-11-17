@@ -81,6 +81,10 @@ class Configuration extends Component {
 
 	}
 
+	componentWillUnmount() {
+		ipcRenderer.removeAllListeners('cmd')
+	}
+
 	handleChange(e, data) {
 		// If you are using babel, you can use ES 6 dictionary syntax { [e.target.name] = e.target.value }
 		var change = {

@@ -7,6 +7,7 @@ class Initialization extends Component {
 
 	constructor() {
 		super()
+		
 		this.state = {
 			isLoading: true
 		}
@@ -21,10 +22,13 @@ class Initialization extends Component {
 
 	componentDidMount() {
 		
-		console.log('Initialization didmount')
-
 		ipcRenderer.send('cmd', 'setup');
 		
+	}
+
+	componentWillUnmount() {
+		ipcRenderer.removeAllListeners('setups')
+		ipcRenderer.removeAllListeners('errorSetup')
 	}
 
 	render() {
