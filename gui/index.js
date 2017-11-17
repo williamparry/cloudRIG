@@ -8,7 +8,9 @@ const cloudrig = require('cloudriglib')
 let win
 
 const log = (message) => {
-	win.webContents.send('log', message);
+	if(win) {
+		win.webContents.send('log', message);
+	}
 }
 
 cloudrig.init(log);
@@ -67,6 +69,13 @@ ipcMain.on('cmd', (event, op, data) => {
 				event.sender.send('getConfigurationValidity', true)
 			});
 			
+
+		break;
+
+		case 'saveCredentialsFile':
+
+			cloudrig.saveCredentialsFile(data);
+			event.returnValue = true;
 
 		break;
 
@@ -154,7 +163,7 @@ ipcMain.on('cmd', (event, op, data) => {
 
 function createWindow() {
 	// Create the browser window.
-	win = new BrowserWindow({ width: 800, height: 600, useContentSize: true })
+	win = new BrowserWindow({ width: 800, height: 600, resizable: false, backgroundColor: '#312450', show: false })
 
 	// and load the index.html of the app.
 	win.loadURL(url.format({
@@ -175,6 +184,12 @@ function createWindow() {
 		// when you should delete the corresponding element.
 		win = null
 	})
+
+	win.once('ready-to-show', () => {
+		win.show()
+	})
+
+
 }
 
 // This method will be called when Electron has finished

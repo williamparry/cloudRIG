@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
-import { Icon, Image, Segment, Container, Step, Divider, TextArea, Form, Grid, Select, Button, Modal, Message } from 'semantic-ui-react'
+import { Icon, Image, Segment, Container, Rail, Step, Divider, TextArea, Form, Grid, Select, Button, Modal, Message } from 'semantic-ui-react'
 import 'semantic-ui-css/semantic.min.css';
 import './App.css';
+import ParsecLogo from './parsec_logo.svg'
 import Configuration from './Configuration';
 import Initialization from './Initialization';
 import Play from './Play';
@@ -16,13 +17,11 @@ class App extends Component {
 	state = {
 		currentPage: pages.Loading,
 		disableNonStartPages: false,
-		logOutput: []
+		logOutput: ["Welcome :)"]
 	}
 
 	constructor() {
-
 		super()
-
 	}
 
 	componentDidMount() {
@@ -31,7 +30,7 @@ class App extends Component {
 
 		ipcRenderer.on('getConfigurationValidity', (event, valid) => {
 
-			if(valid) {
+			if(!valid) {
 				ipcRenderer.sendSync('cmd', 'setConfiguration');
 				this.setState({
 					currentPage: pages.Initialization
@@ -94,7 +93,7 @@ class App extends Component {
 		return (
 			
 			<Grid stretched>
-				<Grid.Row style={{height: 484}}>
+				<Grid.Row style={{height: 476}}>
 					<Grid.Column>
 						<Step.Group attached='top'>
 							<Step link 
@@ -139,8 +138,11 @@ class App extends Component {
 <pre id='output' style={{ height: 60, overflowY: 'scroll' }}>
 {this.state.logOutput.join("\n")}
 </pre>
+
+						
 						</Container>
 					</Grid.Column>
+					
 				</Grid.Row>
 			</Grid>
 
