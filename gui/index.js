@@ -26,9 +26,35 @@ ipcMain.on('setup', (event, arg) => {
   });
 })
 */
-ipcMain.on('cmd', (event, arg) => {
+ipcMain.on('cmd', (event, op, data) => {
+	
+	switch(op) {
 
-	switch(arg) {
+		case 'getCredentials':
+
+			event.returnValue = cloudrig.getCredentials().toString()
+
+		break;
+
+		case 'getConfiguration':
+
+			event.returnValue = cloudrig.getConfigFile()
+
+		break;
+
+		case 'saveConfiguration':
+
+			cloudrig.validateRequiredConfig(data, function(err) {
+				if(err) {
+					event.sender.send('cmd', 'errorConfig')
+					return;
+				}
+				cloudrig.setConfigFile(data);
+				event.sender.send('savedConfig', 'pong')
+			});
+			
+
+		break;
 
 		case 'setup':
 		
@@ -46,7 +72,7 @@ ipcMain.on('cmd', (event, arg) => {
 
 function createWindow() {
 	// Create the browser window.
-	win = new BrowserWindow({ width: 800, height: 600 })
+	win = new BrowserWindow({ width: 800, height: 600, useContentSize: true })
 
 	// and load the index.html of the app.
 	win.loadURL(url.format({
