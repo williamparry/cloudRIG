@@ -59,7 +59,8 @@ This is a work in progress
 
     cd gui
     npm install
-    BROWSER=none npm start
+    npm run build
+    ./node_modules/.bin/electron .
 
 ## Notice
 
