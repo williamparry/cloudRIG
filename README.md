@@ -2,13 +2,20 @@
 
 [Powered by Parsec](https://parsec.tv), but there is an old [ZeroTier + Steam Home Streaming branch](https://github.com/williamparry/cloudRIG/tree/zerotier-steamstreaming)
 
-<img width="600" alt="cloudRIG boot screen" src="https://user-images.githubusercontent.com/348091/31599523-1df1ff3e-b253-11e7-9afc-22b37d4cec04.png">
-<img width="600" alt="Parsec Screen" src="https://user-images.githubusercontent.com/348091/31599767-06218612-b254-11e7-951e-5d9b4f9f106d.png">
-
 ## Features
 
 * Play using Parsec for around $0.10c / hour
+* Schedule shut down for the end of the current billing hour (AWS charges by the hour)
 * Auto-saves your rig when you stop or are booted off
+
+## GUI version (in progress)
+
+<img width="600" alt="Configuration Screen" src="https://user-images.githubusercontent.com/348091/32979619-fbe44170-cc58-11e7-9428-747dd3a0f9fb.png">
+
+## CLI version
+
+<img width="600" alt="cloudRIG boot screen" src="https://user-images.githubusercontent.com/348091/31599523-1df1ff3e-b253-11e7-9afc-22b37d4cec04.png">
+<img width="600" alt="Parsec Screen" src="https://user-images.githubusercontent.com/348091/31599767-06218612-b254-11e7-951e-5d9b4f9f106d.png">
 
 ## Cost
 
@@ -50,7 +57,7 @@ cloudRIG will offer to set up all the AWS infrastructure needed for cloudrig. Yo
 
 This is a work in progress
 
-    cd cli
+    cd gui
     npm install
     BROWSER=none npm start
 
