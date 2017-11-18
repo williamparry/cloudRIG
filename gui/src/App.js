@@ -26,7 +26,7 @@ class App extends Component {
 
 		ipcRenderer.on('getConfigurationValidity', (event, valid) => {
 
-			if(!valid) {
+			if(valid) {
 				ipcRenderer.sendSync('cmd', 'setConfiguration');
 				this.setState({
 					currentPage: pages.Initialization

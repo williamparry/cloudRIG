@@ -77,6 +77,10 @@ class Configuration extends Component {
 
 	extractProfileCredentials(credentials) {
 
+		if(!credentials) {
+			return [];
+		}
+		
 		return credentials.match(/\[(.*?)\]/g).map((profile) => {
 			return profile.substring(1, profile.length - 1)
 		})
