@@ -1,5 +1,5 @@
 {
-  "name": "app",
+  "name": "cloudrig",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -11,11 +11,12 @@
     "semantic-ui-react": "^0.76.0"
   },
   "scripts": {
-    "start": "react-scripts start | ./node_modules/.bin/electron .",
+    "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"
   },
+  "homepage": ".",
   "devDependencies": {
     "electron": "1.7.9"
   }

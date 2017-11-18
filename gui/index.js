@@ -167,8 +167,8 @@ function createWindow() {
 
 	// and load the index.html of the app.
 	win.loadURL(url.format({
-		pathname: "localhost:3000",
-		protocol: 'http:',
+		pathname: path.join(__dirname, 'build/index.html'),
+		protocol: 'file:',
 		slashes: true
 	}))
 
