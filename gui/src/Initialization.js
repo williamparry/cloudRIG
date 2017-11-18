@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import Loading from './Loading';
+import { Icon, List, Button, Header } from 'semantic-ui-react'
 
 const { ipcRenderer } = window.require('electron');
 
@@ -9,35 +10,115 @@ class Initialization extends Component {
 		super()
 		
 		this.state = {
-			isLoading: true
+			isLoading: true,
+			setupSteps: []
 		}
+		
 		ipcRenderer.on('setups', (event, setups) => {
-			console.log(setups)
+			
+			this.setState({
+				isLoading: false,
+				setupSteps: setups
+			})
+
 		})
 
-		ipcRenderer.on('errorSetup', (event, err) => {
+		ipcRenderer.on('setupCheck', (event, setups) => {
 			
+			ipcRenderer.send('cmd', 'setup');
+
+		});
+
+		ipcRenderer.on('errorSetup', (event, err) => {
+
+			this.setState({
+				isLoading: false
+			})
+
+			console.log(err)
 		})
 	}
 
 	componentDidMount() {
 		
 		ipcRenderer.send('cmd', 'setup');
+
+		this.setState({
+			isLoading: true
+		});
 		
+	}
+
+	saveSetup() {
+
+		this.setState({
+			isLoading: true
+		});
+
+		ipcRenderer.send('cmd', 'runSetupSteps');
+
 	}
 
 	componentWillUnmount() {
 		ipcRenderer.removeAllListeners('setups')
+		ipcRenderer.removeAllListeners('setupCheck')
 		ipcRenderer.removeAllListeners('errorSetup')
 	}
 
 	render() {
 		
-		return(
+		if(this.state.isLoading) {
 
-			<Loading />
+			return(
 
-		)
+				<Loading />
+
+			)
+
+		} else if(this.state.setupSteps.length > 0) {
+
+			const setupSteps = this.state.setupSteps.map((step) => {
+
+				return (
+					<List.Item>
+						<List.Icon name='question circle' />
+						<List.Content>{step.q}</List.Content>
+					</List.Item>
+				)
+
+			});
+
+			return(
+
+				<div>
+					<Header as='h2'>
+						Some setup required
+						<Header.Subheader>
+							But, I can do it for you <Icon name='smile' />
+						</Header.Subheader>
+					</Header>
+					
+					<List>
+						{setupSteps}
+					</List>
+
+					<br />
+
+					<Button onClick={this.saveSetup.bind(this)} content='Yes' icon='arrow right' labelPosition='right' />
+
+				</div>
+
+			)
+
+		} else {
+
+			return(<div></div>)
+
+		}
+
+		
+
+		
 
 	}
 

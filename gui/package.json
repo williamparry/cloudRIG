@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "async": "^2.6.0",
     "cloudriglib": "file:../lib",
     "react": "^16.1.1",
     "react-dom": "^16.1.1",

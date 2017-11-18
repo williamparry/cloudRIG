@@ -9,7 +9,7 @@ class Loading extends Component {
 		
 		return(
 			<Dimmer active inverted>
-				<Loader inverted>Initializing</Loader>
+				<Loader inverted>Processing</Loader>
 			</Dimmer>
 		  )
 

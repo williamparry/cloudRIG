@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain } = require('electron')
 const path = require('path')
 const url = require('url')
+const async = require('async');
 const cloudrig = require('cloudriglib')
 
 // Keep a global reference of the window object, if you don't, the window will
@@ -101,6 +102,30 @@ ipcMain.on('cmd', (event, op, data) => {
 
 				event.sender.send('setupValid', true)
 				
+			});
+
+		break;
+
+		case 'runSetupSteps':
+
+			cloudrig.setup(function (err, setups) {
+
+				var toProcess = setups.map(step => {
+					return step.m
+				});
+
+				// TODO: Bit loose, tidy up later
+				async.parallel(toProcess, function(err, val) {
+
+					if(err) {
+						event.sender.send('cmd', 'errorSetup')
+						return;
+					}
+
+					event.sender.send('setupCheck')
+
+				});
+
 			});
 
 		break;
