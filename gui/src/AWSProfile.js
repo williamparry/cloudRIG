@@ -17,7 +17,7 @@ class AWSProfile extends Component {
 				aws_secret_access_key: ""
 			}
 		}
-		
+
 	}
 
 	// TODO move to use the one in App.js
@@ -32,6 +32,7 @@ class AWSProfile extends Component {
 	}
 
 	submit() {
+		
 		if(this.state.disallowedProfileNames.includes(this.state.currentCredentials.profile)) {
 			console.log('disallowed')
 			return;
@@ -47,6 +48,7 @@ class AWSProfile extends Component {
 				<Form.Input label='Profile Name' 
 					placeholder='e.g. default' 
 					name="profile" 
+					disabled={!!this.props.currentCredentials}
 					value={this.state.currentCredentials.profile} 
 					onChange={this.handleChange.bind(this)}
 					required />

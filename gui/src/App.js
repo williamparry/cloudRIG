@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
-import { Icon, Image, Segment, Container, Rail, Step, Divider, TextArea, Form, Grid, Select, Button, Modal, Message } from 'semantic-ui-react'
+import { Icon, Segment, Container, Step, Grid } from 'semantic-ui-react'
 import 'semantic-ui-css/semantic.min.css';
 import './App.css';
-import ParsecLogo from './parsec_logo.svg'
+//import ParsecLogo from './parsec_logo.svg'
 import Configuration from './Configuration';
 import Initialization from './Initialization';
 import Play from './Play';
@@ -18,10 +18,6 @@ class App extends Component {
 		currentPage: pages.Loading,
 		disableNonStartPages: false,
 		logOutput: ["Welcome :)"]
-	}
-
-	constructor() {
-		super()
 	}
 
 	componentDidMount() {
@@ -86,9 +82,9 @@ class App extends Component {
 	render() {
 		
 		const currentPage = 
-			this.state.currentPage == pages.Configuration ? <Configuration /> : 
-			this.state.currentPage == pages.Initialization ? <Initialization /> :
-			this.state.currentPage == pages.Play ? <Play /> : null
+			this.state.currentPage === pages.Configuration ? <Configuration /> : 
+			this.state.currentPage === pages.Initialization ? <Initialization /> :
+			this.state.currentPage === pages.Play ? <Play /> : null
 
 		return (
 			
@@ -97,7 +93,7 @@ class App extends Component {
 					<Grid.Column>
 						<Step.Group attached='top'>
 							<Step link 
-								active={this.state.currentPage == pages.Configuration} 
+								active={this.state.currentPage === pages.Configuration} 
 								onClick={this.changePage.bind(this, pages.Configuration)}
 								disabled={this.state.disableNonStartPages}>
 								<Icon name='configure' />
@@ -106,17 +102,17 @@ class App extends Component {
 								</Step.Content>
 							</Step>
 							<Step link 
-								active={this.state.currentPage == pages.Initialization} 
+								active={this.state.currentPage === pages.Initialization} 
 								onClick={this.changePage.bind(this, pages.Initialization)}
-								disabled={this.state.currentPage == pages.Configuration || this.state.disableNonStartPages}>
+								disabled={this.state.currentPage === pages.Configuration || this.state.disableNonStartPages}>
 								<Icon name='tasks' />
 								<Step.Content>
 									<Step.Title>Initialize</Step.Title>
 								</Step.Content>
 							</Step>
 							<Step link 
-								active={this.state.currentPage == pages.Play}
-								disabled={this.state.currentPage == pages.Configuration || this.state.currentPage == pages.Initialization}>
+								active={this.state.currentPage === pages.Play}
+								disabled={this.state.currentPage === pages.Configuration || this.state.currentPage === pages.Initialization}>
 								<Icon name='game' />
 								<Step.Content>
 								<Step.Title>Play</Step.Title>

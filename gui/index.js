@@ -163,7 +163,7 @@ ipcMain.on('cmd', (event, op, data) => {
 
 function createWindow() {
 	// Create the browser window.
-	win = new BrowserWindow({ width: 800, height: 600, resizable: false, backgroundColor: '#312450', show: false })
+	win = new BrowserWindow({ width: 800, height: 600, resizable: false, show: false })
 
 	// and load the index.html of the app.
 	win.loadURL(url.format({

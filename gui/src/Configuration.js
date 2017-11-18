@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Icon, Image, Segment, Step, Divider, TextArea, Form, Grid, Select, Button, Modal, Message } from 'semantic-ui-react'
+import { Form, Grid, Select, Button, Modal, Message, Confirm } from 'semantic-ui-react'
 import 'semantic-ui-css/semantic.min.css';
 import AWSProfile from './AWSProfile.js';
 import './App.css';
@@ -30,6 +30,7 @@ class Configuration extends Component {
 			profiles: [],
 			addCredentialsOpen: false,
 			editCredentialsOpen: false,
+			confirmRemoveModalOpen: false,
 			errorConfig: false,
 			config: {
 				AWSCredentialsProfile: "",
@@ -62,6 +63,9 @@ class Configuration extends Component {
 					errorConfig: true
 				})
 				break;
+				default:
+
+				break;
 			}
 		})
 
@@ -69,6 +73,14 @@ class Configuration extends Component {
 
 	saveConfiguration() {
 		ipcRenderer.send('cmd', 'saveConfiguration', this.state.config);
+	}
+
+	extractProfileCredentials(credentials) {
+
+		return credentials.match(/\[(.*?)\]/g).map((profile) => {
+			return profile.substring(1, profile.length - 1)
+		})
+
 	}
 
 	componentDidMount() {
@@ -80,9 +92,7 @@ class Configuration extends Component {
 		this.setState({
 			allCredentials: credentials,
 			config: config,
-			profiles: credentials.match(/\[(.*?)\]/g).map((profile) => {
-				return profile.substring(1, profile.length - 1)
-			})
+			profiles: this.extractProfileCredentials(credentials)
 		})
 
 		setTimeout(() => {
@@ -115,11 +125,9 @@ class Configuration extends Component {
 
 	setCurrentCredentials(profile) {
 		
-		const startIndex = this.state.allCredentials.indexOf('[' + profile + ']') + (profile.length + 2)
-		const nextProfile = this.state.profiles[this.state.profiles.indexOf(profile) + 1]
-		const endIndex = this.state.allCredentials.indexOf('[' + nextProfile + ']')
+		var bounds = this.getCredentialsBounds(profile);
 
-		var creds = this.state.allCredentials.substring(startIndex, nextProfile ? endIndex : this.state.allCredentials.length)
+		var creds = this.state.allCredentials.substring(bounds.startIndex, bounds.endIndex)
 			.trim()
 			.split('\n')
 			.map(c => { return c.split('=')[1].trim() })
@@ -134,15 +142,73 @@ class Configuration extends Component {
 
 	}
 
+	getCredentialsBounds(profile) {
+		
+		const startIndex = this.state.allCredentials.indexOf('[' + profile + ']') + (profile.length + 2)
+		const nextProfile = this.state.profiles[this.state.profiles.indexOf(profile) + 1]
+		const endIndex = nextProfile ? this.state.allCredentials.indexOf('[' + nextProfile + ']') : this.state.allCredentials.length
+
+		// TODO: Investigate ES sugar
+		return {
+			startIndex: startIndex,
+			endIndex: endIndex
+		}
+	}
+
 	handleCredentialsEdit(credentialsObject) {
 		//console.log(credentialsObject)
+
+		var bounds = this.getCredentialsBounds(this.state.config.AWSCredentialsProfile)
+
+		let credentialsFile = this.state.allCredentials;
+
+		let replaceStr = `\naws_access_key_id=${credentialsObject.aws_access_key_id}
+aws_secret_access_key=${credentialsObject.aws_secret_access_key}\n`
+
+		credentialsFile = credentialsFile.substring(0, bounds.startIndex) + replaceStr + credentialsFile.substring(bounds.endIndex);
+
+		ipcRenderer.send('cmd', 'saveCredentialsFile', credentialsFile);
+
+		var newState = {
+			editCredentialsOpen: false,
+			allCredentials: credentialsFile,
+			currentCredentials: credentialsObject
+		};
+
+		this.setState(newState)
+
+	}
+
+	handleCredentialsDelete() {
+		
+		var bounds = this.getCredentialsBounds(this.state.config.AWSCredentialsProfile)
+
+		let credentialsFile = this.state.allCredentials;
+
+		credentialsFile = credentialsFile.substring(0, bounds.startIndex - (this.state.config.AWSCredentialsProfile.length + 2)) + credentialsFile.substring(bounds.endIndex);
+
+		ipcRenderer.send('cmd', 'saveCredentialsFile', credentialsFile);
+
+		var newState = {
+			confirmRemoveModalOpen: false,
+			allCredentials: credentialsFile,
+			config: {
+				...this.state.config,
+				AWSCredentialsProfile: ""
+			},
+			profiles: this.extractProfileCredentials(credentialsFile),
+			currentCredentials: {}
+		};
+
+		this.setState(newState)
+
 	}
 
 	handleCredentialsAdd(credentialsObject) {
 
 		let credentialsFile = this.state.allCredentials;
 		
-		credentialsFile += `[${credentialsObject.profile}]
+		credentialsFile += `\n[${credentialsObject.profile}]
 aws_access_key_id=${credentialsObject.aws_access_key_id}
 aws_secret_access_key=${credentialsObject.aws_secret_access_key}`
 
@@ -210,12 +276,29 @@ aws_secret_access_key=${credentialsObject.aws_secret_access_key}`
 		})
 	}
 
+	openConfirmRemoveModal () {
+		this.setState({
+			confirmRemoveModalOpen: true
+		})
+	}
+
+	handleCancelRemoveModal () {
+		this.setState({
+			confirmRemoveModalOpen: false
+		})
+	}
+
 	render() {
 
 		return(
 
 			<div>
-				
+				<Confirm
+					content={`Are you sure you wish to delete AWS Profile: "${this.state.config.AWSCredentialsProfile}"?`}
+					open={this.state.confirmRemoveModalOpen}
+					onCancel={this.handleCancelRemoveModal.bind(this)}
+					onConfirm={this.handleCredentialsDelete.bind(this)}
+				/>
 				<Message error
 					hidden={!this.state.errorConfig}
 					header='Validation Error'
@@ -238,7 +321,7 @@ aws_secret_access_key=${credentialsObject.aws_secret_access_key}`
 							</Grid.Column>
 							<Grid.Column width={8} textAlign="right" verticalAlign="bottom">
 								<Modal open={this.state.addCredentialsOpen} onClose={this.addCredentialsClose.bind(this)} closeIcon trigger={<Button onClick={this.addCredentialsOpen.bind(this)} content='Add' icon='add user' labelPosition='left' />}>
-									<Modal.Header>Add user</Modal.Header>
+									<Modal.Header>Add AWS Profile</Modal.Header>
 									<Modal.Content>
 										<Modal.Description>
 											<AWSProfile disallowedProfileNames={this.state.profiles.filter(p => { return p !== this.state.config.AWSCredentialsProfile} )} handleSubmit={this.handleCredentialsAdd.bind(this)} />
@@ -246,14 +329,14 @@ aws_secret_access_key=${credentialsObject.aws_secret_access_key}`
 									</Modal.Content>
 								</Modal>
 								<Modal open={this.state.editCredentialsOpen} onClose={this.editCredentialsClose.bind(this)} closeIcon trigger={<Button onClick={this.editCredentialsOpen.bind(this)} content='Edit' icon='edit' labelPosition='left' disabled={!this.state.config.AWSCredentialsProfile} />}>
-									<Modal.Header>Edit user</Modal.Header>
+									<Modal.Header>Edit AWS Profile</Modal.Header>
 									<Modal.Content>
 										<Modal.Description>
 											<AWSProfile disallowedProfileNames={this.state.profiles.filter(p => { return p !== this.state.config.AWSCredentialsProfile} )} currentCredentials={this.state.currentCredentials} handleSubmit={this.handleCredentialsEdit.bind(this)} />
 										</Modal.Description>
 									</Modal.Content>
 								</Modal>
-								<Button content='Remove' icon='user delete' labelPosition='left' disabled={!this.state.config.AWSCredentialsProfile} />
+								<Button onClick={this.openConfirmRemoveModal.bind(this)} content='Delete' icon='user delete' labelPosition='left' disabled={!this.state.config.AWSCredentialsProfile || this.state.profiles.length === 1} />
 							</Grid.Column>
 						</Grid.Row>
 						<Grid.Row>
