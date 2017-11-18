@@ -12,7 +12,7 @@
 
 <img width="600" alt="Configuration Screen" src="https://user-images.githubusercontent.com/348091/32979619-fbe44170-cc58-11e7-9428-747dd3a0f9fb.png">
 
-## CLI version (in progres)
+## CLI version
 
 <img width="600" alt="cloudRIG boot screen" src="https://user-images.githubusercontent.com/348091/31599523-1df1ff3e-b253-11e7-9afc-22b37d4cec04.png">
 <img width="600" alt="Parsec Screen" src="https://user-images.githubusercontent.com/348091/31599767-06218612-b254-11e7-951e-5d9b4f9f106d.png">
