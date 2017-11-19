@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Button, Message, Segment, Grid, List, Image, Table, Advertisement } from 'semantic-ui-react'
+import { Button, Message, Segment, Grid, List, Image, Table, Advertisement, Divider } from 'semantic-ui-react'
 import Loading from './Loading';
 import ParsecLogo from './parsec_logo.svg'
 import DiscordIcon from './discord_icon.svg'
@@ -32,6 +32,7 @@ class Play extends Component {
 			this.setState({
 				isStarting: isStarting
 			})
+			ipcRenderer.send('cmd', 'disableNonPlay', true)
 		})
 
 		ipcRenderer.on('stopping', (event, isStopping) => {
@@ -176,6 +177,10 @@ class Play extends Component {
 						<Grid.Column width={10}>
 							{message}
 							{actionButtons}
+							<br /><br />
+							<Divider horizontal>Powered by</Divider>
+							<br />
+							<Image width="200" src={ParsecLogo} />
 
 						</Grid.Column>
 						<Grid.Column width={6}>
@@ -226,11 +231,10 @@ class Play extends Component {
 								
 							</List>
 
-						
-						
-
 						</Grid.Column>
+
 					</Grid.Row>
+
 				</Grid>
 
 			)
