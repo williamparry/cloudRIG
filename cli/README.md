@@ -2,7 +2,6 @@
 
 ## Install & Run
 
-	cd cli
     npm install
     node index
 
