@@ -2,6 +2,12 @@
 
 [Powered by Parsec](https://parsec.tv), but there is an old [ZeroTier + Steam Home Streaming branch](https://github.com/williamparry/cloudRIG/tree/zerotier-steamstreaming)
 
+---
+
+**Note:** I STRONGLY recommend you use a dedicated AWS account for cloudRIG as described [here](https://github.com/williamparry/cloudRIG/wiki/AWS-Testing#setting-up-a-test-account).
+
+---
+
 ## Features
 
 * Play using Parsec for around $0.10c / hour
