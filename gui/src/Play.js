@@ -1,7 +1,12 @@
 import React, { Component } from 'react';
-import { Button, Message } from 'semantic-ui-react'
+import { Button, Message, Segment, Grid, List, Image, Table, Advertisement } from 'semantic-ui-react'
+import Loading from './Loading';
+import ParsecLogo from './parsec_logo.svg'
+import DiscordIcon from './discord_icon.svg'
 
 const { ipcRenderer } = window.require('electron');
+
+let stateTimer;
 
 class Play extends Component {
 
@@ -12,9 +17,10 @@ class Play extends Component {
 		this.state = {
 			isLoading: true,
 			isStarting: false,
-			hasStarted: false,
+			isStopping: false,
 			errorMessage: "",
 			cloudRIGState: {
+				startingInstances: [],
 				activeInstances: [],
 				pendingInstances: [],
 				shuttingDownInstances: [],
@@ -22,18 +28,24 @@ class Play extends Component {
 			}
 		}
 
-		ipcRenderer.on('started', (event) => {
+		ipcRenderer.on('starting', (event, isStarting) => {
 			this.setState({
-				isStarting: false,
-				hasStarted: true
+				isStarting: isStarting
 			})
-		});
+		})
+
+		ipcRenderer.on('stopping', (event, isStopping) => {
+			this.setState({
+				isStopping: isStopping
+			})
+		})
+
+		ipcRenderer.on('started', (event) => {
+			ipcRenderer.send('cmd', 'getState')
+		})
 
 		ipcRenderer.on('stopped', (event) => {
-			this.setState({
-				isStarting: false,
-				hasStarted: false
-			})
+			ipcRenderer.send('cmd', 'getState')
 		})
 
 		ipcRenderer.on('errorPlay', (event, err) => {
@@ -43,38 +55,34 @@ class Play extends Component {
 				hasStarted: false,
 				errorMessage: err
 			})
+
 		});
 
 		ipcRenderer.on('gotState', (event, state) => {
 			
+			if(state.activeInstances.length > 0) {
+				ipcRenderer.send('cmd', 'disableNonPlay', true)
+			} else {
+				ipcRenderer.send('cmd', 'disableNonPlay', false)
+			}
+
 			this.setState({
-				isLoading: false,
 				cloudRIGState: state
 			})
 
-			ipcRenderer.send('cmd', 'log', 'Ready')
-
 		});
-
-		ipcRenderer.on('startRunning', (event, isRunning) => {
-			
-			this.setState({
-				isStarting: true,
-				hasStarted: false
-			})
-
-		})
 
 	}
 
 	componentWillUnmount() {
 
-		ipcRenderer.removeAllListeners('startRunning')
-		ipcRenderer.removeAllListeners('gotState')
+		ipcRenderer.removeAllListeners('starting')
 		ipcRenderer.removeAllListeners('stopped')
 		ipcRenderer.removeAllListeners('started')
+		ipcRenderer.removeAllListeners('gotState')
 
-
+		clearInterval(stateTimer)
+		
 	}
 
 	handleDismiss = () => {
@@ -98,6 +106,20 @@ class Play extends Component {
 			isLoading: true
 		});
 
+		stateTimer = setInterval(() => {
+			ipcRenderer.send('cmd', 'getState')
+		}, 10000)
+
+		ipcRenderer.once('gotState', (event, state) => {
+			
+			event.sender.send('cmd', 'log', '✓ Ready')
+
+			this.setState({
+				isLoading: false
+			});
+
+		});
+
 		ipcRenderer.send('cmd', 'getState')
 
 	}
@@ -107,14 +129,19 @@ class Play extends Component {
 		
 		let actionButtons;
 
-		if(this.state.cloudRIGState.activeInstances.length > 0) {
+		if(this.state.cloudRIGState.activeInstances.length > 0 && !this.state.isStarting) {
 			
-			actionButtons = 
-			<div>
-				<Button content='Stop' icon='stop' labelPosition='right' onClick={this.stop.bind(this)} />
-				<Button content='Schedule stop' icon='stop' labelPosition='right' onClick={this.stop.bind(this)} disabled />
-			</div>
-			
+			if(!this.state.isStopping) {
+				actionButtons = <div>
+					<Button content='Stop' icon='stop' labelPosition='right' onClick={this.stop.bind(this)} />
+					<Button content='Schedule stop' icon='stop' labelPosition='right' onClick={this.stop.bind(this)} disabled />
+				</div>
+			} else {
+				actionButtons = <div>
+					<Button content='Stopping' icon='stop' labelPosition='right' disabled />
+					<Button content='Schedule stop' icon='stop' labelPosition='right' disabled />
+				</div>
+			}
 
 		} else {
 			
@@ -138,21 +165,74 @@ class Play extends Component {
 
 		if(this.state.isLoading) {
 
-			return(
-
-				<div>
-					
-				</div>
-			)
+			return(<Loading message="Setting up" />)
 
 		} else {
 
 			return(
 
-				<div>
-					{message}
-					{actionButtons}
-				</div>
+				<Grid>
+					<Grid.Row>
+						<Grid.Column width={10}>
+							{message}
+							{actionButtons}
+
+						</Grid.Column>
+						<Grid.Column width={6}>
+
+
+							<Table definition>
+
+								<Table.Body>
+									<Table.Row>
+										<Table.Cell>Current Spot Price</Table.Cell>
+										<Table.Cell>-</Table.Cell>
+									</Table.Row>
+									<Table.Row>
+										<Table.Cell>Scheduled Stop</Table.Cell>
+										<Table.Cell>-</Table.Cell>
+									</Table.Row>
+									<Table.Row>
+										<Table.Cell>Pending Instances</Table.Cell>
+										<Table.Cell>-</Table.Cell>
+									</Table.Row>
+									<Table.Row>
+										<Table.Cell>Active Instances</Table.Cell>
+										<Table.Cell>-</Table.Cell>
+									</Table.Row>
+									<Table.Row>
+										<Table.Cell>Stopping Instances</Table.Cell>
+										<Table.Cell>-</Table.Cell>
+									</Table.Row>
+
+								</Table.Body>
+							</Table>	
+
+							<List>
+								<List.Item>
+										<Image width="14" src={DiscordIcon} verticalAlign="middle" style={{marginRight: 4}} />
+										<List.Content><a href="https://discordapp.com/invite/3TS2emF">Discord (javagoogles)</a></List.Content>
+									</List.Item>
+								<List.Item>
+									<List.Icon name='mail' />
+									<List.Content><a href='mailto:williamparry@gmail.com'>williamparry@gmail.com</a></List.Content>
+								</List.Item>
+								<List.Item>
+									<List.Icon name='github' />
+									<List.Content>
+										<a href='https://github.com/williamparry/cloudRIG'>Github</a>
+									</List.Content>
+								</List.Item>
+								
+							</List>
+
+						
+						
+
+						</Grid.Column>
+					</Grid.Row>
+				</Grid>
+
 			)
 		}
 

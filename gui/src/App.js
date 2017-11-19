@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import { Icon, Segment, Container, Step, Grid } from 'semantic-ui-react'
 import 'semantic-ui-css/semantic.min.css';
 import './App.css';
-//import ParsecLogo from './parsec_logo.svg'
 import Configuration from './Configuration';
 import Initialization from './Initialization';
 import Play from './Play';
@@ -31,6 +30,9 @@ class App extends Component {
 				this.setState({
 					currentPage: pages.Initialization
 				});
+
+				event.sender.send('cmd', 'log', '✓ Configured')
+
 				return;		
 			}
 
@@ -45,9 +47,11 @@ class App extends Component {
 				currentPage: pages.Play
 			})
 
+			event.sender.send('cmd', 'log', '✓ Initialized')
+
 		})
 
-		ipcRenderer.on('startRunning', (event, isRunning) => {
+		ipcRenderer.on('disableNonPlay', (event, isRunning) => {
 			
 			this.setState({
 				disableNonStartPages: isRunning

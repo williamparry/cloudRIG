@@ -71,7 +71,7 @@ class Initialization extends Component {
 
 			return(
 
-				<Loading />
+				<Loading message="Processing" />
 
 			)
 

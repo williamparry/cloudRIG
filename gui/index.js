@@ -3,6 +3,7 @@ const path = require('path')
 const url = require('url')
 const async = require('async');
 const cloudrig = require('cloudriglib')
+const argv = require('yargs').argv
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -16,19 +17,16 @@ const log = (message) => {
 
 cloudrig.init(log);
 
-/*
-ipcMain.on('asynchronous-message', (event, arg) => {
-  console.log(arg)  // prints "ping"
-  event.sender.send('asynchronous-reply', 'pong')
-})
-*/
-/*
-ipcMain.on('setup', (event, arg) => {
-  cloudrig.setup(function(err, serviceSetups) {
-    event.returnValue = serviceSetups
-  });
-})
-*/
+// The profile names should match the ones in ~/.aws/credentials
+const testCredentialsFile = `
+[default]
+aws_access_key_id=testaccesskeyid
+aws_secret_access_key=testaccesskeyid
+[cloudrig]
+aws_access_key_id=testaccesskeyid2
+aws_secret_access_key=testaccesskeyid2
+`
+
 ipcMain.on('cmd', (event, op, data) => {
 	
 	switch(op) {
@@ -41,7 +39,24 @@ ipcMain.on('cmd', (event, op, data) => {
 
 		case 'getCredentials':
 
+			if(!argv.prod) {
+				event.returnValue = testCredentialsFile;
+				return;
+			}
 			event.returnValue = cloudrig.getCredentials().toString()
+
+		break;
+
+		case 'saveCredentialsFile':
+
+			if(!argv.prod) {
+				testCredentialsFile = data;
+				event.returnValue = true;
+				return;
+			}
+
+			cloudrig.saveCredentialsFile(data);
+			event.returnValue = true;
 
 		break;
 
@@ -73,17 +88,16 @@ ipcMain.on('cmd', (event, op, data) => {
 
 		break;
 
-		case 'saveCredentialsFile':
-
-			cloudrig.saveCredentialsFile(data);
-			event.returnValue = true;
-
-		break;
-
 		case 'setConfiguration':
 
 			cloudrig.setConfig(cloudrig.getConfigFile())
 			event.returnValue = true;
+
+		break;
+
+		case 'disableNonPlay':
+
+			event.sender.send('disableNonPlay', data)
 
 		break;
 
@@ -139,22 +153,19 @@ ipcMain.on('cmd', (event, op, data) => {
 					return;
 				}
 
-				if(data.activeInstances.length > 0) {
-					event.sender.send('startRunning', true)
-				}
-
 				event.sender.send('gotState', data)
+
 			})
 
 		break;
 
 		case 'start':
 
-			event.sender.send('startRunning', true)
+			event.sender.send('starting', true)
 
 			cloudrig.start(function(err) {
 
-				event.sender.send('startRunning', false)
+				event.sender.send('starting', false)
 
 				if(err) {
 					event.sender.send('errorPlay', err)
@@ -169,13 +180,19 @@ ipcMain.on('cmd', (event, op, data) => {
 
 		case 'stop':
 
+			event.sender.send('stopping', true)
+
 			cloudrig.stop(function(err) {
+
+				event.sender.send('stopping', false)
+
 				if(err) {
 					event.sender.send('errorStop')
 					return;
 				}
+				
 				event.sender.send('stopped')
-				event.sender.send('startRunning', false)
+
 			})
 
 		break;
@@ -184,21 +201,29 @@ ipcMain.on('cmd', (event, op, data) => {
 
 });
 
-
-
 function createWindow() {
-	// Create the browser window.
+
 	win = new BrowserWindow({ width: 800, height: 600, resizable: false, show: false })
 
-	// and load the index.html of the app.
-	win.loadURL(url.format({
-		pathname: path.join(__dirname, 'build/index.html'),
-		protocol: 'file:',
-		slashes: true
-	}))
+	if(!argv.prod) {
 
-	// Open the DevTools.
-	//win.webContents.openDevTools()
+		win.loadURL(url.format({
+			pathname: 'localhost:3000',
+			protocol: 'http:',
+			slashes: true
+		}))
+
+		win.webContents.openDevTools()
+
+	} else {
+
+		win.loadURL(url.format({
+			pathname: path.join(__dirname, 'build/index.html'),
+			protocol: 'file:',
+			slashes: true
+		}))
+
+	}
 	
 	// Emitted when the window is closed.
 	win.on('closed', () => {
