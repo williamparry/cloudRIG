@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import { Button, Message, Segment, Grid, List, Image, Table, Advertisement, Divider } from 'semantic-ui-react'
 import Loading from './Loading';
-import ParsecLogo from './parsec_logo.svg'
-import DiscordIcon from './discord_icon.svg'
+import ParsecLogo from '../img/parsec_logo.svg'
+import DiscordIcon from '../img/discord_icon.svg'
 
 const { ipcRenderer } = window.require('electron');
 
@@ -180,7 +180,9 @@ class Play extends Component {
 							<br /><br />
 							<Divider horizontal>Powered by</Divider>
 							<br />
-							<Image width="200" src={ParsecLogo} />
+							<a href='https://parsecgaming.com' target='_blank' rel='noopener noreferrer'>
+								<Image width="200" src={ParsecLogo} />
+							</a>
 
 						</Grid.Column>
 						<Grid.Column width={6}>
@@ -216,16 +218,16 @@ class Play extends Component {
 							<List>
 								<List.Item>
 										<Image width="14" src={DiscordIcon} verticalAlign="middle" style={{marginRight: 4}} />
-										<List.Content><a href="https://discordapp.com/invite/3TS2emF">Discord (javagoogles)</a></List.Content>
+										<List.Content><a href='https://discordapp.com/invite/3TS2emF' target='_blank' rel='noopener noreferrer'>Discord (javagoogles)</a></List.Content>
 									</List.Item>
 								<List.Item>
 									<List.Icon name='mail' />
-									<List.Content><a href='mailto:williamparry@gmail.com'>williamparry@gmail.com</a></List.Content>
+									<List.Content><a href='mailto:williamparry@gmail.com' target='_blank' rel='noopener noreferrer'>williamparry@gmail.com</a></List.Content>
 								</List.Item>
 								<List.Item>
 									<List.Icon name='github' />
 									<List.Content>
-										<a href='https://github.com/williamparry/cloudRIG'>Github</a>
+										<a href='https://github.com/williamparry/cloudRIG' target='_blank' rel='noopener noreferrer'>Github</a>
 									</List.Content>
 								</List.Item>
 								

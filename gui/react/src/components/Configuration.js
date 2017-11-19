@@ -1,8 +1,7 @@
 import React, { Component } from 'react';
 import { Form, Grid, Select, Button, Modal, Message, Confirm } from 'semantic-ui-react'
 import 'semantic-ui-css/semantic.min.css';
-import AWSProfile from './AWSProfile.js';
-import './App.css';
+import AWSProfile from './configuration/AWSProfile.js';
 const { ipcRenderer } = window.require('electron');
 
 const zonesArr = {
