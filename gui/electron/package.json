@@ -1,11 +1,33 @@
 {
-  "name": "cloudrigelectron",
-  "version": "0.1.0",
-  "private": true,
-  "dependencies": {
-    "electron": "1.7.9",
-    "async": "^2.6.0",
-    "cloudriglib": "file:../../lib",
-    "yargs": "^10.0.3"
-  }
+	"name": "cloudrig",
+	"productName": "cloudRIG",
+	"author": {
+		"name": "William Parry",
+		"email": "williamparry@gmail.com"
+	},
+	"main": "index.js",
+	"description": "Play games with Parsec on AWS for cheap.",
+	"version": "0.1.0",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/williamparry/cloudRIG"
+	},
+	"build": {
+		"appId": "com.williamparry.cloudrig",
+		"mac": {
+			"category": "public.app-category.games"
+		},
+		"files": [
+			"index.js",
+			"build/**/*"
+		]
+	},
+	"dependencies": {
+		"async": "^2.6.0",
+		"cloudriglib": "file:../../lib"
+	},
+	"devDependencies": {
+		"electron": "1.7.9",
+		"electron-builder": "^19.45.5"
+	}
 }

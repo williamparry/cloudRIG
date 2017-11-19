@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Button, Message, Segment, Grid, List, Image, Table, Advertisement, Divider } from 'semantic-ui-react'
+import { Button, Message, Grid, List, Image, Table, Divider } from 'semantic-ui-react'
 import Loading from './Loading';
 import ParsecLogo from '../img/parsec_logo.svg'
 import DiscordIcon from '../img/discord_icon.svg'

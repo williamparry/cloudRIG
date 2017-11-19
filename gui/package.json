@@ -3,12 +3,11 @@
 	"version": "0.1.0",
 	"private": true,
 	"scripts": {
-		"dev": "concurrently --kill-others \"cd react && BROWSER=none npm run start\" \"./node_modules/.bin/electron electron\"",
-		"build": "react-scripts build"
+		"dev": "cd react && BROWSER=none npm run start & ./node_modules/.bin/electron electron",
+		"build": "rm -rf tmp && cd ./electron && npm install --only=production && cd .. && cp -r ./electron ./tmp && cd ./react && npm run build && cd .. && cp -r react/build tmp && cd tmp && mv -f index.prod.js index.js && ../node_modules/.bin/electron-builder"
 	},
 	"devDependencies": {
 		"cloudrigelectron": "file:./electron",
-		"cloudrigreact": "file:./react",
-		"concurrently": "^3.5.0"
+		"cloudrigreact": "file:./react"
 	}
 }

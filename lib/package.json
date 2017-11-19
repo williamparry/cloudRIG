@@ -4,21 +4,20 @@
 	"description": "Stream your games on the cheap.",
 	"main": "index.js",
 	"scripts": {
-	  "test": "echo \"Error: no test specified\" && exit 1"
+		"test": "echo \"Error: no test specified\" && exit 1"
 	},
 	"repository": {
-	  "type": "git"
+		"type": "git"
 	},
 	"keywords": [],
 	"author": "",
 	"license": "ISC",
 	"dependencies": {
-	  "async": "^2.5.0",
-	  "aws-sdk": "^2.125.0",
-	  "external-ip": "^0.2.4",
-	  "jszip": "^3.1.4",
-	  "moment": "^2.19.2",
-	  "tmp": "0.0.33"
+		"async": "^2.5.0",
+		"aws-sdk": "^2.125.0",
+		"external-ip": "^0.2.4",
+		"jszip": "^3.1.4",
+		"moment": "^2.19.2",
+		"tmp": "0.0.33"
 	}
-  }
-  
+}
