@@ -1,25 +1,14 @@
 {
-  "name": "cloudrig",
-  "version": "0.1.0",
-  "private": true,
-  "dependencies": {
-    "async": "^2.6.0",
-    "cloudriglib": "file:../lib",
-    "react": "^16.1.1",
-    "react-dom": "^16.1.1",
-    "react-scripts": "1.0.17",
-    "semantic-ui-css": "^2.2.12",
-    "semantic-ui-react": "^0.76.0",
-    "yargs": "^10.0.3"
-  },
-  "scripts": {
-    "start": "react-scripts start | ./node_modules/.bin/electron .",
-    "build": "react-scripts build",
-    "test": "react-scripts test --env=jsdom",
-    "eject": "react-scripts eject"
-  },
-  "homepage": ".",
-  "devDependencies": {
-    "electron": "1.7.9"
-  }
+	"name": "cloudrig",
+	"version": "0.1.0",
+	"private": true,
+	"scripts": {
+		"dev": "concurrently --kill-others \"cd react && BROWSER=none npm run start\" \"./node_modules/.bin/electron electron\"",
+		"build": "react-scripts build"
+	},
+	"devDependencies": {
+		"cloudrigelectron": "file:./electron",
+		"cloudrigreact": "file:./react",
+		"concurrently": "^3.5.0"
+	}
 }

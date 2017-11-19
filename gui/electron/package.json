@@ -1,0 +1,11 @@
+{
+  "name": "cloudrigelectron",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "electron": "1.7.9",
+    "async": "^2.6.0",
+    "cloudriglib": "file:../../lib",
+    "yargs": "^10.0.3"
+  }
+}
