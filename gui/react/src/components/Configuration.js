@@ -17,7 +17,6 @@ const zonesArr = {
 
 class Configuration extends Component {
 
-
 	constructor(props) {
 
 		super(props)
@@ -31,6 +30,7 @@ class Configuration extends Component {
 			editCredentialsOpen: false,
 			confirmRemoveModalOpen: false,
 			config: {
+				AWSCredentialsFile: "",
 				AWSCredentialsProfile: "",
 				AWSRegion: "",
 				AWSAvailabilityZone: "",
@@ -54,6 +54,25 @@ class Configuration extends Component {
 			
 		});
 
+		ipcRenderer.on('credentialsFileChosen', (event, filePaths) => {
+
+			if(filePaths) {
+				var newConfig = {...this.state.config, AWSCredentialsFile: filePaths[0]}
+				ipcRenderer.send('cmd', 'saveConfiguration', newConfig, true);
+			} else {
+				ipcRenderer.send('cmd', 'closeWithError', 'You have to select an AWS credentials file to use cloudRIG');
+			}
+			
+			
+
+		});
+
+		ipcRenderer.on('reInit', (event, filePaths) => {
+			this.init()
+		});
+
+		
+
 	}
 
 	saveConfiguration() {
@@ -73,10 +92,28 @@ class Configuration extends Component {
 	}
 
 	componentDidMount() {
-		//const setupSteps = ipcRenderer.send('setup');
-		//console.log(setupSteps)
-		const credentials = ipcRenderer.sendSync('cmd', 'getCredentials');
+		this.init();
+	}
+
+	init() {
+
 		const config = ipcRenderer.sendSync('cmd', 'getConfiguration');
+		
+		if(!config.AWSCredentialsFile) {
+			
+			this.setState({
+				config: config
+			});
+
+			ipcRenderer.send('cmd', 'selectCredentialsFile');
+			return;
+		}
+
+		ipcRenderer.sendSync('cmd', 'setConfiguration');
+		
+
+		const credentials = ipcRenderer.sendSync('cmd', 'getCredentials');
+		
 
 		this.setState({
 			allCredentials: credentials,

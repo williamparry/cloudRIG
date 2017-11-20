@@ -4,7 +4,7 @@
 	"private": true,
 	"scripts": {
 		"dev": "cd react && BROWSER=none npm run start & ./node_modules/.bin/electron electron",
-		"build": "rm -rf .tmp && cd ./electron && npm install --only=production && cd .. && cp -r ./electron ./.tmp && cd ./react && npm run build && cd .. && cp -r react/build .tmp && cd .tmp && mv -f index.prod.js index.js && ../node_modules/.bin/electron-builder && cd .. && rm -rf .tmp"
+		"build": "rm -rf .tmp && cd ./electron && npm install --only=production && cd .. && cp -r ./electron ./.tmp && cd ./react && npm run build && cd .. && cp -r react/build .tmp && cd .tmp && mv -f index.prod.js index.js && ../node_modules/.bin/electron-builder --dir && cd .. && rm -rf .tmp"
 	},
 	"devDependencies": {
 		"cloudrigelectron": "file:./electron",

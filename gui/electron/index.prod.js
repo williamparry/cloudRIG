@@ -17,7 +17,7 @@ const log = (message) => {
 
 cloudrig.init(log);
 
-ipcMain.on('cmd', (event, op, data) => {
+ipcMain.on('cmd', (event, op, data, flags) => {
 	
 	switch(op) {
 
@@ -40,6 +40,23 @@ ipcMain.on('cmd', (event, op, data) => {
 
 		break;
 
+		case 'selectCredentialsFile':
+
+			dialog.showOpenDialog(win, {
+				title: "Select AWS Credentials file",
+				defaultPath: "~/.aws",
+				properties: [
+					"openFile",
+					"promptToCreate",
+					"showHiddenFiles"
+				],
+				message: "Select AWS Credentials file; this will be loaded into the cloudRIG app"
+			}, function(filePaths) {
+				event.sender.send('credentialsFileChosen', filePaths)
+			})
+
+		break;
+
 		case 'getConfiguration':
 
 			event.returnValue = cloudrig.getConfigFile()
@@ -56,14 +73,20 @@ ipcMain.on('cmd', (event, op, data) => {
 
 		case 'saveConfiguration':
 
-			cloudrig.validateRequiredConfig(data, function(err) {
-				if(err) {
-					event.sender.send('error', err)
-					return;
-				}
+			if(flags) {
 				cloudrig.setConfigFile(data);
-				event.sender.send('getConfigurationValidity', true)
-			});
+				cloudrig.setConfig(data);
+				event.sender.send('reInit')
+			} else {
+				cloudrig.validateRequiredConfig(data, function(err) {
+					if(err) {
+						event.sender.send('error', err)
+						return;
+					}
+					cloudrig.setConfigFile(data);
+					event.sender.send('getConfigurationValidity', true)
+				});
+			}
 			
 
 		break;
@@ -179,6 +202,17 @@ ipcMain.on('cmd', (event, op, data) => {
 				type: "error",
 				message: data
 			})
+
+		break;
+
+		case 'closeWithError':
+
+			dialog.showMessageBox(win, {
+				type: "error",
+				message: data
+			})
+
+			win.close();
 
 		break;
 
