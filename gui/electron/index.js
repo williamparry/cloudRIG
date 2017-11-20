@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron')
+const { app, BrowserWindow, ipcMain, dialog } = require('electron')
 const path = require('path')
 const url = require('url')
 const async = require('async');
@@ -17,7 +17,7 @@ const log = (message) => {
 cloudrig.init(log);
 
 // The profile names should match the ones in ~/.aws/credentials
-const testCredentialsFile = `
+let testCredentialsFile = `
 [default]
 aws_access_key_id=testaccesskeyid
 aws_secret_access_key=testaccesskeyid
@@ -67,7 +67,7 @@ ipcMain.on('cmd', (event, op, data) => {
 
 			cloudrig.validateRequiredConfig(data, function(err) {
 				if(err) {
-					event.sender.send('cmd', 'errorConfig')
+					event.sender.send('error', err)
 					return;
 				}
 				cloudrig.setConfigFile(data);
@@ -94,7 +94,7 @@ ipcMain.on('cmd', (event, op, data) => {
 		
 			cloudrig.setup(function (err, setups) {
 				if(err) {
-					event.sender.send('cmd', 'errorSetup')
+					event.sender.send('error', err)
 					return;
 				}
 				if(setups.length > 0) {
@@ -121,7 +121,7 @@ ipcMain.on('cmd', (event, op, data) => {
 				async.parallel(toProcess, function(err, val) {
 
 					if(err) {
-						event.sender.send('cmd', 'errorSetup')
+						event.sender.send('error', err)
 						return;
 					}
 
@@ -160,8 +160,6 @@ ipcMain.on('cmd', (event, op, data) => {
 					event.sender.send('errorPlay', err)
 					return;
 				}
-
-				event.sender.send('started')
 				
 			})
 
@@ -179,9 +177,16 @@ ipcMain.on('cmd', (event, op, data) => {
 					event.sender.send('errorStop')
 					return;
 				}
-				
-				event.sender.send('stopped')
 
+			})
+
+		break;
+
+		case 'error':
+
+			dialog.showMessageBox(win, {
+				type: "error",
+				message: data
 			})
 
 		break;
@@ -193,7 +198,6 @@ ipcMain.on('cmd', (event, op, data) => {
 function createWindow() {
 
 	win = new BrowserWindow({ width: 800, height: 600, resizable: false, show: false })
-
 
 	win.loadURL(url.format({
 		pathname: 'localhost:3000',

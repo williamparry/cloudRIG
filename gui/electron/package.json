@@ -17,6 +17,10 @@
 		"mac": {
 			"category": "public.app-category.games"
 		},
+		"directories": {
+			"output": "../releases",
+			"buildResources": "assets"
+		},
 		"files": [
 			"index.js",
 			"build/**/*"

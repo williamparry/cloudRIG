@@ -28,15 +28,7 @@ class Initialization extends Component {
 			ipcRenderer.send('cmd', 'setup');
 
 		});
-
-		ipcRenderer.on('errorSetup', (event, err) => {
-
-			this.setState({
-				isLoading: false
-			})
-
-			console.log(err)
-		})
+		
 	}
 
 	componentDidMount() {
@@ -62,7 +54,6 @@ class Initialization extends Component {
 	componentWillUnmount() {
 		ipcRenderer.removeAllListeners('setups')
 		ipcRenderer.removeAllListeners('setupCheck')
-		ipcRenderer.removeAllListeners('errorSetup')
 	}
 
 	render() {

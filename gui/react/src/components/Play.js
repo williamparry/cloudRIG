@@ -1,12 +1,12 @@
 import React, { Component } from 'react';
-import { Button, Message, Grid, List, Image, Table, Divider } from 'semantic-ui-react'
+import { Button, Grid, List, Image, Table, Divider, Icon } from 'semantic-ui-react'
 import Loading from './Loading';
 import ParsecLogo from '../img/parsec_logo.svg'
 import DiscordIcon from '../img/discord_icon.svg'
 
 const { ipcRenderer } = window.require('electron');
 
-let stateTimer;
+let stateTimeout;
 
 class Play extends Component {
 
@@ -16,60 +16,56 @@ class Play extends Component {
 
 		this.state = {
 			isLoading: true,
-			isStarting: false,
-			isStopping: false,
+			immediateIsStarting: false,
+			immediateIsStopping: false,
 			errorMessage: "",
 			cloudRIGState: {
-				startingInstances: [],
-				activeInstances: [],
-				pendingInstances: [],
-				shuttingDownInstances: [],
-				stoppedInstances: []
+				activeInstance: null,
+				instanceReady: false,
+				instanceStopping: false,
+				scheduledStop: null,
+				currentSpotPrice: null,
+				remainingTime: null
 			}
 		}
 
 		ipcRenderer.on('starting', (event, isStarting) => {
 			this.setState({
-				isStarting: isStarting
+				immediateIsStarting: isStarting
 			})
-			ipcRenderer.send('cmd', 'disableNonPlay', true)
 		})
 
 		ipcRenderer.on('stopping', (event, isStopping) => {
 			this.setState({
-				isStopping: isStopping
+				immediateIsStopping: isStopping
 			})
 		})
-
-		ipcRenderer.on('started', (event) => {
-			ipcRenderer.send('cmd', 'getState')
-		})
-
-		ipcRenderer.on('stopped', (event) => {
-			ipcRenderer.send('cmd', 'getState')
-		})
-
+		
 		ipcRenderer.on('errorPlay', (event, err) => {
 
-			this.setState({
-				isStarting: false,
-				hasStarted: false,
-				errorMessage: err
-			})
+			ipcRenderer.send('cmd', 'error', err)
 
+			this.setState({
+				immediateIsStarting: false,
+				immediateIsStopping: false
+			})
 		});
 
 		ipcRenderer.on('gotState', (event, state) => {
 			
-			if(state.activeInstances.length > 0) {
-				ipcRenderer.send('cmd', 'disableNonPlay', true)
-			} else {
-				ipcRenderer.send('cmd', 'disableNonPlay', false)
-			}
-
 			this.setState({
 				cloudRIGState: state
 			})
+
+			ipcRenderer.send('cmd', 'disableNonPlay', 
+				this.state.immediateIsStarting || 
+				this.state.immediateIsStopping ||
+				this.state.cloudRIGState.instanceStopping || 
+				!!this.state.cloudRIGState.activeInstance)
+
+			stateTimeout = setTimeout(() => {
+				ipcRenderer.send('cmd', 'getState')
+			}, 5000)
 
 		});
 
@@ -78,38 +74,23 @@ class Play extends Component {
 	componentWillUnmount() {
 
 		ipcRenderer.removeAllListeners('starting')
-		ipcRenderer.removeAllListeners('stopped')
-		ipcRenderer.removeAllListeners('started')
+		ipcRenderer.removeAllListeners('stopping')
 		ipcRenderer.removeAllListeners('gotState')
+		ipcRenderer.removeAllListeners('errorPlay')
 
-		clearInterval(stateTimer)
+		clearTimeout(stateTimeout)
 		
 	}
 
-	handleDismiss = () => {
-		this.setState({
-			errorMessage: ""
-		})
+	start() { ipcRenderer.send('cmd', 'start') }
 
-	}
-
-	start() {
-		ipcRenderer.send('cmd', 'start')
-	}
-
-	stop() {
-		ipcRenderer.send('cmd', 'stop')
-	}
+	stop() { ipcRenderer.send('cmd', 'stop') }
 
 	componentDidMount() {
 
 		this.setState({
 			isLoading: true
 		});
-
-		stateTimer = setInterval(() => {
-			ipcRenderer.send('cmd', 'getState')
-		}, 10000)
 
 		ipcRenderer.once('gotState', (event, state) => {
 			
@@ -125,14 +106,13 @@ class Play extends Component {
 
 	}
 	
-
 	render() {
 		
 		let actionButtons;
 
-		if(this.state.cloudRIGState.activeInstances.length > 0 && !this.state.isStarting) {
+		if(this.state.cloudRIGState.instanceReady || this.state.cloudRIGState.instanceStopping) {
 			
-			if(!this.state.isStopping) {
+			if(!this.state.cloudRIGState.instanceStopping && !this.state.immediateIsStopping) {
 				actionButtons = <div>
 					<Button content='Stop' icon='stop' labelPosition='right' onClick={this.stop.bind(this)} />
 					<Button content='Schedule stop' icon='stop' labelPosition='right' onClick={this.stop.bind(this)} disabled />
@@ -146,22 +126,16 @@ class Play extends Component {
 
 		} else {
 			
-			if(!this.state.isStarting) {
-				actionButtons = <Button content='Start' icon='play' labelPosition='right' onClick={this.start.bind(this)} />
-			} else {
-				actionButtons = <Button content='Starting...' icon='play' labelPosition='right' disabled />
+			if(!this.state.cloudRIGState.instanceReady) {
+
+				if(!this.state.cloudRIGState.activeInstance && !this.state.immediateIsStarting) {
+					actionButtons = <Button content='Start' icon='play' labelPosition='right' onClick={this.start.bind(this)} />
+				} else {
+					actionButtons = <Button content='Starting...' icon='play' labelPosition='right' disabled />
+				}
+
 			}
 
-		}
-
-		let message = ""
-
-		if(this.state.errorMessage) {
-			message = <Message
-				onDismiss={this.handleDismiss.bind(this)}
-				header='cloudRIG could not start'
-				content={this.state.errorMessage}
-			/>
 		}
 
 		if(this.state.isLoading) {
@@ -170,12 +144,19 @@ class Play extends Component {
 
 		} else {
 
+			const readyCell = this.state.cloudRIGState.instanceReady ? <Icon name='circle' color='green' /> : '-'
+
+			const stoppingCell = this.state.cloudRIGState.instanceStopping ? <Icon name='circle' color='red' /> : '-'
+
+			const remainingCell = this.state.cloudRIGState.scheduledStop ? this.state.cloudRIGState.remainingTime : '-'
+
+			const spotCell = this.state.cloudRIGState.currentSpotPrice;
+
 			return(
 
 				<Grid>
 					<Grid.Row>
 						<Grid.Column width={10}>
-							{message}
 							{actionButtons}
 							<br /><br />
 							<Divider horizontal>Powered by</Divider>
@@ -187,29 +168,24 @@ class Play extends Component {
 						</Grid.Column>
 						<Grid.Column width={6}>
 
-
 							<Table definition>
 
 								<Table.Body>
 									<Table.Row>
+										<Table.Cell>Ready</Table.Cell>
+										<Table.Cell>{readyCell}</Table.Cell>
+									</Table.Row>
+									<Table.Row>
+										<Table.Cell>Stopping</Table.Cell>
+										<Table.Cell>{stoppingCell}</Table.Cell>
+									</Table.Row>
+									<Table.Row>
+										<Table.Cell>Remaining time</Table.Cell>
+										<Table.Cell>{remainingCell}</Table.Cell>
+									</Table.Row>
+									<Table.Row>
 										<Table.Cell>Current Spot Price</Table.Cell>
-										<Table.Cell>-</Table.Cell>
-									</Table.Row>
-									<Table.Row>
-										<Table.Cell>Scheduled Stop</Table.Cell>
-										<Table.Cell>-</Table.Cell>
-									</Table.Row>
-									<Table.Row>
-										<Table.Cell>Pending Instances</Table.Cell>
-										<Table.Cell>-</Table.Cell>
-									</Table.Row>
-									<Table.Row>
-										<Table.Cell>Active Instances</Table.Cell>
-										<Table.Cell>-</Table.Cell>
-									</Table.Row>
-									<Table.Row>
-										<Table.Cell>Stopping Instances</Table.Cell>
-										<Table.Cell>-</Table.Cell>
+										<Table.Cell>${spotCell}</Table.Cell>
 									</Table.Row>
 
 								</Table.Body>

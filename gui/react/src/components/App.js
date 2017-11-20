@@ -74,6 +74,13 @@ class App extends Component {
 			})
 		})
 
+		ipcRenderer.on('error', (event, arg) => {
+			ipcRenderer.send('cmd', 'error', 'Sorry, there was an error, see log below.');
+
+			event.sender.send('cmd', 'log', arg)
+
+		})
+
 	}
 
 	changePage(e) {

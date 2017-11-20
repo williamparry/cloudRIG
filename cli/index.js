@@ -25,18 +25,7 @@ function displayState(cb) {
 
 	cloudrig.getState(function(err, state) {
 		
-		var display = {
-
-			"Instances": {
-				"Active": state.activeInstances.length > 0 ? state.activeInstances.map(function(f) { return f.PublicDnsName; }) : 0,
-				"Pending": state.pendingInstances.length,
-				"Shutting down": state.shuttingDownInstances.length,
-				"Stopped": state.stoppedInstances.length,
-				"Scheduled stop": !!state.scheduledStop
-			}
-		};
-				
-		console.log(prettyjson.render(display, null, 4));
+		console.log(prettyjson.render(state, null, 4));
 
 		cb();
 
@@ -48,9 +37,14 @@ function mainMenu() {
 
 	cloudrig.getState(function(err, state) {
 		
+		if(err) {
+			criticalError(err);
+			return;
+		}
+
 		var choices;
 
-		if(state.activeInstances.length > 0) {
+		if(state.activeInstance) {
 
 			if(!state.scheduledStop) {
 				choices = ["Stop"];
@@ -237,7 +231,7 @@ function advancedMenu(cb) {
 
 		var choices = ["« Back"];
 
-		if(state.activeInstances.length > 0) {
+		if(state.activeInstance) {
 			choices.push(
 				"Send Command"
 			);

@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Form, Grid, Select, Button, Modal, Message, Confirm } from 'semantic-ui-react'
+import { Form, Grid, Select, Button, Modal, Confirm } from 'semantic-ui-react'
 import 'semantic-ui-css/semantic.min.css';
 import AWSProfile from './configuration/AWSProfile.js';
 const { ipcRenderer } = window.require('electron');
@@ -30,7 +30,6 @@ class Configuration extends Component {
 			addCredentialsOpen: false,
 			editCredentialsOpen: false,
 			confirmRemoveModalOpen: false,
-			errorConfig: false,
 			config: {
 				AWSCredentialsProfile: "",
 				AWSRegion: "",
@@ -54,19 +53,6 @@ class Configuration extends Component {
 			this.state.allZones = [...this.state.zones]
 			
 		});
-
-		ipcRenderer.on('cmd', (event, arg) => {
-			switch(arg) {
-				case 'errorConfig':
-				this.setState({
-					errorConfig: true
-				})
-				break;
-				default:
-
-				break;
-			}
-		})
 
 	}
 
@@ -104,10 +90,6 @@ class Configuration extends Component {
 			}
 		}, 0)
 
-	}
-
-	componentWillUnmount() {
-		ipcRenderer.removeAllListeners('cmd')
 	}
 
 	handleChange(e, data) {
@@ -302,10 +284,6 @@ aws_secret_access_key=${credentialsObject.aws_secret_access_key}`
 					onCancel={this.handleCancelRemoveModal.bind(this)}
 					onConfirm={this.handleCredentialsDelete.bind(this)}
 				/>
-				<Message error
-					hidden={!this.state.errorConfig}
-					header='Validation Error'
-					content='Invalid AWS credentials. Please check your configuration' />
 				<Form>
 					<Grid>
 						<Grid.Row>
