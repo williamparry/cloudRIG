@@ -63,15 +63,11 @@ class Configuration extends Component {
 				ipcRenderer.send('cmd', 'closeWithError', 'You have to select an AWS credentials file to use cloudRIG');
 			}
 			
-			
-
 		});
 
-		ipcRenderer.on('reInit', (event, filePaths) => {
+		ipcRenderer.on('reInit', (event) => {
 			this.init()
 		});
-
-		
 
 	}
 
@@ -105,7 +101,9 @@ class Configuration extends Component {
 				config: config
 			});
 
-			ipcRenderer.send('cmd', 'selectCredentialsFile');
+			setTimeout(() => {
+				ipcRenderer.send('cmd', 'selectCredentialsFile');
+			}, 0)
 			return;
 		}
 

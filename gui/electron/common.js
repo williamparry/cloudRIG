@@ -1,4 +1,5 @@
 const { app, BrowserWindow, ipcMain, dialog } = require('electron')
+require('electron-context-menu')();
 const url = require('url')
 const async = require('async');
 const cloudrig = require('cloudriglib')

@@ -4,4 +4,4 @@ node_modules
 *.log
 .DS_STORE
 .vscode
-releases
+_releases

@@ -18,7 +18,7 @@
 			"category": "public.app-category.games"
 		},
 		"directories": {
-			"output": "../releases",
+			"output": "../../_releases",
 			"buildResources": "assets"
 		},
 		"files": [
@@ -29,10 +29,10 @@
 	},
 	"dependencies": {
 		"async": "^2.6.0",
-		"cloudriglib": "file:../../lib"
+		"cloudriglib": "file:../../lib",
+		"electron-context-menu": "^0.9.1"
 	},
 	"devDependencies": {
-		"electron": "1.7.9",
-		"electron-builder": "^19.45.5"
+		"electron": "1.7.9"
 	}
 }
