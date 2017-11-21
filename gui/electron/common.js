@@ -220,11 +220,17 @@ function init(_urlObj, _onCreateWindow) {
 
 			break;
 
+			case 'changePage':
+
+				event.sender.send('changePage', data)
+
+			break;
+
 			case 'error':
 
 				dialog.showMessageBox(win, {
 					type: "error",
-					message: data
+					message: JSON.stringify(data, null, 4)
 				})
 
 			break;
@@ -233,7 +239,7 @@ function init(_urlObj, _onCreateWindow) {
 
 				dialog.showMessageBox(win, {
 					type: "error",
-					message: data
+					message: JSON.stringify(data, null, 4)
 				})
 
 				win.close();

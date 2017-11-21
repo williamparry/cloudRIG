@@ -53,6 +53,12 @@ class Play extends Component {
 
 		ipcRenderer.on('gotState', (event, state) => {
 			
+			if(!state.currentSpotPrice) {
+				event.sender.send('cmd', 'error', 'This Availability Zone does not appear to have a spot price. Please select another in Configuration.')
+				ipcRenderer.send('cmd', 'changePage', 1)
+				return;
+			}
+
 			this.setState({
 				cloudRIGState: state
 			})

@@ -488,10 +488,7 @@ function startCloudrig() {
 
 	], function(err) {
 
-		if(err) {
-			criticalError(err);
-			return;
-		}
+		if(err) { criticalError(err); return; }
 
 		mainMenu();
 
@@ -499,116 +496,7 @@ function startCloudrig() {
 
 }
 
-function init() {
-
-	cloudrig.init(console.log);
-
-	async.series([
-
-		function(cb) {
-
-			var credentials = cloudrig.getCredentials().toString();
-
-			function done(err) {
-				if(err) {
-					cb(err);
-					return;
-				}
-				
-				console.log("Done. Wait for 10s for it to propagate.");
-				setTimeout(start, 10000);
-				
-			}
-
-			if(!credentials) {
-
-				inquirer.prompt([{
-					type: "confirm",
-					name: "openconsole",
-					message: "I can't find your AWS credentials file in ~/.aws/credentials. Open AWS console?",
-					default: true
-				}]).then(function(answers) {
-					if(answers.openconsole) {
-						open("https://console.aws.amazon.com/");
-					} else {
-						console.log("OK, when you've set it try again.");
-					}
-				});
-
-			} else if(credentials.indexOf("[cloudrig]") === -1) {
-
-				console.log("\n");
-				console.log("[!] BACK UP YOUR EXISTING CREDENTIALS FILE FIRST [!]");
-				console.log("[!] BACK UP YOUR EXISTING CREDENTIALS FILE FIRST [!]");
-				console.log("[!] BACK UP YOUR EXISTING CREDENTIALS FILE FIRST [!]");
-				console.log("\n");
-
-				inquirer.prompt([{
-					type: "confirm",
-					name: "openconsole",
-					message: "Looks like your have a credentials file but no 'cloudrig' profile. Open AWS console?",
-					default: true
-				}]).then(function(answers) {
-					if(answers.openconsole) {
-						open("https://console.aws.amazon.com/");
-					} else {
-						console.log("OK, when cloudrig configuration starts, you can use another profile such as 'default'");
-						cb();
-					}
-				});
-
-			} else {
-				cb();
-			}
-		},
-
-		function(cb) {
-
-			var parsecServerId = cloudrig.getConfigFile().ParsecServerId;
-			
-			if(!parsecServerId) {
-
-				inquirer.prompt([{
-					type: "confirm",
-					name: "hasparsec",
-					message: "Do you have a Parsec account and server key?",
-					default: true
-				}]).then(function(answers) {
-
-					if(answers.hasparsec) {
-						
-						console.log("OK great, when it sets up next you will be asked to put in your server key");
-
-					} else {
-						
-						console.log("OK, make an account or login here and get the server_key");
-						open("https://parsec.tv/add-computer/own");
-						
-					}
-
-					cb();
-
-				});
-
-			} else {
-				cb();
-			}
-
-		}
-	], function(err) {
-
-		if(err) {
-			console.log("Something went wrong, or timed out.");
-			console.log(err);
-			return;
-		}
-
-		startCloudrig();
-
-	});
-
-}
-
 // INIT
 showIntro();
-init();
+cloudrig.init(console.log);
+startCloudrig();

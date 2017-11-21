@@ -58,12 +58,19 @@ class App extends Component {
 			})
 
 		})
-		
 
+		ipcRenderer.on('changePage', (event, newPage) => {
+			
+			this.setState({
+				currentPage: newPage
+			})
+
+		})
+		
 		ipcRenderer.on('log', (event, arg) => {
 			
 			this.setState({
-				logOutput: [...this.state.logOutput, arg]
+				logOutput: [...this.state.logOutput, typeof arg === "string" ? arg : JSON.stringify(arg, null, 4)]
 			})
 
 			setTimeout(() => {
@@ -88,6 +95,7 @@ class App extends Component {
 		this.setState({
 			currentPage: e
 		})
+
 	}
 
 	render() {
