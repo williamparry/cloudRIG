@@ -68,10 +68,10 @@ class Initialization extends Component {
 
 		} else if(this.state.setupSteps.length > 0) {
 
-			const setupSteps = this.state.setupSteps.map((step) => {
+			const setupSteps = this.state.setupSteps.map((step, i) => {
 
 				return (
-					<List.Item>
+					<List.Item key={"step-" + i}>
 						<List.Icon name='question circle' />
 						<List.Content>{step.q}</List.Content>
 					</List.Item>

@@ -25,7 +25,8 @@ class Play extends Component {
 				instanceStopping: false,
 				scheduledStop: null,
 				currentSpotPrice: null,
-				remainingTime: null
+				remainingTime: null,
+				savingInstance: null
 			}
 		}
 
@@ -66,6 +67,7 @@ class Play extends Component {
 			ipcRenderer.send('cmd', 'disableNonPlay', 
 				this.state.immediateIsStarting || 
 				this.state.immediateIsStopping ||
+				this.state.cloudRIGState.savingInstance ||
 				this.state.cloudRIGState.instanceStopping || 
 				!!this.state.cloudRIGState.activeInstance)
 
@@ -116,7 +118,11 @@ class Play extends Component {
 		
 		let actionButtons;
 
-		if(this.state.cloudRIGState.instanceReady || this.state.cloudRIGState.instanceStopping) {
+		if(this.state.cloudRIGState.savingInstance || (this.state.cloudRIGState.savingInstance && this.state.immediateIsStopping)) {
+
+			actionButtons = <div><Button content='Saving...' icon='save' labelPosition='right' disabled /></div>
+
+		} else if(this.state.cloudRIGState.instanceReady || this.state.cloudRIGState.instanceStopping) {
 			
 			if(!this.state.cloudRIGState.instanceStopping && !this.state.immediateIsStopping) {
 				actionButtons = <div>
@@ -135,9 +141,9 @@ class Play extends Component {
 			if(!this.state.cloudRIGState.instanceReady) {
 
 				if(!this.state.cloudRIGState.activeInstance && !this.state.immediateIsStarting) {
-					actionButtons = <Button content='Start' icon='play' labelPosition='right' onClick={this.start.bind(this)} />
+					actionButtons = <div><Button content='Start' icon='play' labelPosition='right' onClick={this.start.bind(this)} /></div>
 				} else {
-					actionButtons = <Button content='Starting...' icon='play' labelPosition='right' disabled />
+					actionButtons = <div><Button content='Starting...' icon='play' labelPosition='right' disabled /></div>
 				}
 
 			}
@@ -153,6 +159,8 @@ class Play extends Component {
 			const readyCell = this.state.cloudRIGState.instanceReady ? <Icon name='circle' color='green' /> : '-'
 
 			const stoppingCell = this.state.cloudRIGState.instanceStopping ? <Icon name='circle' color='red' /> : '-'
+
+			const savingCell = this.state.cloudRIGState.savingInstance ? <Icon loading name='spinner' /> : '-'
 
 			const remainingCell = this.state.cloudRIGState.scheduledStop ? this.state.cloudRIGState.remainingTime : '-'
 
@@ -184,6 +192,10 @@ class Play extends Component {
 									<Table.Row>
 										<Table.Cell>Stopping</Table.Cell>
 										<Table.Cell>{stoppingCell}</Table.Cell>
+									</Table.Row>
+									<Table.Row>
+										<Table.Cell>Saving</Table.Cell>
+										<Table.Cell>{savingCell}</Table.Cell>
 									</Table.Row>
 									<Table.Row>
 										<Table.Cell>Remaining time</Table.Cell>
