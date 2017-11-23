@@ -50,7 +50,7 @@ class Configuration extends Component {
 			confirmRemoveModalOpen: false,
 			config: config,
 			allCredentials: credentials,
-			currentCredentials: this.getCurrentCredentials(credentials, profiles, config.AWSCredentialsProfile)
+			currentCredentials: config.AWSCredentialsProfile ? this.getCurrentCredentials(credentials, profiles, config.AWSCredentialsProfile) : {}
 		}
 		
 	}
