@@ -52,7 +52,7 @@ function init(_urlObj, _onCreateWindow) {
 
 	cloudrig.init(log);
 
-	ipcMain.on('cmd', (event, op, data, flags) => {
+	ipcMain.on('cmd', (event, op, data) => {
 
 		switch(op) {
 
@@ -93,23 +93,22 @@ function init(_urlObj, _onCreateWindow) {
 
 			break;
 
+			case 'saveInitialConfiguration':
+				cloudrig.setConfigFile(data);
+				cloudrig.setConfig(data)
+				event.sender.send('savedInitialConfiguration', data)
+			break;
+
 			case 'saveConfiguration':
 
-				if(flags) {
+				cloudrig.validateRequiredConfig(data, function(err) {
+					if(err) {
+						event.sender.send('error', err)
+						return;
+					}
 					cloudrig.setConfigFile(data);
-					cloudrig.setConfig(data)
-					event.sender.send('reInit')
-				} else {
-					cloudrig.validateRequiredConfig(data, function(err) {
-						if(err) {
-							event.sender.send('error', err)
-							return;
-						}
-						cloudrig.setConfigFile(data);
-						event.sender.send('getConfigurationValidity', true)
-					});
-				}
-				
+					event.sender.send('getConfigurationValidity', true)
+				});
 
 			break;
 
@@ -249,7 +248,7 @@ function init(_urlObj, _onCreateWindow) {
 		}
 
 		if(hooks[op]) {
-			hooks[op](event, op, data, flags)
+			hooks[op](event, op, data)
 		}
 
 	});

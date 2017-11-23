@@ -10,11 +10,11 @@ aws_access_key_id=testaccessk2eyid3
 aws_secret_access_key=testacces2skeyid3
 `
 
-common.registerCMDHook("getCredentials", function(event, op, data, flags) {
+common.registerCMDHook("getCredentials", function(event, op, data) {
 	event.returnValue = testCredentialsFile;
 })
 
-common.registerCMDHook("saveCredentialsFile", function(event, op, data, flags) {
+common.registerCMDHook("saveCredentialsFile", function(event, op, data) {
 	testCredentialsFile = data;
 	event.returnValue = true;
 })

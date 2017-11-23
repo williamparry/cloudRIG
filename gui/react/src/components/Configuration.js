@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Form, Grid, Select, Button, Modal, Confirm } from 'semantic-ui-react'
+import { Form, Grid, Select, Button, Confirm, Popup, Image, Modal } from 'semantic-ui-react'
 import 'semantic-ui-css/semantic.min.css';
 import AWSProfile from './configuration/AWSProfile.js';
 const { ipcRenderer } = window.require('electron');
@@ -15,61 +15,46 @@ const zonesArr = {
 	"sa-east-1": ['a', 'b'],
 }
 
+let allRegions;
+let allZones;
+
 class Configuration extends Component {
 
 	constructor(props) {
 
 		super(props)
 
-		this.state = {
-			regions: [],
-			allZones: [],
-			zones: [],
-			profiles: [],
-			addCredentialsOpen: false,
-			editCredentialsOpen: false,
-			confirmRemoveModalOpen: false,
-			config: {
-				AWSCredentialsFile: "",
-				AWSCredentialsProfile: "",
-				AWSRegion: "",
-				AWSAvailabilityZone: "",
-				AWSMaxPrice: "",
-				ParsecServerId: ""
-			},
-			allCredentials: {},
-			currentCredentials: {}
-		}
+		allRegions = [];
+		allZones = [];
 		
 		Object.keys(zonesArr).forEach((region) => {
 			
-			this.state.regions.push({ key: region, text: region, value: region })
+			allRegions.push({ key: region, text: region, value: region })
 		
 			zonesArr[region].forEach((zone) => {
 				let z = region + zone
-				this.state.zones.push({ key: z, text: z, value: z })
+				allZones.push({ key: z, text: z, value: z })
 			})
-
-			this.state.allZones = [...this.state.zones]
 			
 		});
 
-		ipcRenderer.on('credentialsFileChosen', (event, filePaths) => {
+		const config = ipcRenderer.sendSync('cmd', 'getConfiguration');
+		const credentials = ipcRenderer.sendSync('cmd', 'getCredentials');
+		const profiles = this.extractProfileCredentials(credentials);
 
-			if(filePaths) {
-				var newConfig = {...this.state.config, AWSCredentialsFile: filePaths[0]}
-				ipcRenderer.send('cmd', 'saveConfiguration', newConfig, true);
-			} else {
-				ipcRenderer.send('cmd', 'closeWithError', 'You have to select an AWS credentials file to use cloudRIG');
-			}
-			
-		});
-
-		ipcRenderer.on('reInit', (event) => {
-			this.init()
-		});
-
+		this.state = {
+			currentZones: this.getZones(config.AWSRegion),
+			profiles: profiles,
+			addCredentialsOpen: false,
+			editCredentialsOpen: false,
+			confirmRemoveModalOpen: false,
+			config: config,
+			allCredentials: credentials,
+			currentCredentials: this.getCurrentCredentials(credentials, profiles, config.AWSCredentialsProfile)
+		}
+		
 	}
+
 
 	saveConfiguration() {
 		ipcRenderer.send('cmd', 'saveConfiguration', this.state.config);
@@ -84,46 +69,6 @@ class Configuration extends Component {
 		return credentials.match(/\[(.*?)\]/g).map((profile) => {
 			return profile.substring(1, profile.length - 1)
 		})
-
-	}
-
-	componentDidMount() {
-		this.init();
-	}
-
-	init() {
-
-		const config = ipcRenderer.sendSync('cmd', 'getConfiguration');
-		
-		if(!config.AWSCredentialsFile) {
-			
-			this.setState({
-				config: config
-			});
-
-			setTimeout(() => {
-				ipcRenderer.send('cmd', 'selectCredentialsFile');
-			}, 0)
-			return;
-		}
-
-		ipcRenderer.sendSync('cmd', 'setConfiguration');
-		
-
-		const credentials = ipcRenderer.sendSync('cmd', 'getCredentials');
-		
-
-		this.setState({
-			allCredentials: credentials,
-			config: config,
-			profiles: this.extractProfileCredentials(credentials)
-		})
-
-		setTimeout(() => {
-			if(config.AWSCredentialsProfile) {
-				this.setCurrentCredentials(config.AWSCredentialsProfile)
-			}
-		}, 0)
 
 	}
 
@@ -143,30 +88,35 @@ class Configuration extends Component {
 
 	}
 
-	setCurrentCredentials(profile) {
-		
-		var bounds = this.getCredentialsBounds(profile);
+	getCurrentCredentials(credentials, profiles, profile) {
+		var bounds = this.getCredentialsBounds(credentials, profiles, profile);
 
-		var creds = this.state.allCredentials.substring(bounds.startIndex, bounds.endIndex)
+		var creds = credentials.substring(bounds.startIndex, bounds.endIndex)
 			.trim()
 			.split('\n')
 			.map(c => { return c.split('=')[1].trim() })
 
+		return {
+			profile: profile,
+			aws_access_key_id: creds[0],
+			aws_secret_access_key: creds[1]
+		}
+		
+	}
+
+	setCurrentCredentials(profile) {
+		
 		this.setState({
-			currentCredentials: {
-				profile: profile,
-				aws_access_key_id: creds[0],
-				aws_secret_access_key: creds[1]
-			}
+			currentCredentials: this.getCurrentCredentials(this.state.allCredentials, this.state.profiles, profile)
 		})
 
 	}
 
-	getCredentialsBounds(profile) {
+	getCredentialsBounds(allCredentials, profiles, profile) {
 		
-		const startIndex = this.state.allCredentials.indexOf('[' + profile + ']') + (profile.length + 2)
-		const nextProfile = this.state.profiles[this.state.profiles.indexOf(profile) + 1]
-		const endIndex = nextProfile ? this.state.allCredentials.indexOf('[' + nextProfile + ']') : this.state.allCredentials.length
+		const startIndex = allCredentials.indexOf('[' + profile + ']') + (profile.length + 2)
+		const nextProfile = profiles[profiles.indexOf(profile) + 1]
+		const endIndex = nextProfile ? allCredentials.indexOf('[' + nextProfile + ']') : allCredentials.length
 
 		// TODO: Investigate ES sugar
 		return {
@@ -178,9 +128,9 @@ class Configuration extends Component {
 	handleCredentialsEdit(credentialsObject) {
 		//console.log(credentialsObject)
 
-		var bounds = this.getCredentialsBounds(this.state.config.AWSCredentialsProfile)
-
 		let credentialsFile = this.state.allCredentials;
+
+		var bounds = this.getCredentialsBounds(this.state.allCredentials, this.state.profiles, this.state.config.AWSCredentialsProfile)
 
 		let replaceStr = `\naws_access_key_id=${credentialsObject.aws_access_key_id}
 aws_secret_access_key=${credentialsObject.aws_secret_access_key}\n`
@@ -201,9 +151,9 @@ aws_secret_access_key=${credentialsObject.aws_secret_access_key}\n`
 
 	handleCredentialsDelete() {
 		
-		var bounds = this.getCredentialsBounds(this.state.config.AWSCredentialsProfile)
-
 		let credentialsFile = this.state.allCredentials;
+
+		var bounds = this.getCredentialsBounds(this.state.allCredentials, this.state.profiles, this.state.config.AWSCredentialsProfile)
 
 		credentialsFile = credentialsFile.substring(0, bounds.startIndex - (this.state.config.AWSCredentialsProfile.length + 2)) + credentialsFile.substring(bounds.endIndex);
 
@@ -247,21 +197,27 @@ aws_secret_access_key=${credentialsObject.aws_secret_access_key}`
 
 		this.setState(newState)
 	}
+
+	getZones(region) {
+
+		return allZones.filter(zone => {
+			return zone.key.indexOf(region) >= 0
+		});
+
+	}
 	
 	handleRegionChange(e, data) {
 		
-		var newZones = this.state.allZones.filter(zone => {
-			return zone.key.indexOf(data.value) >= 0
-		});
+		const currentZones = this.getZones(data.value);
 
 		this.setState({
-			zones: newZones
+			currentZones: currentZones
 		});
 
 		setTimeout(() => {
 
 			var newConfig = {...this.state.config}
-			newConfig.AWSAvailabilityZone = newZones[0].key;
+			newConfig.AWSAvailabilityZone = currentZones[0].key;
 	
 			this.setState({
 				config: newConfig
@@ -313,6 +269,7 @@ aws_secret_access_key=${credentialsObject.aws_secret_access_key}`
 		return(
 
 			<div>
+
 				<Confirm
 					content={`Are you sure you wish to delete AWS Profile: "${this.state.config.AWSCredentialsProfile}"?`}
 					open={this.state.confirmRemoveModalOpen}
@@ -359,7 +316,7 @@ aws_secret_access_key=${credentialsObject.aws_secret_access_key}`
 							<Grid.Column width={8}>
 								<Form.Field control={Select} 
 									label='AWS Region' 
-									options={this.state.regions} 
+									options={allRegions} 
 									value={this.state.config.AWSRegion} 
 									name="AWSRegion"
 									onChange={this.handleRegionChange.bind(this)} 
@@ -369,7 +326,7 @@ aws_secret_access_key=${credentialsObject.aws_secret_access_key}`
 							<Grid.Column width={8}>
 								<Form.Field control={Select} 
 									label='AWS Availability Zone' 
-									options={this.state.zones} 
+									options={this.state.currentZones} 
 									value={this.state.config.AWSAvailabilityZone} 
 									name="AWSAvailabilityZone"
 									onChange={this.handleChange.bind(this)} 
@@ -387,12 +344,38 @@ aws_secret_access_key=${credentialsObject.aws_secret_access_key}`
 									required />
 							</Grid.Column>
 							<Grid.Column width={13}>
-								<Form.Input label='Parsec Server Id' 
+
+
+							<Popup
+								trigger={<Form.Input label='Parsec Server Id' 
 									value={this.state.config.ParsecServerId} 
 									name="ParsecServerId" 
 									onChange={this.handleChange.bind(this)} 
 									placeholder='server_id' 
-									required />
+									required />}
+								hoverable={true}
+								on='focus'
+								size='small'
+								position='bottom left'>
+								<Popup.Header>Where can I find my server_id?</Popup.Header>
+								<Popup.Content>
+									<ol>
+										<li>Make a Parsec account</li>
+										<li>Download the Parsec client</li>
+										<li><a href="https://parsec.tv/add-computer/own" rel="noopener noreferrer" target="_blank">Get the self-hosting key</a></li>
+									</ol>
+									
+									<Image
+										src='https://user-images.githubusercontent.com/348091/32673294-ef117400-c64e-11e7-949f-a34344b1368e.jpg'
+										as='a'
+										size='tiny'
+										href='https://user-images.githubusercontent.com/348091/32673294-ef117400-c64e-11e7-949f-a34344b1368e.jpg'
+										target='_blank'/>
+																
+								</Popup.Content>
+							</Popup>
+
+								
 							</Grid.Column>
 						</Grid.Row>
 						<Grid.Row>

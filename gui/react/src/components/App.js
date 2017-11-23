@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Icon, Segment, Container, Step, Grid } from 'semantic-ui-react'
+import { Icon, Segment, Container, Step, Grid, Button, Form, Header, Divider, Modal } from 'semantic-ui-react'
 import 'semantic-ui-css/semantic.min.css';
 import './App.css';
 import Configuration from './Configuration';
@@ -15,11 +15,14 @@ class App extends Component {
 
 	state = {
 		currentPage: pages.Loading,
+		config: {},
 		disableNonStartPages: false,
 		logOutput: ["Welcome :)"]
 	}
 
-	componentDidMount() {
+	constructor() {
+
+		super();
 		
 		ipcRenderer.send('cmd', 'getConfigurationValidity');
 
@@ -88,6 +91,31 @@ class App extends Component {
 
 		})
 
+		ipcRenderer.on('credentialsFileChosen', (event, filePaths) => {
+
+			if(filePaths) {
+				var newConfig = {...this.state.config, AWSCredentialsFile: filePaths[0]}
+				ipcRenderer.send('cmd', 'saveInitialConfiguration', newConfig);
+			} else {
+				ipcRenderer.send('cmd', 'error', 'You have to select an AWS credentials file or have a test account to use cloudRIG');
+			}
+			
+		});
+
+		ipcRenderer.on('savedInitialConfiguration', (event, config) => {
+			this.setState({
+				config: config
+			});
+		});
+
+		const config = ipcRenderer.sendSync('cmd', 'getConfiguration');
+
+		if(config.AWSCredentialsFile) {	
+			ipcRenderer.sendSync('cmd', 'setConfiguration');
+		}
+
+		this.state.config = config
+
 	}
 
 	changePage(e) {
@@ -98,6 +126,10 @@ class App extends Component {
 
 	}
 
+	handleChoose(e) {
+		ipcRenderer.send('cmd', 'selectCredentialsFile');
+	}
+
 	render() {
 		
 		const currentPage = 
@@ -105,63 +137,122 @@ class App extends Component {
 			this.state.currentPage === pages.Initialization ? <Initialization /> :
 			this.state.currentPage === pages.Play ? <Play /> : null
 
-		return (
+		if(!this.state.config.AWSCredentialsFile) {
+
+			return (
 			
-			<Grid stretched>
-				<Grid.Row style={{height: 476}}>
-					<Grid.Column>
-						<Step.Group attached='top'>
-							<Step link 
-								active={this.state.currentPage === pages.Configuration} 
-								onClick={this.changePage.bind(this, pages.Configuration)}
-								disabled={this.state.disableNonStartPages}>
-								<Icon name='configure' />
-								<Step.Content>
-									<Step.Title>Configure</Step.Title>
-								</Step.Content>
-							</Step>
-							<Step link 
-								active={this.state.currentPage === pages.Initialization} 
-								onClick={this.changePage.bind(this, pages.Initialization)}
-								disabled={this.state.currentPage === pages.Configuration || this.state.disableNonStartPages}>
-								<Icon name='tasks' />
-								<Step.Content>
-									<Step.Title>Initialize</Step.Title>
-								</Step.Content>
-							</Step>
-							<Step link 
-								active={this.state.currentPage === pages.Play}
-								disabled={this.state.currentPage === pages.Configuration || this.state.currentPage === pages.Initialization}>
-								<Icon name='game' />
-								<Step.Content>
-								<Step.Title>Play</Step.Title>
-								</Step.Content>
-							</Step>
-						</Step.Group>
-
-						
-						<Segment attached className="stretched-segment">
-							{currentPage}
-						</Segment>
-
-					</Grid.Column>
+			<div>
+				<Modal open={true}>
 					
-				</Grid.Row>
-				<Grid.Row verticalAlign="bottom">
-					<Grid.Column>
-						<Container>
-<pre id='output' style={{ height: 60, overflowY: 'scroll' }}>
-{this.state.logOutput.join("\n")}
-</pre>
-
+					<Modal.Header>Welcome to cloudRIG <Icon name='smile' /></Modal.Header>
+					<Modal.Content>
 						
-						</Container>
-					</Grid.Column>
-					
-				</Grid.Row>
-			</Grid>
+					<Modal.Description>
+						<Header>Choose your account type</Header>
+						<Grid>
+							<Grid.Row>
+								<Grid.Column width={7}>
+								
+									<p>
+										<i>I have my own <a href="http://docs.aws.amazon.com/ses/latest/DeveloperGuide/create-shared-credentials-file.html" rel="noopener noreferrer" target="_blank">AWS Credentials File</a>.</i>
+									</p>
+									
+									<Button content='Choose' icon='download' labelPosition='right' size='large' onClick={this.handleChoose.bind(this)} />
+								
+								</Grid.Column>
+								<Grid.Column width={2}>
+									<Divider vertical>Or</Divider>
+								</Grid.Column>
+								<Grid.Column width={7}>
+									
+									<p>
+										<i>I have a test account from <a href="https://cloudrig.io" rel="noopener noreferrer" target="_blank">cloudrig.io</a>.</i>
+									</p>
 
-		);
+									<Form>
+										<Form.Input label='Redemption code' disabled placeholder='----- ----- ----- -----' />
+									</Form>
+									
+								</Grid.Column>
+							</Grid.Row>
+						</Grid>
+						
+						<br /><br />
+
+						<Header>NOTICE</Header>
+
+						<p>
+							<small>
+								THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+							</small>
+						</p>
+
+						</Modal.Description>
+					</Modal.Content>
+				</Modal>
+			</div>)
+
+		} else {
+
+			return (
+				
+				<Grid stretched>
+					<Grid.Row style={{height: 476}}>
+						<Grid.Column>
+							<Step.Group attached='top'>
+								<Step link 
+									active={this.state.currentPage === pages.Configuration} 
+									onClick={this.changePage.bind(this, pages.Configuration)}
+									disabled={this.state.disableNonStartPages}>
+									<Icon name='configure' />
+									<Step.Content>
+										<Step.Title>Configure</Step.Title>
+									</Step.Content>
+								</Step>
+								<Step link 
+									active={this.state.currentPage === pages.Initialization} 
+									onClick={this.changePage.bind(this, pages.Initialization)}
+									disabled={this.state.currentPage === pages.Configuration || this.state.disableNonStartPages}>
+									<Icon name='tasks' />
+									<Step.Content>
+										<Step.Title>Initialize</Step.Title>
+									</Step.Content>
+								</Step>
+								<Step link 
+									active={this.state.currentPage === pages.Play}
+									disabled={this.state.currentPage === pages.Configuration || this.state.currentPage === pages.Initialization}>
+									<Icon name='game' />
+									<Step.Content>
+									<Step.Title>Play</Step.Title>
+									</Step.Content>
+								</Step>
+							</Step.Group>
+
+							
+							<Segment attached className="stretched-segment" basic>
+								{currentPage}
+							</Segment>
+
+						</Grid.Column>
+						
+					</Grid.Row>
+					<Grid.Row verticalAlign="bottom">
+						<Grid.Column>
+							<Container>
+	<pre id='output' style={{ height: 60, overflowY: 'scroll' }}>
+	{this.state.logOutput.join("\n")}
+	</pre>
+
+							
+							</Container>
+						</Grid.Column>
+						
+					</Grid.Row>
+				</Grid>
+
+			);
+
+		}
 	}
 }
 
