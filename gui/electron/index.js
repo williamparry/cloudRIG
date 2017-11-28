@@ -19,6 +19,10 @@ common.registerCMDHook("saveCredentialsFile", function(event, op, data) {
 	event.returnValue = true;
 })
 
+common.registerCMDHook("updateFail", function(event, op, data) {
+	event.sender.send('updateCheck', false)
+})
+
 common.init({
 	pathname: 'localhost:3000',
 	protocol: 'http:',

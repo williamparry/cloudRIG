@@ -46,6 +46,331 @@ function createWindow() {
 
 }
 
+function cmdHandler(event, op, data) {
+
+	switch(op) {
+
+		case 'log':
+
+			event.sender.send('log', data)
+
+		break;
+
+		case 'checkForUpdates':
+
+			autoUpdater.on('error', (err) => {
+				cmdHandler(event, 'updateFail')
+			})
+
+			autoUpdater.checkForUpdates();
+
+		break;
+
+		case 'doUpdate':
+		
+			autoUpdater.on('update-downloaded', (info) => {
+				autoUpdater.quitAndInstall();  
+			})
+		
+		break;
+
+		case 'selectCredentialsFile':
+
+			dialog.showOpenDialog(win, {
+				title: "Select AWS Credentials file",
+				defaultPath: "~/.aws",
+				properties: [
+					"openFile",
+					"promptToCreate",
+					"showHiddenFiles"
+				],
+				message: "Select AWS Credentials file; this will be loaded into the cloudRIG app"
+			}, function(filePaths) {
+				event.sender.send('credentialsFileChosen', filePaths)
+			})
+
+		break;
+
+		case 'getConfiguration':
+
+			event.returnValue = cloudrig.getConfigFile()
+
+		break;
+
+		case 'getConfigurationValidity':
+
+			cloudrig.validateRequiredConfig(cloudrig.getConfigFile(), function(err) {
+				event.sender.send('getConfigurationValidity', !err)
+			})
+
+		break;
+
+		case 'saveInitialConfiguration':
+			cloudrig.setConfigFile(data);
+			cloudrig.setConfig(data)
+			event.sender.send('savedInitialConfiguration', data)
+		break;
+
+		case 'saveConfiguration':
+
+			cloudrig.validateRequiredConfig(data, function(err) {
+				if(err) {
+					event.sender.send('error', err)
+					return;
+				}
+				cloudrig.setConfigFile(data);
+				event.sender.send('getConfigurationValidity', true)
+			});
+
+		break;
+
+		case 'setConfiguration':
+
+			cloudrig.setConfig(cloudrig.getConfigFile())
+			event.returnValue = true;
+
+		break;
+
+		case 'disableNonPlay':
+
+			event.sender.send('disableNonPlay', data)
+
+		break;
+
+		case 'setup':
+		
+			cloudrig.setup(function (err, setups) {
+				if(err) {
+					event.sender.send('error', err)
+					return;
+				}
+				if(setups.length > 0) {
+
+					event.sender.send('setups', setups);
+					return;
+				}
+
+				event.sender.send('setupValid', true)
+				
+			});
+
+		break;
+
+		case 'runSetupSteps':
+
+			cloudrig.setup(function (err, setups) {
+
+				var toProcess = setups.map(step => {
+					return step.m
+				});
+
+				// TODO: Bit loose, tidy up later
+				async.parallel(toProcess, function(err, val) {
+
+					if(err) {
+						event.sender.send('error', err)
+						return;
+					}
+
+					event.sender.send('setupCheck')
+
+				});
+
+			});
+
+		break;
+
+		case 'getState':
+
+			cloudrig.getState(function(err, data) {
+				console.log("\n");
+				console.log(data);
+				console.log("\n");
+				if(err) {
+					event.sender.send('errorPlay', err)
+					return;
+				}
+
+				event.sender.send('gotState', data)
+
+			})
+
+		break;
+
+		case 'start':
+
+			event.sender.send('starting', true)
+
+			cloudrig.start(function(err) {
+
+				event.sender.send('starting', false)
+
+				if(err) {
+					event.sender.send('errorPlay', err)
+					return;
+				}
+				
+			})
+
+		break;
+
+		case 'stop':
+
+			event.sender.send('stopping', true)
+
+			cloudrig.stop(function(err) {
+
+				event.sender.send('stopping', false)
+
+				if(err) {
+					event.sender.send('errorStop')
+					return;
+				}
+
+			})
+
+		break;
+
+		case 'scheduleStop':
+
+			event.sender.send('possessiveStarted')
+			cloudrig.scheduleStop(function(err) {
+				if(err) { event.sender.send('error', err); return; }
+				event.sender.send('possessiveFinished')
+			});
+
+		break;
+
+		case 'unScheduleStop':
+
+			event.sender.send('possessiveStarted')
+			cloudrig.cancelScheduledStop(function(err) {
+				if(err) { event.sender.send('error', err); return; }
+				event.sender.send('possessiveFinished')
+			});
+
+		break;
+
+		case 'addStorage':
+
+			event.sender.send('possessiveStarted')
+			cloudrig.createEBSVolume(data.availabilityZone, data.size, function(err) {
+				if(err) { event.sender.send('error', err); return; }
+				event.sender.send('possessiveFinished')
+			});
+
+		break;
+
+		case 'deleteStorage':
+			
+			event.sender.send('possessiveStarted')
+			cloudrig.deleteEBSVolume(data, function(err) {
+				if(err) { event.sender.send('error', err); return; }
+				event.sender.send('possessiveFinished')
+			});
+
+		break;
+
+		case 'changePage':
+
+			event.sender.send('changePage', data)
+
+		break;
+
+		case 'error':
+
+			dialog.showMessageBox(win, {
+				type: "error",
+				message: JSON.stringify(data, null, 4)
+			})
+
+		break;
+
+		case 'closeWithError':
+
+			dialog.showMessageBox(win, {
+				type: "error",
+				message: JSON.stringify(data, null, 4)
+			})
+
+			win.close();
+
+		break;
+
+		case 'preUpdate':
+
+			cloudrig.validateRequiredConfig(cloudrig.getConfigFile(), function(err) {
+
+				if(err) { event.sender.send('error', err); return; }
+
+				// Config is valid
+				if(!err) {
+
+					cloudrig.setup(function (err, setups) {
+
+						if(err) { event.sender.send('error', err); return; }
+						
+						const currentSettings = cloudrig._getSettings();
+
+						let toFlush = [];
+
+						cloudrig.getActiveInstances((err, activeInstances) => {
+
+							if(activeInstances.length > 0) {
+								toFlush.push(cloudrig.stop);
+							}
+
+							if(currentSettings.cloudRIGRole){
+								toFlush.push(cloudrig.deleteRole);
+							}
+
+							if(currentSettings.lambda) {
+								toFlush.push(cloudrig.deleteLambda);
+							}
+
+							if(currentSettings.lambdaSave) {
+								toFlush.push(cloudrig.deleteLambdaSave);
+							}
+
+							if(toFlush.length > 0) {
+
+								toFlush.push(function(cb) {
+									cloudrig.setup(cb, true)
+								})
+
+								async.series(toFlush, (err) => {
+
+									if(err) { event.sender.send('error', err); return; }
+
+									event.sender.send('updateReady')
+
+								})
+
+							} else {
+								event.sender.send('updateReady')
+							}
+
+						})
+
+						
+						
+					});
+
+				} else {
+					event.sender.send('updateReady')
+				}
+
+			})
+
+		break;
+
+	}
+
+	if(hooks[op]) {
+		hooks[op](event, op, data)
+	}
+}
+
 function init(_urlObj, _onCreateWindow) {
 
 	urlObj = _urlObj;
@@ -61,329 +386,7 @@ function init(_urlObj, _onCreateWindow) {
 		event.sender.send('updateCheck', false)
 	});
 
-	
-
-	ipcMain.on('cmd', (event, op, data) => {
-
-		switch(op) {
-
-			case 'log':
-
-				event.sender.send('log', data)
-
-			break;
-
-			case 'checkForUpdates':
-
-				autoUpdater.checkForUpdates();
-
-			break;
-
-			case 'doUpdate':
-			
-				autoUpdater.on('update-downloaded', (info) => {
-					autoUpdater.quitAndInstall();  
-				})
-			
-			break;
-
-			case 'selectCredentialsFile':
-
-				dialog.showOpenDialog(win, {
-					title: "Select AWS Credentials file",
-					defaultPath: "~/.aws",
-					properties: [
-						"openFile",
-						"promptToCreate",
-						"showHiddenFiles"
-					],
-					message: "Select AWS Credentials file; this will be loaded into the cloudRIG app"
-				}, function(filePaths) {
-					event.sender.send('credentialsFileChosen', filePaths)
-				})
-
-			break;
-
-			case 'getConfiguration':
-
-				event.returnValue = cloudrig.getConfigFile()
-
-			break;
-
-			case 'getConfigurationValidity':
-
-				cloudrig.validateRequiredConfig(cloudrig.getConfigFile(), function(err) {
-					event.sender.send('getConfigurationValidity', !err)
-				})
-
-			break;
-
-			case 'saveInitialConfiguration':
-				cloudrig.setConfigFile(data);
-				cloudrig.setConfig(data)
-				event.sender.send('savedInitialConfiguration', data)
-			break;
-
-			case 'saveConfiguration':
-
-				cloudrig.validateRequiredConfig(data, function(err) {
-					if(err) {
-						event.sender.send('error', err)
-						return;
-					}
-					cloudrig.setConfigFile(data);
-					event.sender.send('getConfigurationValidity', true)
-				});
-
-			break;
-
-			case 'setConfiguration':
-
-				cloudrig.setConfig(cloudrig.getConfigFile())
-				event.returnValue = true;
-
-			break;
-
-			case 'disableNonPlay':
-
-				event.sender.send('disableNonPlay', data)
-
-			break;
-
-			case 'setup':
-			
-				cloudrig.setup(function (err, setups) {
-					if(err) {
-						event.sender.send('error', err)
-						return;
-					}
-					if(setups.length > 0) {
-
-						event.sender.send('setups', setups);
-						return;
-					}
-
-					event.sender.send('setupValid', true)
-					
-				});
-
-			break;
-
-			case 'runSetupSteps':
-
-				cloudrig.setup(function (err, setups) {
-
-					var toProcess = setups.map(step => {
-						return step.m
-					});
-
-					// TODO: Bit loose, tidy up later
-					async.parallel(toProcess, function(err, val) {
-
-						if(err) {
-							event.sender.send('error', err)
-							return;
-						}
-
-						event.sender.send('setupCheck')
-
-					});
-
-				});
-
-			break;
-
-			case 'getState':
-
-				cloudrig.getState(function(err, data) {
-					console.log("\n");
-					console.log(data);
-					console.log("\n");
-					if(err) {
-						event.sender.send('errorPlay', err)
-						return;
-					}
-
-					event.sender.send('gotState', data)
-
-				})
-
-			break;
-
-			case 'start':
-
-				event.sender.send('starting', true)
-
-				cloudrig.start(function(err) {
-
-					event.sender.send('starting', false)
-
-					if(err) {
-						event.sender.send('errorPlay', err)
-						return;
-					}
-					
-				})
-
-			break;
-
-			case 'stop':
-
-				event.sender.send('stopping', true)
-
-				cloudrig.stop(function(err) {
-
-					event.sender.send('stopping', false)
-
-					if(err) {
-						event.sender.send('errorStop')
-						return;
-					}
-
-				})
-
-			break;
-
-			case 'scheduleStop':
-
-				event.sender.send('possessiveStarted')
-				cloudrig.scheduleStop(function(err) {
-					if(err) { event.sender.send('error', err); return; }
-					event.sender.send('possessiveFinished')
-				});
-
-			break;
-
-			case 'unScheduleStop':
-
-				event.sender.send('possessiveStarted')
-				cloudrig.cancelScheduledStop(function(err) {
-					if(err) { event.sender.send('error', err); return; }
-					event.sender.send('possessiveFinished')
-				});
-
-			break;
-
-			case 'addStorage':
-
-				event.sender.send('possessiveStarted')
-				cloudrig.createEBSVolume(data.availabilityZone, data.size, function(err) {
-					if(err) { event.sender.send('error', err); return; }
-					event.sender.send('possessiveFinished')
-				});
-
-			break;
-
-			case 'deleteStorage':
-				
-				event.sender.send('possessiveStarted')
-				cloudrig.deleteEBSVolume(data, function(err) {
-					if(err) { event.sender.send('error', err); return; }
-					event.sender.send('possessiveFinished')
-				});
-
-			break;
-
-			case 'changePage':
-
-				event.sender.send('changePage', data)
-
-			break;
-
-			case 'error':
-
-				dialog.showMessageBox(win, {
-					type: "error",
-					message: JSON.stringify(data, null, 4)
-				})
-
-			break;
-
-			case 'closeWithError':
-
-				dialog.showMessageBox(win, {
-					type: "error",
-					message: JSON.stringify(data, null, 4)
-				})
-
-				win.close();
-
-			break;
-
-			case 'preUpdate':
-
-				cloudrig.validateRequiredConfig(cloudrig.getConfigFile(), function(err) {
-
-					if(err) { event.sender.send('error', err); return; }
-
-					// Config is valid
-					if(!err) {
-
-						cloudrig.setup(function (err, setups) {
-
-							if(err) { event.sender.send('error', err); return; }
-							
-							const currentSettings = cloudrig._getSettings();
-
-							let toFlush = [];
-
-							cloudrig.getActiveInstances((err, activeInstances) => {
-
-								if(activeInstances.length > 0) {
-									toFlush.push(cloudrig.stop);
-								}
-
-								if(currentSettings.cloudRIGRole){
-									toFlush.push(cloudrig.deleteRole);
-								}
-
-								if(currentSettings.lambda) {
-									toFlush.push(cloudrig.deleteLambda);
-								}
-
-								if(currentSettings.lambdaSave) {
-									toFlush.push(cloudrig.deleteLambdaSave);
-								}
-
-								if(toFlush.length > 0) {
-
-									toFlush.push(function(cb) {
-										cloudrig.setup(cb, true)
-									})
-
-									async.series(toFlush, (err) => {
-
-										if(err) { event.sender.send('error', err); return; }
-
-										event.sender.send('updateReady')
-
-									})
-
-								} else {
-									event.sender.send('updateReady')
-								}
-
-							})
-
-							
-							
-						});
-
-					} else {
-						event.sender.send('updateReady')
-					}
-
-				})
-
-			break;
-
-		}
-
-		if(hooks[op]) {
-			hooks[op](event, op, data)
-		}
-
-	});
+	ipcMain.on('cmd', cmdHandler);
 
 	app.on('ready', createWindow)
 	

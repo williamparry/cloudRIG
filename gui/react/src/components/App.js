@@ -155,8 +155,11 @@ class App extends Component {
 
 		this.state.config = config
 
-		ipcRenderer.send('cmd', 'checkForUpdates');
-
+		// To remove the blink
+		setTimeout(function() {
+			ipcRenderer.send('cmd', 'checkForUpdates');
+		}, 2000)
+		
 	}
 
 	changePage(e) {

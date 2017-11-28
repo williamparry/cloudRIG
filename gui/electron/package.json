@@ -13,11 +13,6 @@
 		"url": "https://github.com/williamparry/cloudRIG"
 	},
 	"build": {
-		"publish": [
-			{
-				"provider": "github"
-			}
-		],
 		"appId": "com.williamparry.cloudrig",
 		"mac": {
 			"category": "public.app-category.games"
