@@ -1,13 +1,17 @@
-os: unstable
-cache:
-  - node_modules
-environment:
-  GH_TOKEN:
-      secure: MmTegD+barYJO+vqDJImYT6ui1AhKBsmRRUruCsF0McEGaXKl+zLo5DI94reA9wt
-  matrix:
-    - nodejs_version: 8
-install:
-  # Get the latest stable version of Node.js or io.js
-  - ps: Install-Product node $env:nodejs_version
-  # install modules
-  - npm run publish
+build:
+  verbosity: minimal
+before_deploy:
+  - cmd: npm run publish
+deploy:
+  release: cloudRIG-$(appveyor_build_version)
+  description: 'Release description'
+  provider: GitHub
+  artifacts:
+    - path: _releases/*.dmg
+  auth_token:
+    secure: MmTegD+barYJO+vqDJImYT6ui1AhKBsmRRUruCsF0McEGaXKl+zLo5DI94reA9wt # your encrypted token from GitHub
+  draft: true
+  prerelease: true
+  on:
+    branch: master                 # release from master branch only
+    appveyor_repo_tag: true        # deploy on tag push only
