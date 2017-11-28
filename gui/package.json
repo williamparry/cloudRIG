@@ -6,9 +6,6 @@
 		"build-prod": "npm install && rm -rf .tmp && cd ./electron && npm install --only=production && cd .. && cp -r ./electron ./.tmp && cd ./react && npm install --only=production && npm run build && cd .. && cp -r react/build .tmp && ./node_modules/.bin/webpack && rm .tmp/index.prod.js && rm .tmp/common.js && rm -rf .tmp/node_modules && cd .tmp && ../node_modules/.bin/electron-builder && cd .. && rm -rf .tmp"
 	},
 	"devDependencies": {
-		"electron-builder": "^19.45.5",
-		"electron-publisher-s3": "^19.46.0",
-		"uglifyjs-webpack-plugin": "^1.1.0",
-		"webpack": "^3.8.1"
+		"electron-builder": "^19.45.5"
 	}
 }
