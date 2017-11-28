@@ -1,3 +1,5 @@
+environment:
+  nodejs_version: "8"
 before_deploy:
   - cmd: npm run publish
 deploy:
