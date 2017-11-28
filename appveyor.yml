@@ -8,7 +8,7 @@ deploy:
   provider: GitHub
   artifacts:
     - path: _releases/*.dmg
-  auth_token:
+  api_key:
     secure: MmTegD+barYJO+vqDJImYT6ui1AhKBsmRRUruCsF0McEGaXKl+zLo5DI94reA9wt # your encrypted token from GitHub
   draft: true
   prerelease: true
