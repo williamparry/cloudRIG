@@ -2,6 +2,8 @@ environment:
   nodejs_version: "8"
 install:
   - ps: Install-Product node $env:nodejs_version
+build_script:
+  - npm run build
 before_deploy:
   - cmd: npm run publish
 deploy:
