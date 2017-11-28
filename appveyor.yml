@@ -3,7 +3,6 @@ environment:
   nodejs_version: "8"
 install:
   - ps: Install-Product node $env:nodejs_version
-  - ps: npm cache clean --force
   - ps: $env:package_version = (Get-Content -Raw -Path gui/electron/package.json | ConvertFrom-Json).version
 build_script:
   - cd gui
