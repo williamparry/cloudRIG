@@ -5,7 +5,7 @@ install:
 build_script:
   - npm run build
 before_deploy:
-  - cmd: npm run publish
+  - cmd: cd gui && npm run publish
 deploy:
   release: myproduct-v$(appveyor_build_version)
   description: 'Release description'
