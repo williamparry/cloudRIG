@@ -3,6 +3,7 @@ require('electron-context-menu')();
 const url = require('url')
 const async = require('async');
 const cloudrig = require('cloudriglib')
+const autoUpdater = require("electron-updater").autoUpdater
 
 let hooks = {}
 let urlObj = {}
@@ -52,6 +53,16 @@ function init(_urlObj, _onCreateWindow) {
 
 	cloudrig.init(log);
 
+	autoUpdater.on('update-available', (info) => {
+		event.sender.send('updateCheck', true)
+	});
+
+	autoUpdater.on('update-not-available', (info) => {
+		event.sender.send('updateCheck', false)
+	});
+
+	
+
 	ipcMain.on('cmd', (event, op, data) => {
 
 		switch(op) {
@@ -60,6 +71,20 @@ function init(_urlObj, _onCreateWindow) {
 
 				event.sender.send('log', data)
 
+			break;
+
+			case 'checkForUpdates':
+
+				autoUpdater.checkForUpdates();
+
+			break;
+
+			case 'doUpdate':
+			
+				autoUpdater.on('update-downloaded', (info) => {
+					autoUpdater.quitAndInstall();  
+				})
+			
 			break;
 
 			case 'selectCredentialsFile':
@@ -250,12 +275,12 @@ function init(_urlObj, _onCreateWindow) {
 			break;
 
 			case 'deleteStorage':
-			
-			event.sender.send('possessiveStarted')
-			cloudrig.deleteEBSVolume(data, function(err) {
-				if(err) { event.sender.send('error', err); return; }
-				event.sender.send('possessiveFinished')
-			});
+				
+				event.sender.send('possessiveStarted')
+				cloudrig.deleteEBSVolume(data, function(err) {
+					if(err) { event.sender.send('error', err); return; }
+					event.sender.send('possessiveFinished')
+				});
 
 			break;
 
@@ -282,6 +307,73 @@ function init(_urlObj, _onCreateWindow) {
 				})
 
 				win.close();
+
+			break;
+
+			case 'preUpdate':
+
+				cloudrig.validateRequiredConfig(cloudrig.getConfigFile(), function(err) {
+
+					if(err) { event.sender.send('error', err); return; }
+
+					// Config is valid
+					if(!err) {
+
+						cloudrig.setup(function (err, setups) {
+
+							if(err) { event.sender.send('error', err); return; }
+							
+							const currentSettings = cloudrig._getSettings();
+
+							let toFlush = [];
+
+							cloudrig.getActiveInstances((err, activeInstances) => {
+
+								if(activeInstances.length > 0) {
+									toFlush.push(cloudrig.stop);
+								}
+
+								if(currentSettings.cloudRIGRole){
+									toFlush.push(cloudrig.deleteRole);
+								}
+
+								if(currentSettings.lambda) {
+									toFlush.push(cloudrig.deleteLambda);
+								}
+
+								if(currentSettings.lambdaSave) {
+									toFlush.push(cloudrig.deleteLambdaSave);
+								}
+
+								if(toFlush.length > 0) {
+
+									toFlush.push(function(cb) {
+										cloudrig.setup(cb, true)
+									})
+
+									async.series(toFlush, (err) => {
+
+										if(err) { event.sender.send('error', err); return; }
+
+										event.sender.send('updateReady')
+
+									})
+
+								} else {
+									event.sender.send('updateReady')
+								}
+
+							})
+
+							
+							
+						});
+
+					} else {
+						event.sender.send('updateReady')
+					}
+
+				})
 
 			break;
 

@@ -17,6 +17,8 @@ class App extends Component {
 		isPossessive: false,
 		currentPage: pages.Loading,
 		config: {},
+		checkedForUpdates: false,
+		updateAvailable: false,
 		disableNonStartPages: false,
 		logOutput: ["Welcome :)"]
 	}
@@ -44,6 +46,26 @@ class App extends Component {
 				currentPage: pages.Configuration
 			})
 		})
+
+		ipcRenderer.on('updateCheck', (event, updateAvailable) => {
+			
+			this.setState({
+				checkedForUpdates: true,
+				updateAvailable: updateAvailable
+			})
+
+			if(updateAvailable) {
+
+				// Start in maintenance mode
+				ipcRenderer.send('cmd', 'preUpdate');
+
+			}
+
+		})
+
+		ipcRenderer.on('updateReady', (event) => {
+			ipcRenderer.send('cmd', 'doUpdate');
+		});
 
 		ipcRenderer.on('setupValid', (event, valid) => {
 			
@@ -80,7 +102,9 @@ class App extends Component {
 			setTimeout(() => {
 
 				var objDiv = document.getElementById("output");
-				objDiv.scrollTop = objDiv.scrollHeight;
+				if(objDiv) {
+					objDiv.scrollTop = objDiv.scrollHeight;
+				}
 
 			})
 		})
@@ -131,6 +155,8 @@ class App extends Component {
 
 		this.state.config = config
 
+		ipcRenderer.send('cmd', 'checkForUpdates');
+
 	}
 
 	changePage(e) {
@@ -152,7 +178,29 @@ class App extends Component {
 			this.state.currentPage === pages.Initialization ? <Initialization /> :
 			this.state.currentPage === pages.Play ? <Play /> : null
 
-		if(!this.state.config.AWSCredentialsFile) {
+		if(!this.state.checkedForUpdates || this.state.updateAvailable) {
+
+			return (
+			
+			<div>
+				<Modal open={true}>
+					
+					<Modal.Header>{this.state.updateAvailable ? <p>Updating</p> : 'Checking for updates'}</Modal.Header>
+					<Modal.Content>
+						
+					<Modal.Description>
+
+					<pre id='output' style={{ height: 300, overflowY: 'scroll', overflowX: 'hidden' }}>
+	{this.state.logOutput.join("\n")}
+	</pre>
+						
+						</Modal.Description>
+					</Modal.Content>
+				</Modal>
+			</div>)
+
+
+			} else if(!this.state.config.AWSCredentialsFile) {
 
 			return (
 			

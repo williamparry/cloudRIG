@@ -13,6 +13,11 @@
 		"url": "https://github.com/williamparry/cloudRIG"
 	},
 	"build": {
+		"publish": [
+			{
+				"provider": "github"
+			}
+		],
 		"appId": "com.williamparry.cloudrig",
 		"mac": {
 			"category": "public.app-category.games"
@@ -30,7 +35,8 @@
 	"dependencies": {
 		"async": "^2.6.0",
 		"cloudriglib": "file:../../lib",
-		"electron-context-menu": "^0.9.1"
+		"electron-context-menu": "^0.9.1",
+		"electron-updater": "^2.16.1"
 	},
 	"devDependencies": {
 		"electron": "1.7.9"

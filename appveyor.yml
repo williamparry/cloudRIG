@@ -1,0 +1,13 @@
+os: unstable
+cache:
+  - node_modules
+environment:
+  GH_TOKEN:
+      secure: MmTegD+barYJO+vqDJImYT6ui1AhKBsmRRUruCsF0McEGaXKl+zLo5DI94reA9wt
+  matrix:
+    - nodejs_version: 8
+install:
+  # Get the latest stable version of Node.js or io.js
+  - ps: Install-Product node $env:nodejs_version
+  # install modules
+  - npm run publish

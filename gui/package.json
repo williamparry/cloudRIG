@@ -1,7 +1,9 @@
 {
 	"scripts": {
 		"dev": "cd react && npm install && BROWSER=none npm run start & cd electron && npm install && ./node_modules/.bin/electron .",
-		"build": "npm install && rm -rf .tmp && cd ./electron && npm install --only=production && cd .. && cp -r ./electron ./.tmp && cd ./react && npm install --only=production && npm run build && cd .. && cp -r react/build .tmp && cd .tmp && mv -f index.prod.js index.js && ../node_modules/.bin/electron-builder && cd .. && rm -rf .tmp",
+		"pre-build": "npm install && rm -rf .tmp && cd ./electron && npm install --only=production && cd .. && cp -r ./electron ./.tmp && cd ./react && npm install --only=production && npm run build && cd .. && cp -r react/build .tmp && cd .tmp && mv -f index.prod.js index.js",
+		"build": "npm run pre-build && cd .tmp && ../node_modules/.bin/electron-builder && cd .. && rm -rf .tmp",
+		"publish": "npm run pre-build && cd .tmp && ../node_modules/.bin/electron-builder -p onTagOrDraft && cd .. && rm -rf .tmp",
 		"build-prod": "npm install && rm -rf .tmp && cd ./electron && npm install --only=production && cd .. && cp -r ./electron ./.tmp && cd ./react && npm install --only=production && npm run build && cd .. && cp -r react/build .tmp && ./node_modules/.bin/webpack && rm .tmp/index.prod.js && rm .tmp/common.js && rm -rf .tmp/node_modules && cd .tmp && ../node_modules/.bin/electron-builder && cd .. && rm -rf .tmp"
 	},
 	"devDependencies": {
