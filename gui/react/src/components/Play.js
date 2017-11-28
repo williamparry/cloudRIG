@@ -1,12 +1,15 @@
 import React, { Component } from 'react';
-import { Button, Grid, List, Image, Table, Divider, Icon } from 'semantic-ui-react'
+import { Button, Grid, List, Image, Table, Divider, Icon, Modal } from 'semantic-ui-react'
 import Loading from './Loading';
 import ParsecLogo from '../img/parsec_logo.svg'
 import DiscordIcon from '../img/discord_icon.svg'
+import Storage from './play/Storage'
 
 const { ipcRenderer } = window.require('electron');
 
 let stateTimeout;
+
+let config;
 
 class Play extends Component {
 
@@ -18,6 +21,9 @@ class Play extends Component {
 			isLoading: true,
 			immediateIsStarting: false,
 			immediateIsStopping: false,
+			manageDrivesOpen: false,
+			volumesInAZ: [],
+			volumesNotInAZ: [],
 			errorMessage: "",
 			cloudRIGState: {
 				activeInstance: null,
@@ -29,6 +35,8 @@ class Play extends Component {
 				savingInstance: null
 			}
 		}
+
+		config = ipcRenderer.sendSync('cmd', 'getConfiguration');
 
 		ipcRenderer.on('starting', (event, isStarting) => {
 			this.setState({
@@ -60,7 +68,20 @@ class Play extends Component {
 				return;
 			}
 
+			let volumesInAZ = [];
+			let volumesNotInAZ = [];
+
+			state.volumes.forEach((v) => {
+				if(v.AvailabilityZone === config.AWSAvailabilityZone) {
+					volumesInAZ.push(v)
+				} else {
+					volumesNotInAZ.push(v)
+				}
+			})
+
 			this.setState({
+				volumesInAZ: volumesInAZ,
+				volumesNotInAZ: volumesNotInAZ,
 				cloudRIGState: state
 			})
 
@@ -94,6 +115,37 @@ class Play extends Component {
 
 	stop() { ipcRenderer.send('cmd', 'stop') }
 
+	scheduleStop() { ipcRenderer.send('cmd', 'scheduleStop') }
+
+	unScheduleStop() { ipcRenderer.send('cmd', 'unScheduleStop') }
+
+	manageDrivesOpen() {
+
+		this.setState({
+			manageDrivesOpen: true
+		})
+	}
+
+	manageDrivesClose() {
+		
+		this.setState({
+			manageDrivesOpen: false
+		})
+	}
+
+	addStorage(size) {
+		
+		ipcRenderer.send('cmd', 'addStorage', {
+			availabilityZone: config.AWSAvailabilityZone,
+			size: size
+		});
+
+	}
+
+	deleteStorage(volume) {
+		ipcRenderer.send('cmd', 'deleteStorage', volume.VolumeId);
+	}
+
 	componentDidMount() {
 
 		this.setState({
@@ -115,7 +167,7 @@ class Play extends Component {
 	}
 	
 	render() {
-		
+
 		let actionButtons;
 
 		if(this.state.cloudRIGState.savingInstance || (this.state.cloudRIGState.savingInstance && this.state.immediateIsStopping)) {
@@ -127,12 +179,14 @@ class Play extends Component {
 			if(!this.state.cloudRIGState.instanceStopping && !this.state.immediateIsStopping) {
 				actionButtons = <div>
 					<Button content='Stop' icon='stop' labelPosition='right' onClick={this.stop.bind(this)} />
-					<Button content='Schedule stop' icon='stop' labelPosition='right' onClick={this.stop.bind(this)} disabled />
+					{this.state.cloudRIGState.scheduledStop ?
+						(<Button content='Unscheduled Stop' icon='time' labelPosition='right' onClick={this.unScheduleStop.bind(this)} />)
+						:
+						(<Button content='Schedule Stop' icon='time' labelPosition='right' onClick={this.scheduleStop.bind(this)} />)}
 				</div>
 			} else {
 				actionButtons = <div>
 					<Button content='Stopping' icon='stop' labelPosition='right' disabled />
-					<Button content='Schedule stop' icon='stop' labelPosition='right' disabled />
 				</div>
 			}
 
@@ -141,7 +195,23 @@ class Play extends Component {
 			if(!this.state.cloudRIGState.instanceReady) {
 
 				if(!this.state.cloudRIGState.activeInstance && !this.state.immediateIsStarting) {
-					actionButtons = <div><Button content='Start' icon='play' labelPosition='right' onClick={this.start.bind(this)} /></div>
+
+					let manageAction = this.state.volumesInAZ.length > 0 ? 'Manage storage' : 'Add storage'
+					
+
+					actionButtons = 
+					<div>
+						<Button content='Start' icon='play' labelPosition='right' onClick={this.start.bind(this)} />
+
+						<Modal open={this.state.manageDrivesOpen} onClose={this.manageDrivesClose.bind(this)} closeIcon trigger={<Button onClick={this.manageDrivesOpen.bind(this)} content={manageAction} icon='hdd outline' labelPosition='right' />}>
+							<Modal.Header><Icon name='hdd outline' /> {manageAction}</Modal.Header>
+							<Modal.Content>
+								<Modal.Description>
+									<Storage volumesNotInAZ={this.state.volumesNotInAZ} volumesInAZ={this.state.volumesInAZ} handleSubmit={this.addStorage.bind(this)} handleDelete={this.deleteStorage.bind(this)} />
+								</Modal.Description>
+							</Modal.Content>
+						</Modal>
+					</div>
 				} else {
 					actionButtons = <div><Button content='Starting...' icon='play' labelPosition='right' disabled /></div>
 				}
@@ -162,7 +232,7 @@ class Play extends Component {
 
 			const savingCell = this.state.cloudRIGState.savingInstance ? <Icon loading name='spinner' /> : '-'
 
-			const remainingCell = this.state.cloudRIGState.scheduledStop ? this.state.cloudRIGState.remainingTime : '-'
+			const remainingCell = this.state.cloudRIGState.scheduledStop ? this.state.cloudRIGState.remainingTime + ' mins' : '-'
 
 			const spotCell = this.state.cloudRIGState.currentSpotPrice;
 
@@ -173,12 +243,7 @@ class Play extends Component {
 						<Grid.Column width={10}>
 							{actionButtons}
 							<br /><br />
-							<Divider horizontal>Powered by</Divider>
-							<br />
-							<a href='https://parsecgaming.com' target='_blank' rel='noopener noreferrer'>
-								<Image width="200" src={ParsecLogo} />
-							</a>
-
+							<iframe title="Watch Parsec videos" src="https://www.youtube.com/embed?listType=user_uploads&amp;list=jamesstringerphoto" width="100%" height="265" frameBorder='0'></iframe> 
 						</Grid.Column>
 						<Grid.Column width={6}>
 
@@ -226,6 +291,11 @@ class Play extends Component {
 								</List.Item>
 								
 							</List>
+
+							<Divider horizontal><small>Powered by</small></Divider>
+							<a href='https://parsecgaming.com' target='_blank' rel='noopener noreferrer'>
+								<Image width="100" src={ParsecLogo} />
+							</a>
 
 						</Grid.Column>
 

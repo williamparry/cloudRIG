@@ -219,6 +219,46 @@ function init(_urlObj, _onCreateWindow) {
 
 			break;
 
+			case 'scheduleStop':
+
+				event.sender.send('possessiveStarted')
+				cloudrig.scheduleStop(function(err) {
+					if(err) { event.sender.send('error', err); return; }
+					event.sender.send('possessiveFinished')
+				});
+
+			break;
+
+			case 'unScheduleStop':
+
+				event.sender.send('possessiveStarted')
+				cloudrig.cancelScheduledStop(function(err) {
+					if(err) { event.sender.send('error', err); return; }
+					event.sender.send('possessiveFinished')
+				});
+
+			break;
+
+			case 'addStorage':
+
+				event.sender.send('possessiveStarted')
+				cloudrig.createEBSVolume(data.availabilityZone, data.size, function(err) {
+					if(err) { event.sender.send('error', err); return; }
+					event.sender.send('possessiveFinished')
+				});
+
+			break;
+
+			case 'deleteStorage':
+			
+			event.sender.send('possessiveStarted')
+			cloudrig.deleteEBSVolume(data, function(err) {
+				if(err) { event.sender.send('error', err); return; }
+				event.sender.send('possessiveFinished')
+			});
+
+			break;
+
 			case 'changePage':
 
 				event.sender.send('changePage', data)

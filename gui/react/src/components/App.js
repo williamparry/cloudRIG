@@ -14,6 +14,7 @@ const pages = { "Configuration": 1, "Initialization": 2, "Play": 3, "Loading": 4
 class App extends Component {
 
 	state = {
+		isPossessive: false,
 		currentPage: pages.Loading,
 		config: {},
 		disableNonStartPages: false,
@@ -86,9 +87,23 @@ class App extends Component {
 
 		ipcRenderer.on('error', (event, arg) => {
 			ipcRenderer.send('cmd', 'error', 'Sorry, there was an error, see log below.');
-
+			this.setState({
+				isPossessive: false
+			})
 			event.sender.send('cmd', 'log', arg)
 
+		})
+
+		ipcRenderer.on('possessiveStarted', (event, arg) => {
+			this.setState({
+				isPossessive: true
+			})
+		})
+
+		ipcRenderer.on('possessiveFinished', (event, arg) => {
+			this.setState({
+				isPossessive: false
+			})
 		})
 
 		ipcRenderer.on('credentialsFileChosen', (event, filePaths) => {
@@ -196,7 +211,7 @@ class App extends Component {
 
 			return (
 				
-				<Grid stretched>
+				<Grid stretched className={this.state.isPossessive ? 'possessive' : ''}>
 					<Grid.Row style={{height: 476}}>
 						<Grid.Column>
 							<Step.Group attached='top'>
