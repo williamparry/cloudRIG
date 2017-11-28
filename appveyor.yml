@@ -2,13 +2,14 @@ environment:
   nodejs_version: "8"
 install:
   - ps: Install-Product node $env:nodejs_version
+  - ps: $env:package_version = (Get-Content -Raw -Path package.json | ConvertFrom-Json).version
 build_script:
   - cd gui
   - npm run build
 before_deploy:
-  - cmd: npm run publish
+  - cmd: npm run build
 deploy:
-  release: myproduct-v$(appveyor_build_version)
+  release: cloudRIG-v$(package_version)
   description: 'Release description'
   provider: GitHub
   auth_token:
