@@ -1,3 +1,4 @@
+platform: x64
 environment:
   nodejs_version: "8"
 install:
