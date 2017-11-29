@@ -1,5 +1,8 @@
 os: osx
 script: cd gui && npm run build
+language: node_js
+node_js:
+  - "8"
 before_deploy:
 - export FILE_TO_UPLOAD=$(ls _releases/-*.dmg)
 deploy:
