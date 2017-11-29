@@ -1,0 +1,11 @@
+before_deploy:
+- export FILE_TO_UPLOAD=$(ls _releases/-*.dmg)
+deploy:
+  provider: releases
+  api_key:
+  - secure: drdqq1zZ1SUPaar0+/3aocmgbqnI5OQO47QVKEFR/keprQUs2X3IbzTrBDBa/B0FgHMbsI1CnMUDvoSr4UpkAZcRA5x85Jx5YiB7SCaMojyiVQyefHScVEy0ftXEpFR8XwPWlqFZ3Jn8kUFHcdar/AO7SQzBf9fr+cqK9znOpAQ9S7FYIP3ywPXmIi+ndIm0FJIkSh1fwhGb9ib0cUgOp+l5lUgSmne55c2jAQdcgCZYxqt0RL9rjEnksAF90cf+S2mGwkfYz4tamD4PT0e0auU91oQTlGBmJnheOW2Ww4YAbK3zdzj7wOcftAMZG3w0cAozTCKJ0FiRt+0w0tKQjHU0S/HPiImYE2Q7+x7GpQjIDA4z0OrAyqmRln5m43QZFcwBvkVAhjxVKhF7M5mdPTu6xMg54buXdc4xilbRaBeT1LDMEqamY7F6wNWgBikejsyjGS9Me24VkxHnu4evkVFXYZigtCT3X+mL6gEls+92wOH3lFVNUK8TmT/DyW/yUN+YB1y0kDW52w7UjwyuZAZQvtw9s83kF192p9PjcArLfU/SZxDT5AoxcSLBMspHZmyKR+cGiBDI5oplFNDzLfs8xeA9fZhcle9uU+K1cgyJ3kdbCbWlqdUXKrutgi62LmOop09TsDUKWkXGS7zawm5LJUxSGsP95kR5K5w45hU=
+  file_glob: true
+  file: "${FILE_TO_UPLOAD}"
+  skip_cleanup: true
+  on:
+    tags: true
