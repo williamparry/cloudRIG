@@ -6,3 +6,4 @@ node_modules
 .vscode
 _releases
 .env
+package-lock.json
