@@ -1,3 +1,4 @@
+os: osx
 script: cd gui && npm run build
 before_deploy:
 - export FILE_TO_UPLOAD=$(ls _releases/-*.dmg)
