@@ -4,6 +4,7 @@ const url = require('url')
 const async = require('async');
 const cloudrig = require('cloudriglib')
 const autoUpdater = require("electron-updater").autoUpdater
+const fs = require('fs');
 
 let hooks = {}
 let urlObj = {}
@@ -67,11 +68,9 @@ function cmdHandler(event, op, data) {
 		break;
 
 		case 'doUpdate':
-		
-			autoUpdater.on('update-downloaded', (info) => {
-				autoUpdater.quitAndInstall();  
-			})
-		
+			
+			autoUpdater.quitAndInstall();
+			
 		break;
 
 		case 'selectCredentialsFile':
@@ -138,6 +137,13 @@ function cmdHandler(event, op, data) {
 		break;
 
 		case 'setup':
+
+			var autoResolve = false;
+
+			if(fs.existsSync(__dirname + '/.updateFlag')) {
+				autoResolve = true;
+				fs.unlinkSync(__dirname + '/.updateFlag');
+			}
 		
 			cloudrig.setup(function (err, setups) {
 				if(err) {
@@ -152,7 +158,7 @@ function cmdHandler(event, op, data) {
 
 				event.sender.send('setupValid', true)
 				
-			});
+			}, autoResolve);
 
 		break;
 
@@ -334,14 +340,13 @@ function cmdHandler(event, op, data) {
 
 							if(toFlush.length > 0) {
 
-								toFlush.push(function(cb) {
-									cloudrig.setup(cb, true)
-								})
+								fs.writeFileSync(__dirname + '/.updateflag', '')
 
 								async.series(toFlush, (err) => {
 
 									if(err) { event.sender.send('error', err); return; }
-
+									
+									log('Finished');
 									event.sender.send('updateReady')
 
 								})

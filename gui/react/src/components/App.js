@@ -1,11 +1,10 @@
 import React, { Component } from 'react';
-import { Icon, Segment, Container, Step, Grid, Button, Form, Header, Divider, Modal } from 'semantic-ui-react'
+import { Icon, Segment, Container, Step, Grid, Button, Form, Header, Divider, Modal, Message } from 'semantic-ui-react'
 import 'semantic-ui-css/semantic.min.css';
 import './App.css';
 import Configuration from './Configuration';
 import Initialization from './Initialization';
 import Play from './Play';
-
 
 const { ipcRenderer } = window.require('electron');
 
@@ -17,7 +16,7 @@ class App extends Component {
 		isPossessive: false,
 		currentPage: pages.Loading,
 		config: {},
-		checkedForUpdates: false,
+		updateTriggered: false,
 		updateAvailable: false,
 		disableNonStartPages: false,
 		logOutput: ["Welcome :)"]
@@ -50,16 +49,8 @@ class App extends Component {
 		ipcRenderer.on('updateCheck', (event, updateAvailable) => {
 			
 			this.setState({
-				checkedForUpdates: true,
 				updateAvailable: updateAvailable
 			})
-
-			if(updateAvailable) {
-
-				// Start in maintenance mode
-				ipcRenderer.send('cmd', 'preUpdate');
-
-			}
 
 		})
 
@@ -146,7 +137,7 @@ class App extends Component {
 				config: config
 			});
 		});
-
+		
 		const config = ipcRenderer.sendSync('cmd', 'getConfiguration');
 
 		if(config.AWSCredentialsFile) {	
@@ -174,6 +165,13 @@ class App extends Component {
 		ipcRenderer.send('cmd', 'selectCredentialsFile');
 	}
 
+	triggerUpdate(event, config) {
+		this.setState({
+			updateTriggered: true
+		})
+		ipcRenderer.send('cmd', 'preUpdate');
+	};
+
 	render() {
 		
 		const currentPage = 
@@ -181,14 +179,14 @@ class App extends Component {
 			this.state.currentPage === pages.Initialization ? <Initialization /> :
 			this.state.currentPage === pages.Play ? <Play /> : null
 
-		if(!this.state.checkedForUpdates || this.state.updateAvailable) {
+		if(this.state.updateTriggered) {
 
 			return (
 			
 			<div>
 				<Modal open={true}>
 					
-					<Modal.Header>{this.state.updateAvailable ? <p>Updating</p> : 'Checking for updates'}</Modal.Header>
+					<Modal.Header>Preparing...</Modal.Header>
 					<Modal.Content>
 						
 					<Modal.Description>
@@ -293,7 +291,6 @@ class App extends Component {
 									</Step.Content>
 								</Step>
 							</Step.Group>
-
 							
 							<Segment attached className="stretched-segment" basic>
 								{currentPage}
@@ -304,12 +301,21 @@ class App extends Component {
 					</Grid.Row>
 					<Grid.Row verticalAlign="bottom">
 						<Grid.Column>
+						{this.state.updateAvailable ? <Message icon 
+							info size='tiny' 
+							style={{
+								position: 'absolute',
+								top: '-3.4em',
+								left: '0',
+								width: '100%',
+								paddingTop: '.5em',
+								paddingBottom: '.5em'
+							}}>
+							<Icon name='download' /><Message.Content>New version available. <Button onClick={this.triggerUpdate.bind(this)} size='tiny'>Update</Button></Message.Content></Message> : ''}
 							<Container>
 	<pre id='output' style={{ height: 60, overflowY: 'scroll' }}>
 	{this.state.logOutput.join("\n")}
 	</pre>
-
-							
 							</Container>
 						</Grid.Column>
 						
