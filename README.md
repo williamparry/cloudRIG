@@ -8,6 +8,10 @@
 
 ---
 
+**GUI Status**
+
+<img alt="Travis CI status" src="https://travis-ci.org/williamparry/cloudRIG.svg?branch=master">
+
 ## Features
 
 * Play using Parsec for around $0.10c / hour
