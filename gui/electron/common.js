@@ -421,5 +421,3 @@ function registerCMDHook(cmd, method, withLib) {
 module.exports.registerCMDHook = registerCMDHook;
 
 module.exports.init = init;
-
-//test
