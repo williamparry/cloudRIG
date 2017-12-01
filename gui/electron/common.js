@@ -189,9 +189,7 @@ function cmdHandler(event, op, data) {
 		case 'getState':
 
 			cloudrig.getState(function(err, data) {
-				console.log("\n");
-				console.log(data);
-				console.log("\n");
+				
 				if(err) {
 					event.sender.send('errorPlay', err)
 					return;
