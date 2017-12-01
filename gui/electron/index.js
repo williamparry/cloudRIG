@@ -28,7 +28,6 @@ common.init({
 	protocol: 'http:',
 	slashes: true
 }, function(win, autoUpdater) {
-	autoUpdater.allowDowngrade = true
-	autoUpdater.allowPrerelease = true
+	autoUpdater.logger = null
 	win.webContents.openDevTools()
 })
