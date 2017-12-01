@@ -6,6 +6,10 @@ const cloudrig = require('cloudriglib')
 const autoUpdater = require("electron-updater").autoUpdater
 const fs = require('fs');
 
+// TODO: Remove
+autoUpdater.logger = null
+autoUpdater.allowPrerelease = true;
+
 let hooks = {}
 let urlObj = {}
 let onCreateWindow;
@@ -42,7 +46,7 @@ function createWindow() {
 	});
 
 	if(onCreateWindow) {
-		onCreateWindow(win, autoUpdater);
+		onCreateWindow(win);
 	}
 
 }

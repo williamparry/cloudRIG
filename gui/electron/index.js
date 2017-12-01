@@ -27,7 +27,6 @@ common.init({
 	pathname: 'localhost:3000',
 	protocol: 'http:',
 	slashes: true
-}, function(win, autoUpdater) {
-	autoUpdater.logger = null
+}, function(win) {
 	win.webContents.openDevTools()
 })
