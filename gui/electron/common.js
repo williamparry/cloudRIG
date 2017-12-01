@@ -42,7 +42,7 @@ function createWindow() {
 	});
 
 	if(onCreateWindow) {
-		onCreateWindow(win);
+		onCreateWindow(win, autoUpdater);
 	}
 
 }
@@ -58,6 +58,14 @@ function cmdHandler(event, op, data) {
 		break;
 
 		case 'checkForUpdates':
+
+			autoUpdater.on('update-available', (info) => {
+				event.sender.send('updateCheck', true)
+			});
+		
+			autoUpdater.on('update-not-available', (info) => {
+				event.sender.send('updateCheck', false)
+			});
 
 			autoUpdater.on('error', (err) => {
 				cmdHandler(event, 'updateFail')
@@ -380,14 +388,6 @@ function init(_urlObj, _onCreateWindow) {
 	onCreateWindow = _onCreateWindow
 
 	cloudrig.init(log);
-
-	autoUpdater.on('update-available', (info) => {
-		event.sender.send('updateCheck', true)
-	});
-
-	autoUpdater.on('update-not-available', (info) => {
-		event.sender.send('updateCheck', false)
-	});
 
 	ipcMain.on('cmd', cmdHandler);
 

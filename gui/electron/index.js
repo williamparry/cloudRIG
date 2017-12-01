@@ -27,6 +27,8 @@ common.init({
 	pathname: 'localhost:3000',
 	protocol: 'http:',
 	slashes: true
-}, function(win) {
+}, function(win, autoUpdater) {
+	autoUpdater.allowDowngrade = true
+	autoUpdater.allowPrerelease = true
 	win.webContents.openDevTools()
 })
