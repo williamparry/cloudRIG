@@ -18,18 +18,18 @@ There are 2 ways to use cloudRIG: [GUI](#gui) or [CLI](#cli).
 
 ---
 
-## [GUI](gui)
+## [GUI](https://github.com/williamparry/cloudRIG/tree/master/gui)
 
 ![Travis CI status](https://travis-ci.org/williamparry/cloudRIG.svg?branch=master)
 
-### [Releases](releases)
+### [Releases](https://github.com/williamparry/cloudRIG/releases)
 
 ### Screenshots
 
 ![Configuration Screen](https://user-images.githubusercontent.com/348091/32979619-fbe44170-cc58-11e7-9428-747dd3a0f9fb.png)
 ![Initialization Screen](https://user-images.githubusercontent.com/348091/32982361-59593b60-cc83-11e7-822a-f23320bec151.png)
 
-## [CLI](cli)
+## [CLI](https://github.com/williamparry/cloudRIG/tree/master/cli)
 
 Not guaranteed to be up-to-date with the lib, but handy for sending SSM commands.
 
