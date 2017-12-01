@@ -1,6 +1,16 @@
 # cloudRIG
 
-[Powered by Parsec](https://parsec.tv), but there is an old [ZeroTier + Steam Home Streaming branch](https://github.com/williamparry/cloudRIG/tree/zerotier-steamstreaming)
+[Powered by Parsec](https://parsecgaming.com/).
+
+cloudRIG is the cheapest way to use AWS + Parsec for game and other application streaming. When configured, it will set up the requisite AWS infrastructure for you to boot spot instances preloaded with Parsec.
+
+## Features
+
+* Stream games and applications for <small>approx.</small> $0.13/hr
+* Schedule shut down for the end of the current billing hour (AWS charges by the hour)
+* Auto-saves your rig when you stop or are booted off
+
+There are 2 ways to use cloudRIG: [GUI](#gui) or [CLI](#cli).
 
 ---
 
@@ -8,21 +18,24 @@
 
 ---
 
-**GUI Status**
+## [GUI](gui)
 
-<img alt="Travis CI status" src="https://travis-ci.org/williamparry/cloudRIG.svg?branch=master">
+![Travis CI status](https://travis-ci.org/williamparry/cloudRIG.svg?branch=master)
 
-## Features
+### [Releases](releases)
 
-* Play using Parsec for around $0.10c / hour
-* Schedule shut down for the end of the current billing hour (AWS charges by the hour)
-* Auto-saves your rig when you stop or are booted off
+### Screenshots
 
-## Cost
+![Configuration Screen](https://user-images.githubusercontent.com/348091/32979619-fbe44170-cc58-11e7-9428-747dd3a0f9fb.png)
+![Initialization Screen](https://user-images.githubusercontent.com/348091/32982361-59593b60-cc83-11e7-822a-f23320bec151.png)
 
-You set the maximum price you're willing to pay and cloudRIG will find the cheapest Availability Zone for your region, which is cheaper.
+## [CLI](cli)
 
-You will also have a separate EBS volume for storing games, which is around $10/month ([check for your region](https://calculator.s3.amazonaws.com/index.html))
+Not guaranteed to be up-to-date with the lib, but handy for sending SSM commands.
+
+### Screenshots
+
+![cloudRIG boot screen](https://user-images.githubusercontent.com/348091/31599523-1df1ff3e-b253-11e7-9afc-22b37d4cec04.png)
 
 **Don't forget to turn it off when you're done gaming!**
 
@@ -47,6 +60,10 @@ cloudRIG will offer to set up all the AWS infrastructure needed for cloudrig. Yo
 ### Software
 
 * NodeJS
+
+## History
+
+There is an old [ZeroTier + Steam Home Streaming branch](https://github.com/williamparry/cloudRIG/tree/zerotier-steamstreaming).
 
 ## Notice
 
