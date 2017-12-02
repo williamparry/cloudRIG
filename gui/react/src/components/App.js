@@ -130,6 +130,7 @@ class App extends Component {
 			this.setState({
 				config: config
 			});
+			ipcRenderer.send('cmd', 'getConfigurationValidity');
 		});
 		
 		const config = ipcRenderer.sendSync('cmd', 'getConfiguration');
