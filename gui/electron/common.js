@@ -7,6 +7,8 @@ const autoUpdater = require("electron-updater").autoUpdater
 const fs = require('fs');
 const homedir = require('os').homedir();
 
+autoUpdater.autoDownload = false
+
 let hooks = {}
 let urlObj = {}
 let onCreateWindow;
@@ -78,7 +80,17 @@ function cmdHandler(event, op, data) {
 
 		case 'doUpdate':
 			
-			autoUpdater.quitAndInstall();
+			event.sender.send('updateDownloading')
+
+			autoUpdater.on('download-progress', (info) => {
+				event.sender.send('updateDownloadProgress', info)
+			});
+			
+			autoUpdater.on('update-downloaded', (info) => {
+				autoUpdater.quitAndInstall();
+			});
+
+			autoUpdater.downloadUpdate();
 			
 		break;
 
