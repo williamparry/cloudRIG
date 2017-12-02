@@ -7,7 +7,7 @@
 	},
 	"main": "index.js",
 	"description": "Play games with Parsec on AWS for cheap.",
-	"version": "0.1.3",
+	"version": "0.1.4",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/williamparry/cloudRIG"

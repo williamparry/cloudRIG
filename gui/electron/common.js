@@ -5,6 +5,7 @@ const async = require('async');
 const cloudrig = require('cloudriglib')
 const autoUpdater = require("electron-updater").autoUpdater
 const fs = require('fs');
+const homedir = require('os').homedir();
 
 // TODO: Remove
 autoUpdater.logger = null
@@ -152,9 +153,9 @@ function cmdHandler(event, op, data) {
 
 			var autoResolve = false;
 
-			if(fs.existsSync(__dirname + '/.updateFlag')) {
+			if(fs.existsSync(homedir + '/.updateFlag')) {
 				autoResolve = true;
-				fs.unlinkSync(__dirname + '/.updateFlag');
+				fs.unlinkSync(homedir + '/.updateFlag');
 			}
 		
 			cloudrig.setup(function (err, setups) {
@@ -350,7 +351,7 @@ function cmdHandler(event, op, data) {
 
 							if(toFlush.length > 0) {
 
-								fs.writeFileSync(__dirname + '/.updateflag', '')
+								fs.writeFileSync(homedir + '/.updateflag', '')
 
 								async.series(toFlush, (err) => {
 
