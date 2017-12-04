@@ -29,6 +29,7 @@ There are 2 ways to use cloudRIG: [GUI](#gui) or [CLI](#cli).
 ![Configuration Screen](https://user-images.githubusercontent.com/348091/32979619-fbe44170-cc58-11e7-9428-747dd3a0f9fb.png)
 ![Initialization Screen](https://user-images.githubusercontent.com/348091/32982361-59593b60-cc83-11e7-822a-f23320bec151.png)
 ![Play Screen](https://user-images.githubusercontent.com/348091/33514039-23bc3d34-d74d-11e7-93dc-7d7725efb743.png)
+![Scheduled Stop](https://user-images.githubusercontent.com/348091/33574118-509dbe3a-d938-11e7-905f-476771a5a65f.png)
 
 ## [CLI](https://github.com/williamparry/cloudRIG/tree/master/cli)
 
