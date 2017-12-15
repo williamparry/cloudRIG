@@ -146,6 +146,10 @@ class Play extends Component {
 		ipcRenderer.send('cmd', 'deleteStorage', volume.VolumeId);
 	}
 
+	openVNC() {
+		ipcRenderer.send('cmd', 'openVNC');
+	}
+
 	componentDidMount() {
 
 		this.setState({
@@ -183,6 +187,7 @@ class Play extends Component {
 						(<Button content='Unscheduled Stop' icon='time' labelPosition='right' onClick={this.unScheduleStop.bind(this)} />)
 						:
 						(<Button content='Schedule Stop' icon='time' labelPosition='right' onClick={this.scheduleStop.bind(this)} />)}
+					<Button content='Open VNC' icon='external' labelPosition='right' onClick={this.openVNC.bind(this)} />
 				</div>
 			} else {
 				actionButtons = <div>
