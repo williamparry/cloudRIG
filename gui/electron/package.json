@@ -31,7 +31,8 @@
 		"async": "^2.6.0",
 		"cloudriglib": "file:../../lib",
 		"electron-context-menu": "^0.9.1",
-		"electron-updater": "^2.16.1"
+		"electron-updater": "^2.16.1",
+		"open": "0.0.5"
 	},
 	"devDependencies": {
 		"electron": "1.7.9"
