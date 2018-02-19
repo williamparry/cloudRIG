@@ -7,7 +7,7 @@ class Storage extends Component {
 	constructor(props) {
 		super(props)
 
-		this.state = { ...props, newVolume: 100 }
+		this.state = {...props, newVolume: 100, transferNum: 0}
 
 	}
 
@@ -24,8 +24,14 @@ class Storage extends Component {
 		})
 	}
 
-	submit() {
+	handleAZChange(e, data) {
+		this.setState({
+			transferNum: data.value
+		})
+	}
 
+	submit() {
+		
 		this.state.handleSubmit(this.state.newVolume)
 	}
 
@@ -34,18 +40,13 @@ class Storage extends Component {
 	}
 
 	transfer() {
-		this.state.handleTransfer(this.state.volumesNotInAZ[0])
+		this.state.handleTransfer(this.state.volumesNotInAZ[this.state.transferNum])
 	}
 
 	render() {
-
-		const message = this.state.volumesNotInAZ.length > 0 ?
-			<div>
-				<Message warning icon='exclamation triangle' header='You have a volume in another Availability Zone' content='You will still be charged for it if you make another one here.' />
-				<br />
-			</div>
-			: ''
-		const buttons = this.state.volumesInAZ.length > 0 ?
+		
+		const message = this.state.volumesNotInAZ.length > 0 ? <Message warning icon='exclamation triangle' header='You have a volume in another Availability Zone' content='You will still be charged for it if you make another one here.' /> : ''
+		const buttons = this.state.volumesInAZ.length > 0 ? 
 			(
 				<div>
 					<Button content='Delete volume' icon='delete' labelPosition='right' onClick={this.delete.bind(this)} />
@@ -53,51 +54,59 @@ class Storage extends Component {
 				</div>)
 			:
 			(
-
+				
 				<Form>
 					<Form.Group inline>
-						<Form.Select label='Volume Size' value={this.state.newVolume} onChange={this.handleChange.bind(this)} options={[
+						<Form.Select label='Volume Size' value={this.state.newVolume} onChange={this.handleChange.bind(this)} options={ [
 							{ key: '100', text: '100 GB', value: 100 },
 							{ key: '150', text: '150 GB', value: 150 },
 							{ key: '200', text: '200 GB', value: 200 },
 						]} />
 						<Button onClick={this.submit.bind(this)}>Create</Button>
-						{this.state.volumesNotInAZ.length > 0 ? <Button content='Transfer here' icon='exchange' labelPosition='right' onClick={this.transfer.bind(this)} /> : ''}
 					</Form.Group>
+					{this.state.volumesNotInAZ.length > 0 && this.state.volumesInAZ.length===0 ?
+					 <Form.Group inline>
+					 <Form.Select label='Transfer from' value={this.state.transferNum} onChange={this.handleAZChange.bind(this)} options={ 
+							this.state.volumesNotInAZ.map((volume, index, array) => {
+								return { key: index, text: volume.AvailabilityZone, value: index }
+							})
+						} />
+						 <Button content='Transfer here' icon='exchange' labelPosition='right' onClick={this.transfer.bind(this)} /> 
+					 </Form.Group> : '' }
 				</Form>
 			);
+		
 
-
-		return (
-
+		return(
+			
 			<div>
-				{message}
-				{buttons}
+			{message}
+			{buttons}
 
-				<Header>Prices</Header>
-				<Table definition>
-					<Table.Body>
-						<Table.Row>
-							<Table.Cell><small>Default cloudRIG Drive 30GB</small></Table.Cell>
-							<Table.Cell><small>approx.</small> $1.60/month</Table.Cell>
-						</Table.Row>
-						<Table.Row>
-							<Table.Cell><small>Extra Volume (persistent volume)<sup>*</sup></small></Table.Cell>
-							<Table.Cell>
-								<small>approx.</small> $11.90/month for 100GB
+			<Header>Prices</Header>
+			<Table definition>
+				<Table.Body>
+					<Table.Row>
+						<Table.Cell><small>Default cloudRIG Drive 30GB</small></Table.Cell>
+						<Table.Cell><small>approx.</small> $1.60/month</Table.Cell>
+					</Table.Row>
+					<Table.Row>
+						<Table.Cell><small>Extra Volume (persistent volume)<sup>*</sup></small></Table.Cell>
+						<Table.Cell>
+							<small>approx.</small> $11.90/month for 100GB
 						</Table.Cell>
-						</Table.Row>
+					</Table.Row>
+					
+				</Table.Body>
+			</Table>	
+				
+			<small>
+				<sup>*</sup>You are only charged for how much you use, and it is tied to one Availability Zone.<br />
+				<a href='https://aws.amazon.com/ebs/pricing/' target='_blank' rel='noopener noreferrer'>Detailed pricing <Icon name='external' /></a>
 
-					</Table.Body>
-				</Table>
-
-				<small>
-					<sup>*</sup>You are only charged for how much you use, and it is tied to one Availability Zone.<br />
-					<a href='https://aws.amazon.com/ebs/pricing/' target='_blank' rel='noopener noreferrer'>Detailed pricing <Icon name='external' /></a>
-
-				</small>
+			</small>
 			</div>
-		)
+		  )
 
 	}
 
