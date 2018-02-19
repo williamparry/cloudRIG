@@ -306,6 +306,15 @@ function cmdHandler(event, op, data) {
 				if(err) { event.sender.send('error', err); return; }
 				event.sender.send('possessiveFinished')
 			});
+		case 'transferStorage':
+
+			event.sender.send('possessiveStarted')
+			cloudrig.transferEBSVolume(data, function (err) {
+				if (err) { event.sender.send('error', err); return; }
+				event.sender.send('possessiveFinished')
+			});
+
+			break;
 
 		break;
 

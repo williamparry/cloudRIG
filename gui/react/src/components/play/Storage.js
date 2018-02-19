@@ -7,7 +7,7 @@ class Storage extends Component {
 	constructor(props) {
 		super(props)
 
-		this.state = {...props, newVolume: 100}
+		this.state = {...props, newVolume: 100, transferNum: 0}
 
 	}
 
@@ -24,6 +24,12 @@ class Storage extends Component {
 		})
 	}
 
+	handleAZChange(e, data) {
+		this.setState({
+			transferNum: data.value
+		})
+	}
+
 	submit() {
 		
 		this.state.handleSubmit(this.state.newVolume)
@@ -33,10 +39,13 @@ class Storage extends Component {
 		this.state.handleDelete(this.state.volumesInAZ[0])
 	}
 
+	transfer() {
+		this.state.handleTransfer(this.state.volumesNotInAZ[this.state.transferNum])
+	}
+
 	render() {
 		
 		const message = this.state.volumesNotInAZ.length > 0 ? <Message warning icon='exclamation triangle' header='You have a volume in another Availability Zone' content='You will still be charged for it if you make another one here.' /> : ''
-
 		const buttons = this.state.volumesInAZ.length > 0 ? 
 			(
 				<div>
@@ -55,6 +64,15 @@ class Storage extends Component {
 						]} />
 						<Button onClick={this.submit.bind(this)}>Create</Button>
 					</Form.Group>
+					{this.state.volumesNotInAZ.length > 0 && this.state.volumesInAZ.length===0 ?
+					 <Form.Group inline>
+					 <Form.Select label='Transfer from' value={this.state.transferNum} onChange={this.handleAZChange.bind(this)} options={ 
+							this.state.volumesNotInAZ.map((volume, index, array) => {
+								return { key: index, text: volume.AvailabilityZone, value: index }
+							})
+						} />
+						 <Button content='Transfer here' icon='exchange' labelPosition='right' onClick={this.transfer.bind(this)} /> 
+					 </Form.Group> : '' }
 				</Form>
 			);
 		
