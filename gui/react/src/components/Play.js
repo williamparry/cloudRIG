@@ -146,6 +146,10 @@ class Play extends Component {
 		ipcRenderer.send('cmd', 'deleteStorage', volume.VolumeId);
 	}
 
+	transferStorage(volume) {
+		ipcRenderer.send('cmd', 'transferStorage', volume);
+	}
+
 	openVNC() {
 		ipcRenderer.send('cmd', 'openVNC');
 	}
@@ -212,7 +216,7 @@ class Play extends Component {
 							<Modal.Header><Icon name='hdd outline' /> {manageAction}</Modal.Header>
 							<Modal.Content>
 								<Modal.Description>
-									<Storage volumesNotInAZ={this.state.volumesNotInAZ} volumesInAZ={this.state.volumesInAZ} handleSubmit={this.addStorage.bind(this)} handleDelete={this.deleteStorage.bind(this)} />
+									<Storage volumesNotInAZ={this.state.volumesNotInAZ} volumesInAZ={this.state.volumesInAZ} handleSubmit={this.addStorage.bind(this)} handleDelete={this.deleteStorage.bind(this)} handleTransfer={this.transferStorage.bind(this)} />
 								</Modal.Description>
 							</Modal.Content>
 						</Modal>

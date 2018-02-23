@@ -300,12 +300,23 @@ function cmdHandler(event, op, data) {
 		break;
 
 		case 'deleteStorage':
-			
 			event.sender.send('possessiveStarted')
 			cloudrig.deleteEBSVolume(data, function(err) {
 				if(err) { event.sender.send('error', err); return; }
 				event.sender.send('possessiveFinished')
 			});
+			
+		break;
+
+		case 'transferStorage':
+
+			event.sender.send('possessiveStarted')
+			cloudrig.transferEBSVolume(data, function (err) {
+				if (err) { event.sender.send('error', err); return; }
+				event.sender.send('possessiveFinished')
+			});
+
+			break;
 
 		break;
 
