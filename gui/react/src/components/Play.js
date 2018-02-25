@@ -77,10 +77,11 @@ class Play extends Component {
 				} else {
 					volumesNotInAZ.push(v)
 				}
-			})
-
+			});
+			const newVolumeSize =  volumesInAZ.length > 0 ? volumesInAZ[0].Size : null;
 			this.setState({
 				volumesInAZ: volumesInAZ,
+				newVolumeSize,
 				volumesNotInAZ: volumesNotInAZ,
 				cloudRIGState: state
 			})
@@ -150,6 +151,10 @@ class Play extends Component {
 		ipcRenderer.send('cmd', 'transferStorage', volume);
 	}
 
+	expandStorage(volume, newVolumeSize) {
+		ipcRenderer.send('cmd', 'expandStorage', {VolumeId: volume.VolumeId, newVolumeSize});
+	}
+
 	openVNC() {
 		ipcRenderer.send('cmd', 'openVNC');
 	}
@@ -216,7 +221,7 @@ class Play extends Component {
 							<Modal.Header><Icon name='hdd outline' /> {manageAction}</Modal.Header>
 							<Modal.Content>
 								<Modal.Description>
-									<Storage volumesNotInAZ={this.state.volumesNotInAZ} volumesInAZ={this.state.volumesInAZ} handleSubmit={this.addStorage.bind(this)} handleDelete={this.deleteStorage.bind(this)} handleTransfer={this.transferStorage.bind(this)} />
+									<Storage volumesNotInAZ={this.state.volumesNotInAZ} volumesInAZ={this.state.volumesInAZ} handleSubmit={this.addStorage.bind(this)} handleDelete={this.deleteStorage.bind(this)} handleTransfer={this.transferStorage.bind(this)} handleExpand={this.expandStorage.bind(this)}  />
 								</Modal.Description>
 							</Modal.Content>
 						</Modal>

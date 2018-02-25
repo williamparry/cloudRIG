@@ -1,13 +1,12 @@
 import React, { Component } from 'react';
-import { Button, Form, Message, Table, Header, Icon } from 'semantic-ui-react'
+import { Button, Form, Message, Table, Header, Icon, Input } from 'semantic-ui-react'
 import 'semantic-ui-css/semantic.min.css';
 
 class Storage extends Component {
 
 	constructor(props) {
 		super(props)
-
-		this.state = {...props, newVolume: 100, transferNum: 0}
+		this.state = {...props, newVolume: 100, transferNum: 0,  maxVolumeSize: 1000}
 
 	}
 
@@ -31,7 +30,6 @@ class Storage extends Component {
 	}
 
 	submit() {
-		
 		this.state.handleSubmit(this.state.newVolume)
 	}
 
@@ -43,14 +41,42 @@ class Storage extends Component {
 		this.state.handleTransfer(this.state.volumesNotInAZ[this.state.transferNum])
 	}
 
+	expand(){
+		this.state.handleExpand(this.state.volumesInAZ[0], this.state.newVolumeSize)
+	}
+
+	onChangeVolumeSize(event){
+		if(event && event.target){
+			const newValue = event.target.value>this.state.maxVolumeSize ? this.state.maxVolumeSize : event.target.value;
+			this.setState({newVolumeSize:newValue});
+		}
+	}
+
 	render() {
 		
 		const message = this.state.volumesNotInAZ.length > 0 ? <Message warning icon='exclamation triangle' header='You have a volume in another Availability Zone' content='You will still be charged for it if you make another one here.' /> : ''
-		const buttons = this.state.volumesInAZ.length > 0 ? 
+		const buttons = this.state.volumesInAZ.length > 0 ?
 			(
 				<div>
-					<Button content='Delete volume' icon='delete' labelPosition='right' onClick={this.delete.bind(this)} />
-					<Button content='Expand volume' icon='expand' labelPosition='right' disabled />
+					<Form>
+						<Form.Group inline>
+							<Button content='Delete volume' icon='delete' labelPosition='right' onClick={this.delete.bind(this)} />
+						</Form.Group>
+						{this.state.volumesInAZ[0].Size < this.state.maxVolumeSize && 
+						<div>
+						<Form.Group inline>
+							<Button content='Expand volume' icon='expand' labelPosition='right' onClick={this.expand.bind(this)} disabled={!this.state.newVolumeSize || this.state.newVolumeSize<=this.state.volumesInAZ[0].Size } />
+							<Form.Field>
+								<Input type="number" min="100" max="1000" labelPosition="right" label="GB" value={this.state.newVolumeSize ? this.state.newVolumeSize : this.state.volumesInAZ[0].Size} onChange={this.onChangeVolumeSize.bind(this)} />
+							</Form.Field>
+						</Form.Group>{
+							this.state.newVolumeSize<this.state.volumesInAZ[0].Size &&
+						<Message negative>
+								<p>Min volume new size is { this.state.volumesInAZ[0].Size + 1} GB</p>  
+							</Message>
+							}
+							</div>}
+					</Form>
 				</div>)
 			:
 			(
