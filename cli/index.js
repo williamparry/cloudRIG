@@ -7,7 +7,6 @@ var prettyjson = require('prettyjson');
 var figlet = require('figlet');
 var cowsay = require('cowsay');
 var argv = require('yargs').argv;
-var open = require("open");
 var cloudrig = require('cloudriglib');
 
 function criticalError(err) {
@@ -33,7 +32,50 @@ function displayState(cb) {
 
 }
 
+function newVolumeMenu(cb) {
+	
+	var config = cloudrig.getConfigFile();
+	
+	inquirer.prompt([{
+		name: "cmd",
+		message: "Command:",
+		type: "list",
+		choices: ["« Back", "100 GB", "150 GB", "250 GB"]
+	}
+
+	]).then(function(answers) {
+		
+		switch(answers.cmd) {
+			
+			case "« Back":
+
+				cb();
+
+			break;
+			
+			case "100 GB":
+			case "150 GB":
+			case "250 GB":
+			
+			console.log(`Creating ${answers.cmd} volume in ${config.AWSAvailabilityZone}`);
+			
+			cloudrig.createEBSVolume(config.AWSAvailabilityZone, parseInt(answers.cmd), function(err) {
+				if(err) { criticalError(err); return; }
+				console.log("Created");
+				cb();
+			})
+			
+			break;
+			
+		}
+		
+	});
+	
+}
+
 function mainMenu() {
+	
+	var config = cloudrig.getConfigFile();
 
 	cloudrig.getState(function(err, state) {
 		
@@ -41,6 +83,17 @@ function mainMenu() {
 			criticalError(err);
 			return;
 		}
+		
+		var volumesInAZ = [];
+		var volumesNotInAZ = [];
+
+		state.volumes.forEach((v) => {
+			if(v.AvailabilityZone === config.AWSAvailabilityZone) {
+				volumesInAZ.push(v)
+			} else {
+				volumesNotInAZ.push(v)
+			}
+		})
 
 		var choices;
 
@@ -54,8 +107,14 @@ function mainMenu() {
 
 		} else {
 			choices = ["Start", "Setup"];
+			
+			if(volumesInAZ.length > 0) {
+				choices.push('Manage Storage')
+			} else {
+				choices.push('Add Storage')
+			}
 		}
-
+		
 		choices.push("Get State", "Advanced");
 
 		inquirer.prompt([{
@@ -79,7 +138,6 @@ function mainMenu() {
 							return;
 						}
 						console.log("K done");
-						open("parsec:server_id=")
 						mainMenu();
 
 					});
@@ -175,6 +233,145 @@ function mainMenu() {
 					});
 
 				break;
+				
+				case "Manage Storage":
+					
+					inquirer.prompt([{
+						name: "cmd",
+						message: "Command:",
+						type: "list",
+						choices: ["« Back", "Delete volume", "Extend volume"]
+					}
+			
+					]).then(function(answers) {
+						
+						switch(answers.cmd) {
+							case "« Back":
+
+								mainMenu();
+
+							break;
+
+							case "Delete volume":
+								
+								cloudrig.deleteEBSVolume(state.volumes[0].VolumeId, function(err) {
+									if(err) { criticalError(err); return; }
+									console.log("Deleted")
+									mainMenu()
+								})
+
+							break;
+							
+							case "Extend volume":
+								
+								console.log("Not implemented");
+								mainMenu();
+
+							break;
+
+							default: 
+								
+								mainMenu();
+
+							break;
+							
+						}
+					});
+					
+				
+				break;
+				
+				case "Add Storage":
+				
+					if(volumesNotInAZ.length) {
+						console.log("[!] You have a volume in another Availability Zone")
+						console.log("[!] You will still be charged for it if you make another one here.")
+					}
+					
+					if(volumesNotInAZ.length > 0 && volumesInAZ.length === 0) {
+							
+						inquirer.prompt([{
+							name: "cmd",
+							message: "Command:",
+							type: "list",
+							choices: ["« Back", "New volume", "Transfer here from another Availability Zone"]
+						}
+				
+						]).then(function(answers) {
+							
+							switch(answers.cmd) {
+								case "« Back":
+
+									mainMenu();
+
+								break;
+
+								case "New volume":
+									
+									newVolumeMenu(mainMenu);
+
+								break;
+								
+								case "Transfer here from another Availability Zone":
+								
+									console.log("From what Availability Zone?");
+									console.log("[!] This will also delete the volume in the original Availability Zone")
+									
+									var choices = ["« Back"];
+									var volumesHash = {};
+									
+									volumesNotInAZ.forEach(function(volume) {
+										choices.push(`[${volume.VolumeId}] ${volume.AvailabilityZone} (${volume.Size} GB)`);
+										volumesHash[volume.VolumeId] = volume
+									});
+									
+									inquirer.prompt([{
+										name: "cmd",
+										message: "Command:",
+										type: "list",
+										choices: choices
+									}
+							
+									]).then(function(answers) {
+										
+										if(answers.cmd === "« Back") {
+											mainMenu();
+											return;
+										}
+										
+										var volumeIdTag = answers.cmd.match(/\[(.*)\]/)[0]
+										var volumeId = volumeIdTag.substr(1, volumeIdTag.length - 2)
+										
+										console.log("This will take some time - please be patient and don't interrupt the process");
+										
+										cloudrig.transferEBSVolume(volumesHash[volumeId], function(err) {
+											if(err) { criticalError(err); return; }
+											console.log("Transferred")
+											mainMenu()
+										});
+										
+										
+									});
+
+								break;
+
+								default: 
+									
+									mainMenu();
+
+								break;
+								
+							}
+							
+						});
+							
+					} else {
+						
+						newVolumeMenu(mainMenu)
+						
+					}
+					
+				break;
 
 				case "Get State":
 
@@ -198,32 +395,6 @@ function mainMenu() {
 
 }
 
-function configMenu(cb) {
-
-	var config = cloudrig.getConfigFile();
-	var questions = [];
-
-	Object.keys(config).forEach(function(configKey) {
-
-		questions.push({
-			type: "input",
-			name: configKey,
-			message: configKey,
-			default: config[configKey]
-		});
-	
-	});
-
-	inquirer.prompt(questions).then(function(answers) {
-
-		Object.assign(config, answers);
-		cloudrig.setConfigFile(config);
-
-		cb();
-			
-	});
-
-}
 
 function advancedMenu(cb) {
 
@@ -328,31 +499,94 @@ function advancedMenu(cb) {
 
 }
 
+function populateConfigQuestions(configItems, existingValues) {
+
+	return configItems.map(function(configItem) {
+			
+		var message = `Please enter ${configItem.title}\n\n(${configItem.help})\n`;
+		
+		var questionObject = {
+			name: configItem.key,
+			message: message
+		}
+		
+		if(existingValues && existingValues[configItem.key]) {
+			questionObject.default = existingValues[configItem.key]
+		}
+		
+		if(configItem.validate) {
+			questionObject.validate = configItem.validate;
+		}
+		
+		// Object spread would be handy here...
+		
+		if(configItem.options) {
+			
+			questionObject.type = "list";
+			
+			if(typeof configItem.options == "function") {
+				
+				questionObject.choices = function(configItem, answers) {
+					
+					if(configItem.optionsDependsOnPreviousValues) {
+						return configItem.options.apply(null, 
+							configItem.optionsDependsOnPreviousValues.map(function(o) {
+								return answers[o]
+							})
+						)
+					}
+				}.bind(null, configItem);
+		
+			} else {
+				
+				questionObject.choices = configItem.options;
+				
+			}
+			
+		} else {
+			
+			questionObject.type = "input";
+			
+		}
+		
+		return questionObject;
+		
+	});
+	
+}
+
+function configMenu(cb) {
+
+	var config = cloudrig.getConfigFile();
+	var requiredConfig = cloudrig.getRequiredConfig();
+
+	inquirer.prompt(populateConfigQuestions(requiredConfig, config)).then(function(answers) {
+
+		Object.assign(config, answers);
+		cloudrig.setConfigFile(config);
+
+		cb();
+			
+	});
+
+}
+
 function validateAndSetConfig(cb) {
 	
 	console.log("Getting config");
 
 	var config = cloudrig.getConfigFile();
-	var configState = cloudrig.getRequiredConfig();
-	var questions = [];
-
-	configState.forEach(function(configKey) {
-
-		if(!config[configKey]) {
-			questions.push({
-				type: "input",
-				name: configKey,
-				message: "Enter " + configKey
-			});
-		}
-	});
+	var requiredConfig = cloudrig.getRequiredConfig();
+	var questions = requiredConfig.filter(function(c) {
+		return !config[c.key]
+	})
 	
 	if(questions.length > 0) {
 		
 		console.log("You're missing some values in your config. Enter them below:");
 
-		inquirer.prompt(questions).then(function(answers) {
-
+		inquirer.prompt(populateConfigQuestions(questions)).then(function(answers) {
+			
 			Object.assign(config, answers);
 			cloudrig.setConfigFile(config);
 			validateAndSetConfig(cb);
@@ -472,7 +706,7 @@ function showIntro() {
 	}));
 	
 	console.log(cowsay.say({
-		text : "This is alpha software - please use an isolated AWS account.\nDynamic 'best availability zone' is disabled in this version, sorry.\nAlso, please check your AWS console to ensure start/stop etc has worked.",
+		text : "This is alpha software - please use an isolated AWS account.\nPlease check your AWS console to ensure start/stop etc has worked.",
 		e : "oO",
 		T : "U "
 	}));
