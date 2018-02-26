@@ -240,7 +240,7 @@ function mainMenu() {
 						name: "cmd",
 						message: "Command:",
 						type: "list",
-						choices: ["« Back", "Delete volume", "Extend volume"]
+						choices: ["« Back", "Delete volume", "Expand volume"]
 					}
 			
 					]).then(function(answers) {
@@ -262,10 +262,30 @@ function mainMenu() {
 
 							break;
 							
-							case "Extend volume":
+							case "Expand volume":
 								
-								console.log("Not implemented");
-								mainMenu();
+								inquirer.prompt([{
+									name: "val",
+									message: "New size (max 1000)",
+									type: "input",
+									default: state.volumes[0].Size,
+									validate: function(val) {
+										return val >= state.volumes[0].Size && val <= 1000
+									}
+								}]).then(function(answers) {
+									var val = parseInt(answers.val);
+									if(val === state.volumes[0].Size) {
+										console.log("No change");
+										mainMenu();
+									} else {
+										cloudrig.expandEBSVolume(state.volumes[0].VolumeId, val, function(err) {
+											if(err) { criticalError(err); return; }
+											console.log("Expanded to " + val)
+											mainMenu()
+										});
+										
+									}
+								});
 
 							break;
 
