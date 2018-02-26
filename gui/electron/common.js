@@ -316,7 +316,14 @@ function cmdHandler(event, op, data) {
 				event.sender.send('possessiveFinished')
 			});
 
-			break;
+		break;
+
+		case 'expandStorage':
+			event.sender.send('possessiveStarted')
+			cloudrig.expandEBSVolume(data.VolumeId, data.newVolumeSize, function (err) {
+				if (err) { event.sender.send('error', err); return; }
+				event.sender.send('possessiveFinished')
+			});
 
 		break;
 
