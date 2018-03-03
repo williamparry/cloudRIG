@@ -116,6 +116,8 @@ function mainMenu() {
 		}
 		
 		choices.push("Get State", "Advanced");
+		
+		console.log(`Current Spot price for ${config.AWSAvailabilityZone} is $${state.currentSpotPrice}`)
 
 		inquirer.prompt([{
 			name: "cmd",
@@ -137,7 +139,7 @@ function mainMenu() {
 							mainMenu();
 							return;
 						}
-						console.log("K done");
+						
 						mainMenu();
 
 					});
@@ -240,7 +242,7 @@ function mainMenu() {
 						name: "cmd",
 						message: "Command:",
 						type: "list",
-						choices: ["« Back", "Delete volume", "Extend volume"]
+						choices: ["« Back", "Delete volume", "Expand volume"]
 					}
 			
 					]).then(function(answers) {
@@ -262,10 +264,30 @@ function mainMenu() {
 
 							break;
 							
-							case "Extend volume":
+							case "Expand volume":
 								
-								console.log("Not implemented");
-								mainMenu();
+								inquirer.prompt([{
+									name: "val",
+									message: "New size (max 1000)",
+									type: "input",
+									default: state.volumes[0].Size,
+									validate: function(val) {
+										return val >= state.volumes[0].Size && val <= 1000
+									}
+								}]).then(function(answers) {
+									var val = parseInt(answers.val);
+									if(val === state.volumes[0].Size) {
+										console.log("No change");
+										mainMenu();
+									} else {
+										cloudrig.expandEBSVolume(state.volumes[0].VolumeId, val, function(err) {
+											if(err) { criticalError(err); return; }
+											console.log("Expanded to " + val)
+											mainMenu()
+										});
+										
+									}
+								});
 
 							break;
 
@@ -409,7 +431,12 @@ function advancedMenu(cb) {
 		}
 
 		choices.push(
-			"Clean up Instance Profiles"
+			"Delete Role",
+			"Delete Instance Profile",
+			"Delete Instance Profile Role",
+			"Delete all Roles and Instance Profile",
+			"Delete Lambda",
+			"Delete Lambda Save"
 		);
 
 		inquirer.prompt([{
@@ -450,9 +477,11 @@ function advancedMenu(cb) {
 					
 				break;
 
-				case "Clean up Instance Profiles":
+				case "Delete Instance Profile":
 					
 					cloudrig._getInstanceProfiles(function(err, data) {
+						
+						data = data.InstanceProfiles;
 						
 						if(data.length > 0) {
 
@@ -469,7 +498,7 @@ function advancedMenu(cb) {
 							}]).then(function(answers) {
 
 								async.parallel(answers.toDelete.map(function(answer) {
-									return cloudrig._deleteInstanceProfile.bind(null, answer);
+									return cloudrig._deleteInstanceProfileByName.bind(null, answer);
 								}), function(err, results) {
 									console.log("Done");
 									advancedMenu(cb);
@@ -485,6 +514,35 @@ function advancedMenu(cb) {
 						}
 
 					});
+				break;
+				
+				case "Delete Role":
+					cloudrig.deleteRole(function(err) {
+						if(err) { console.log(err); }
+						advancedMenu(cb)
+					});
+				break;
+				
+				case "Delete Instance Profile Role":
+					cloudrig.deleteInstanceProfileRole(function(err) {
+						if(err) { console.log(err); }
+						advancedMenu(cb)
+					});
+				break;
+				
+				case "Delete all Roles and Instance Profile":
+					cloudrig.deleteAllRolesAndInstanceProfile(function(err) {
+						if(err) { console.log(err); }
+						advancedMenu(cb)
+					});
+				break;
+				
+				case "Delete Lambda":
+					cloudrig.deleteLambda(advancedMenu.bind(null, cb))
+				break;
+				
+				case "Delete Lambda Save":
+					cloudrig.deleteLambdaSave(advancedMenu.bind(null, cb))
 				break;
 
 				case "Create Security Group":

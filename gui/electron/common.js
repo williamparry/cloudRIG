@@ -375,9 +375,13 @@ function cmdHandler(event, op, data) {
 							if(activeInstances.length > 0) {
 								toFlush.push(cloudrig.stop);
 							}
-
+							
+							/*
+							This may need to be more explicit to check
+							instance profile role
+							*/
 							if(currentSettings.cloudRIGRole){
-								toFlush.push(cloudrig.deleteRole);
+								toFlush.push(cloudrig.deleteAllRolesAndInstanceProfile);
 							}
 
 							if(currentSettings.lambda) {
