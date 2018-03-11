@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Button, Form, Message, Table, Header, Icon, Input } from 'semantic-ui-react'
+import { Button, Form, Message, Table, Header, Icon, Input, Divider, Grid } from 'semantic-ui-react'
 import 'semantic-ui-css/semantic.min.css';
 
 class Storage extends Component {
@@ -54,7 +54,7 @@ class Storage extends Component {
 
 	render() {
 		
-		const message = this.state.volumesNotInAZ.length > 0 ? <Message warning icon='exclamation triangle' header='You have a volume in another Availability Zone' content='You will still be charged for it if you make another one here.' /> : ''
+		const message = this.state.volumesNotInAZ.length > 0 ? <Message warning icon='exclamation triangle' header='You have a volume in another Availability Zone' content='You will still be charged for it if you create another one here.' /> : ''
 		const buttons = this.state.volumesInAZ.length > 0 ?
 			(
 				<div>
@@ -80,58 +80,78 @@ class Storage extends Component {
 				</div>)
 			:
 			(
-				
 				<Form>
-					<Form.Group inline>
-						<Form.Select label='Volume Size' value={this.state.newVolume} onChange={this.handleChange.bind(this)} options={ [
-							{ key: '100', text: '100 GB', value: 100 },
-							{ key: '150', text: '150 GB', value: 150 },
-							{ key: '200', text: '200 GB', value: 200 },
-						]} />
-						<Button onClick={this.submit.bind(this)}>Create</Button>
+					<Form.Group widths='equal'>
+						<Grid container columns={2}>
+							<Grid.Row>
+								<Grid.Column>
+									<Form.Select label='Create Volume With Size' value={this.state.newVolume} onChange={this.handleChange.bind(this)} options={ [
+										{ key: '100', text: '100 GB', value: 100 },
+										{ key: '150', text: '150 GB', value: 150 },
+										{ key: '200', text: '200 GB', value: 200 },
+									]} />
+								</Grid.Column>
+								<Grid.Column verticalAlign="bottom">
+									<Button onClick={this.submit.bind(this)}>Create</Button>
+								</Grid.Column>
+							</Grid.Row>
+						</Grid>
 					</Form.Group>
 					{this.state.volumesNotInAZ.length > 0 && this.state.volumesInAZ.length===0 ?
-					 <Form.Group inline>
-					 <Form.Select label='Transfer from' value={this.state.transferNum} onChange={this.handleAZChange.bind(this)} options={ 
-							this.state.volumesNotInAZ.map((volume, index, array) => {
-								return { key: index, text: volume.AvailabilityZone, value: index }
-							})
-						} />
-						 <Button content='Transfer here' icon='exchange' labelPosition='right' onClick={this.transfer.bind(this)} /> 
-					 </Form.Group> : '' }
+					<React.Fragment>
+						<Divider horizontal>Or</Divider>
+						<Form.Group  widths='equal'>
+							<Grid container columns={2}>
+								<Grid.Row>
+									<Grid.Column>
+										<Form.Select label='Transfer From Availability Zone' value={this.state.transferNum} onChange={this.handleAZChange.bind(this)} options={ 
+											this.state.volumesNotInAZ.map((volume, index, array) => {
+												return { key: index, text: volume.AvailabilityZone, value: index }
+											})
+										}
+										/>
+									</Grid.Column>
+									<Grid.Column verticalAlign="bottom">
+										<Button content='Transfer Here' icon='exchange' labelPosition='right' onClick={this.transfer.bind(this)} /> 
+									</Grid.Column>
+								</Grid.Row>
+							</Grid>
+						</Form.Group>
+						<small><Icon name='info circle' fitted /> This will take a long time, and will delete the volume in the previous Availability Zone.</small>
+					 </React.Fragment> : '' }
 				</Form>
 			);
 		
 
 		return(
 			
-			<div>
-			{message}
-			{buttons}
-
-			<Header>Prices</Header>
-			<Table definition>
-				<Table.Body>
-					<Table.Row>
-						<Table.Cell><small>Default cloudRIG Drive 30GB</small></Table.Cell>
-						<Table.Cell><small>approx.</small> $1.60/month</Table.Cell>
-					</Table.Row>
-					<Table.Row>
-						<Table.Cell><small>Extra Volume (persistent volume)<sup>*</sup></small></Table.Cell>
-						<Table.Cell>
-							<small>approx.</small> $11.90/month for 100GB
-						</Table.Cell>
-					</Table.Row>
-					
-				</Table.Body>
-			</Table>	
+			<React.Fragment>
 				
-			<small>
-				<sup>*</sup>You are only charged for how much you use, and it is tied to one Availability Zone.<br />
-				<a href='https://aws.amazon.com/ebs/pricing/' target='_blank' rel='noopener noreferrer'>Detailed pricing <Icon name='external' /></a>
+				{message}
+				{buttons}
 
-			</small>
-			</div>
+				<Header>Prices</Header>
+				<Table definition>
+					<Table.Body>
+						<Table.Row>
+							<Table.Cell><small>Default cloudRIG Drive 30GB</small></Table.Cell>
+							<Table.Cell><small>approx.</small> $1.60/month</Table.Cell>
+						</Table.Row>
+						<Table.Row>
+							<Table.Cell><small>Extra Volume (persistent volume)<sup>*</sup></small></Table.Cell>
+							<Table.Cell>
+								<small>approx.</small> $11.90/month for 100GB
+							</Table.Cell>
+						</Table.Row>
+						
+					</Table.Body>
+				</Table>	
+					
+				<small>
+					<sup>*</sup>You are only charged for how much you use, and it is tied to one Availability Zone.&nbsp;
+					<a href='https://aws.amazon.com/ebs/pricing/' target='_blank' rel='noopener noreferrer'>Detailed pricing <Icon name='external' /></a>
+				</small>
+			</React.Fragment>
 		  )
 
 	}
