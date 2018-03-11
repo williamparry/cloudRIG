@@ -4,7 +4,7 @@ Set the app version number in electron/package.json
 
 ## Install & Run
 
-	npm install
+	npm run install
 	npm run dev
 
 ## Build
