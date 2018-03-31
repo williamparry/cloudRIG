@@ -6,13 +6,13 @@
         </binding>
     </visual>
        <actions>
-            <action
-            content="Cancel shutdown"
-            arguments="cancelShutdown"
-            activationType="foreground"/>
         <action
-            content="Close"
-            arguments="close"
+            content="Extend"
+            arguments="extend"
+            activationType="foreground"/>
+		<action
+            content="Cancel"
+            arguments="cancel"
             activationType="foreground"/>
     </actions>
 </toast>
