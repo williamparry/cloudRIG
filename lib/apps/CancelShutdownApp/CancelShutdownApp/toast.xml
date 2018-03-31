@@ -1,0 +1,18 @@
+﻿<toast>
+    <visual>
+        <binding template="ToastText02">
+            <text id="1">Scheduled shutdown activated!</text>
+            <text id="2">You have a couple minutes for save game or cancel shutdown</text>
+        </binding>
+    </visual>
+       <actions>
+        <action
+            content="Extend"
+            arguments="extend"
+            activationType="foreground"/>
+		<action
+            content="Cancel"
+            arguments="cancel"
+            activationType="foreground"/>
+    </actions>
+</toast>
