@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title></title>
+</head>
+
+<body>
+    Waiting for the development server.
+    <script>
+        var url = "http://localhost:3000";
+        function ping() {
+
+            var xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function () {
+                if (this.readyState === 4 && this.status == 200) {
+                    window.location.href = url
+                } else {
+                    setTimeout(ping, 500)
+                }
+            };
+
+            xhr.open('GET', url, true);
+            xhr.send(null)
+
+        }
+        setTimeout(ping, 500)
+    </script>
+</body>
+
+</html>

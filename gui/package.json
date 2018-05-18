@@ -1,14 +1,15 @@
 {
-	"name": "cloudrig-gui-builder",
-	"version": "0.0.1",
-	"scripts": {
-		"install": "cd react && rm -rf node_modules && npm install & cd electron && rm -rf node_modules && npm install",
-		"dev": "cd react && BROWSER=none npm run start & cd electron && ./node_modules/.bin/electron .",
-		"pre-build": "npm install && rm -rf .tmp && cd ./electron && npm install --only=production && cd .. && cp -r ./electron ./.tmp && cd ./react && npm install --only=production && npm run build && cd .. && cp -r react/build .tmp && cd .tmp && mv -f index.prod.js index.js",
-		"build": "npm run pre-build && cd .tmp && ../node_modules/.bin/electron-builder && cd .. && rm -rf .tmp",
-		"publish": "export $(cat .env | xargs) && npm run pre-build && cd .tmp && ../node_modules/.bin/electron-builder -p onTagOrDraft && cd .. && rm -rf .tmp"
-	},
-	"devDependencies": {
-		"electron-builder": "^19.45.5"
-	}
+  "name": "cloudrig-gui-builder",
+  "version": "0.0.1",
+  "scripts": {
+    "postinstall": "cd react && rm -rf node_modules && yarn install && cd ../electron && rm -rf node_modules && yarn install",
+    "dev": "yarn run concurrently \"cd react && yarn start\" \"cd electron && yarn run electron .\"",
+    "pre-build": "rm -rf .tmp && yarn run concurrently \"cd ./electron && rm -rf ./node_modules && yarn install --only=production && cd .. && cp -r ./electron ./.tmp && cd ./.tmp && rm dev.html && rm yarn.lock && rm yarn-error.log\" \"cd ./react && rm -rf ./node_modules && yarn install --only=production && yarn build && cd .. && cp -r react/build .tmp && cd .tmp && mv -f index.prod.js index.js\"",
+    "build": "yarn pre-build && cd .tmp && npx electron-builder && cd .. && rm -rf .tmp",
+    "publish": "export $(cat .env | xargs) && npm run pre-build && cd .tmp && ../node_modules/.bin/electron-builder -p onTagOrDraft && cd .. && rm -rf .tmp"
+  },
+  "devDependencies": {
+    "concurrently": "^3.5.1",
+    "electron-builder": "^20.8.1"
+  }
 }
