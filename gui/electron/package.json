@@ -35,6 +35,6 @@
 		"open": "0.0.5"
 	},
 	"devDependencies": {
-		"electron": "1.7.9"
+		"electron": "2.0.1"
 	}
 }
