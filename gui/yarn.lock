@@ -552,7 +552,7 @@ electron-builder-lib@~20.13.2:
     semver "^5.5.0"
     temp-file "^3.1.2"
 
-electron-builder@^20.8.1:
+electron-builder@^20.13.4:
   version "20.13.4"
   resolved "https://registry.yarnpkg.com/electron-builder/-/electron-builder-20.13.4.tgz#fad23bcf9db1923785ef6bdbcf286a8780453240"
   dependencies:

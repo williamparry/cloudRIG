@@ -1,6 +1,7 @@
 {
   "name": "cloudrig-gui-builder",
   "version": "0.0.1",
+  "license": "MIT",
   "scripts": {
     "postinstall": "cd react && rm -rf node_modules && yarn install && cd ../electron && rm -rf node_modules && yarn install",
     "dev": "yarn run concurrently \"cd react && yarn start\" \"cd electron && yarn run electron .\"",
@@ -9,7 +10,9 @@
     "publish": "export $(cat .env | xargs) && npm run pre-build && cd .tmp && ../node_modules/.bin/electron-builder -p onTagOrDraft && cd .. && rm -rf .tmp"
   },
   "devDependencies": {
-    "concurrently": "^3.5.1",
-    "electron-builder": "^20.8.1"
+    "concurrently": "^3.5.1"
+  },
+  "dependencies": {
+    "electron-builder": "^20.13.4"
   }
 }
