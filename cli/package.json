@@ -17,8 +17,8 @@
     "cloudriglib": "file:../lib",
     "cowsay": "^1.2.1",
     "figlet": "^1.2.0",
-    "inquirer": "^1.2.2",
+    "inquirer": "^5.2.0",
     "prettyjson": "^1.1.3",
-    "yargs": "^7.0.1"
+    "yargs": "^11.0.0"
   }
 }
