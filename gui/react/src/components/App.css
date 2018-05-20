@@ -39,3 +39,10 @@ https://github.com/Semantic-Org/Semantic-UI-React/issues/2550
 .ui.modal {
   margin-top: 0;
 }
+.disclaimer-text{
+  color: red;
+  display: inline;
+}
+.install-emulator{
+  display: inline;
+}

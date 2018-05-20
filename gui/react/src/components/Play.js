@@ -1,8 +1,15 @@
 import React, { Component } from 'react';
-import { Button, Grid, List, Image, Table, Divider, Icon, Modal } from 'semantic-ui-react'
+import { Button, Grid, List, Image, Table, Divider, Icon, Modal, Card } from 'semantic-ui-react'
 import Loading from './Loading';
 import ParsecLogo from '../img/parsec_logo.svg'
 import DiscordIcon from '../img/discord_icon.svg'
+import N64Image from '../img/n64-emulator.svg'
+import SNESImage from '../img/snes-emulator.svg'
+import NESImage from '../img/nes-emulator.svg'
+import WiiUImage from '../img/wii-u-emulator.svg'
+import GameCubeAndWiiImage from '../img/gamecube-and-wii-emulator.svg'
+import SegaImage from '../img/sega-emulator.svg'
+import MameImage from '../img/mame-emulator.svg'
 import Storage from './play/Storage'
 
 const { ipcRenderer } = window.require('electron');
@@ -159,6 +166,11 @@ class Play extends Component {
 		ipcRenderer.send('cmd', 'openVNC');
 	}
 
+	installEmulator(packageName) {
+		console.log(packageName)
+		ipcRenderer.send('cmd', 'installEmulator', packageName);
+	}
+
 	componentDidMount() {
 
 		this.setState({
@@ -250,15 +262,30 @@ class Play extends Component {
 
 			const spotCell = this.state.cloudRIGState.currentSpotPrice;
 
+			const emulatorCardStyle = {width: "210px", display: "inline-block", marginRight:"4%", marginBottom: 0, padding: 0 };
+
 			return(
 
 				<Grid>
 					<Grid.Row>
 						<Grid.Column width={10}>
 							{actionButtons}
-							<br /><br />
-							<iframe title="Watch Parsec videos" src="https://www.youtube.com/embed?listType=user_uploads&amp;list=jamesstringerphoto" width="100%" height="265" frameBorder='0'></iframe> 
-						</Grid.Column>
+							<br/>
+							{!this.state.cloudRIGState.instanceReady ?
+						    <iframe title="Watch Parsec videos" src="https://www.youtube.com/embed?listType=user_uploads&amp;list=jamesstringerphoto" width="100%" height="265" frameBorder='0'></iframe> 
+							:
+							<div>
+								<h2 className="install-emulator">Install an emulator</h2> <h3 className="disclaimer-text">(Use at your own risk)</h3>
+								<Card style={emulatorCardStyle}  image={N64Image} onClick={()=>this.installEmulator("mupen64plus")} />
+								<Card style={emulatorCardStyle}  image={SNESImage} onClick={()=>this.installEmulator("snes9x")} />
+								<Card style={emulatorCardStyle}  image={NESImage} onClick={()=>this.installEmulator("nestopia")} />
+								<Card style={emulatorCardStyle}  image={WiiUImage} onClick={()=>this.installEmulator("cemu")} />
+								<Card style={emulatorCardStyle}  image={GameCubeAndWiiImage} onClick={()=>this.installEmulator("dolphin")} />
+								<Card style={emulatorCardStyle}  image={SegaImage} onClick={()=>this.installEmulator("kega-fusion")} />
+								<Card style={emulatorCardStyle}  image={MameImage} onClick={()=>this.installEmulator("mame")} />
+							</div>
+							}
+							</Grid.Column>
 						<Grid.Column width={6}>
 
 							<Table definition>
