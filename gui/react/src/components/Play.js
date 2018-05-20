@@ -3,6 +3,13 @@ import { Button, Grid, List, Image, Table, Divider, Icon, Modal } from 'semantic
 import Loading from './Loading';
 import ParsecLogo from '../img/parsec_logo.svg'
 import DiscordIcon from '../img/discord_icon.svg'
+import N64Image from '../img/n64-emulator.svg'
+import SNESImage from '../img/snes-emulator.svg'
+import NESImage from '../img/nes-emulator.svg'
+import WiiUImage from '../img/wii-u-emulator.svg'
+import GameCubeAndWiiImage from '../img/gamecube-and-wii-emulator.svg'
+import SegaImage from '../img/sega-emulator.svg'
+import MameImage from '../img/mame-emulator.svg'
 import Storage from './play/Storage'
 
 const { ipcRenderer } = window.require('electron');
@@ -256,9 +263,22 @@ class Play extends Component {
 					<Grid.Row>
 						<Grid.Column width={10}>
 							{actionButtons}
-							<br /><br />
-							<iframe title="Watch Parsec videos" src="https://www.youtube.com/embed?listType=user_uploads&amp;list=jamesstringerphoto" width="100%" height="265" frameBorder='0'></iframe> 
-						</Grid.Column>
+							<br/>
+							{this.state.cloudRIGState.instanceReady ?
+						    <iframe title="Watch Parsec videos" src="https://www.youtube.com/embed?listType=user_uploads&amp;list=jamesstringerphoto" width="100%" height="265" frameBorder='0'></iframe> 
+							:
+							<div>
+								<h2 className="install-emulator">Install an emulator</h2> <h3 className="disclaimer-text">(Use at your own risk)</h3>
+								<Image className="emulator-link" href ='https://parsecgaming.com' width="225px" src={N64Image} />
+								<Image className="emulator-link" href ='https://parsecgaming.com' width="225px" src={SNESImage} />
+								<Image className="emulator-link" href ='https://parsecgaming.com' width="225px" src={NESImage} />
+								<Image className="emulator-link" href ='https://parsecgaming.com' width="225px" src={WiiUImage} />
+								<Image className="emulator-link" href ='https://parsecgaming.com' width="225px" src={GameCubeAndWiiImage} />
+								<Image className="emulator-link" href ='https://parsecgaming.com' width="225px" src={SegaImage} />
+								<Image className="emulator-link" href ='https://parsecgaming.com'  src={MameImage} />
+							</div>
+							}
+							</Grid.Column>
 						<Grid.Column width={6}>
 
 							<Table definition>
