@@ -1,6 +1,8 @@
 # CLI
 
+Use yarn
+
 ## Install & Run
 
-    npm install
+    yarn install
     node index

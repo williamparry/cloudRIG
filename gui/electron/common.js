@@ -6,7 +6,7 @@ const cloudrig = require('cloudriglib')
 const autoUpdater = require("electron-updater").autoUpdater
 const fs = require('fs');
 const homedir = require('os').homedir();
-const open = require("open");
+const opn = require("opn");
 
 autoUpdater.autoDownload = false
 
@@ -102,7 +102,7 @@ function cmdHandler(event, op, data) {
 					event.sender.send('error', err)
 					return;
 				}
-				open(`vnc://admin:4ubg9sde@${activeInstances[0].PublicDnsName}`);
+				opn(`vnc://admin:4ubg9sde@${activeInstances[0].PublicDnsName}`);
 			})
 
 			break;
