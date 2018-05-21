@@ -1,13 +1,13 @@
 {
   "name": "cloudrig-gui-builder",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "license": "MIT",
   "scripts": {
     "postinstall": "cd react && rm -rf node_modules && yarn install && cd ../electron && rm -rf node_modules && yarn install",
     "dev": "yarn run concurrently \"cd react && yarn start\" \"cd electron && yarn run electron .\"",
-    "pre-build": "rm -rf .tmp && yarn run concurrently \"cd ./electron && rm -rf ./node_modules && yarn install --only=production && cd .. && cp -r ./electron ./.tmp && cd ./.tmp && rm dev.html && rm yarn.lock && rm yarn-error.log\" \"cd ./react && rm -rf ./node_modules && yarn install --only=production && yarn build && cd .. && cp -r react/build .tmp && cd .tmp && mv -f index.prod.js index.js\"",
+    "pre-build": "rm -rf .tmp && yarn run concurrently \"cd ./electron && rm -rf ./node_modules && yarn install --only=production && cd .. && cp -r ./electron ./.tmp && cd ./.tmp && rm dev.html && rm yarn.lock && rm -f yarn-error.log\" \"cd ./react && rm -rf ./node_modules && yarn install --only=production && yarn build && cd .. && cp -r react/build .tmp && cd .tmp && mv -f index.prod.js index.js\"",
     "build": "yarn pre-build && cd .tmp && npx electron-builder && cd .. && rm -rf .tmp",
-    "publish": "export $(cat .env | xargs) && npm run pre-build && cd .tmp && ../node_modules/.bin/electron-builder -p onTagOrDraft && cd .. && rm -rf .tmp"
+    "deploygithub": "export $(cat .env | xargs) && npm run pre-build && cd .tmp && npx electron-builder -p onTagOrDraft && cd .. && rm -rf .tmp"
   },
   "devDependencies": {
     "concurrently": "^3.5.1"

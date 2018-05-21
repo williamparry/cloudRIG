@@ -16,6 +16,7 @@ class App extends Component {
 		isPossessive: false,
 		currentPage: pages.Loading,
 		config: {},
+		setupValid: false,
 		updateTriggered: false,
 		updateNotReady: false,
 		updateAvailable: false,
@@ -37,7 +38,7 @@ class App extends Component {
 				this.setState({
 					currentPage: pages.Initialization
 				});
-				event.sender.send('cmd', 'log', '✓ Configured')
+				event.sender.send('cmd', 'log', 'Configured')
 				return;
 			}
 			this.setState({
@@ -75,9 +76,10 @@ class App extends Component {
 
 		ipcRenderer.on('setupValid', (event, valid) => {
 			this.setState({
+				setupValid: valid,
 				currentPage: pages.Play
 			})
-			event.sender.send('cmd', 'log', '✓ Initialized')
+			event.sender.send('cmd', 'log', 'Initialized')
 		})
 
 		ipcRenderer.on('disableNonPlay', (event, isRunning) => {
@@ -206,7 +208,7 @@ class App extends Component {
 					</Modal.Content>
 				</Modal>
 			</div>)
-		} else if (this.state.updateTriggered && this.state.updateNotReady) {
+		} else if (!this.setupValid && this.state.updateNotReady) {
 
 			return (<div>
 				<Modal open={true}>
@@ -216,8 +218,8 @@ class App extends Component {
 						<Modal.Description>
 							<p>{this.state.updateNotReady}</p>
 							<Button onClick={() => {
+								ipcRenderer.send('cmd', 'setup');
 								this.setState({
-									updateTriggered: false,
 									updateNotReady: false
 								})
 							}}>Close</Button>

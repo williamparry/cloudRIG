@@ -49,7 +49,7 @@ class Play extends Component {
 				immediateIsStopping: isStopping
 			})
 		})
-		
+
 		ipcRenderer.on('errorPlay', (event, err) => {
 
 			ipcRenderer.send('cmd', 'error', err)
@@ -61,8 +61,8 @@ class Play extends Component {
 		});
 
 		ipcRenderer.on('gotState', (event, state) => {
-			
-			if(!state.currentSpotPrice) {
+
+			if (!state.currentSpotPrice) {
 				event.sender.send('cmd', 'error', 'This Availability Zone does not appear to have a spot price. Please select another in Configuration.')
 				ipcRenderer.send('cmd', 'changePage', 1)
 				return;
@@ -72,13 +72,13 @@ class Play extends Component {
 			let volumesNotInAZ = [];
 
 			state.volumes.forEach((v) => {
-				if(v.AvailabilityZone === config.AWSAvailabilityZone) {
+				if (v.AvailabilityZone === config.AWSAvailabilityZone) {
 					volumesInAZ.push(v)
 				} else {
 					volumesNotInAZ.push(v)
 				}
 			});
-			const newVolumeSize =  volumesInAZ.length > 0 ? volumesInAZ[0].Size : null;
+			const newVolumeSize = volumesInAZ.length > 0 ? volumesInAZ[0].Size : null;
 			this.setState({
 				volumesInAZ: volumesInAZ,
 				newVolumeSize,
@@ -86,11 +86,11 @@ class Play extends Component {
 				cloudRIGState: state
 			})
 
-			ipcRenderer.send('cmd', 'disableNonPlay', 
-				this.state.immediateIsStarting || 
+			ipcRenderer.send('cmd', 'disableNonPlay',
+				this.state.immediateIsStarting ||
 				this.state.immediateIsStopping ||
 				this.state.cloudRIGState.savingInstance ||
-				this.state.cloudRIGState.instanceStopping || 
+				this.state.cloudRIGState.instanceStopping ||
 				!!this.state.cloudRIGState.activeInstance)
 
 			stateTimeout = setTimeout(() => {
@@ -109,7 +109,7 @@ class Play extends Component {
 		ipcRenderer.removeAllListeners('errorPlay')
 
 		clearTimeout(stateTimeout)
-		
+
 	}
 
 	start() { ipcRenderer.send('cmd', 'start') }
@@ -128,14 +128,14 @@ class Play extends Component {
 	}
 
 	manageDrivesClose() {
-		
+
 		this.setState({
 			manageDrivesOpen: false
 		})
 	}
 
 	addStorage(size) {
-		
+
 		ipcRenderer.send('cmd', 'addStorage', {
 			availabilityZone: config.AWSAvailabilityZone,
 			size: size
@@ -152,7 +152,7 @@ class Play extends Component {
 	}
 
 	expandStorage(volume, newVolumeSize) {
-		ipcRenderer.send('cmd', 'expandStorage', {VolumeId: volume.VolumeId, newVolumeSize});
+		ipcRenderer.send('cmd', 'expandStorage', { VolumeId: volume.VolumeId, newVolumeSize });
 	}
 
 	openVNC() {
@@ -166,8 +166,8 @@ class Play extends Component {
 		});
 
 		ipcRenderer.once('gotState', (event, state) => {
-			
-			event.sender.send('cmd', 'log', '✓ Ready')
+
+			event.sender.send('cmd', 'log', 'Ready')
 
 			this.setState({
 				isLoading: false
@@ -178,18 +178,18 @@ class Play extends Component {
 		ipcRenderer.send('cmd', 'getState')
 
 	}
-	
+
 	render() {
 
 		let actionButtons;
 
-		if(this.state.cloudRIGState.savingInstance || (this.state.cloudRIGState.savingInstance && this.state.immediateIsStopping)) {
+		if (this.state.cloudRIGState.savingInstance || (this.state.cloudRIGState.savingInstance && this.state.immediateIsStopping)) {
 
 			actionButtons = <div><Button content='Saving...' icon='save' labelPosition='right' disabled /></div>
 
-		} else if(this.state.cloudRIGState.instanceReady || this.state.cloudRIGState.instanceStopping) {
-			
-			if(!this.state.cloudRIGState.instanceStopping && !this.state.immediateIsStopping) {
+		} else if (this.state.cloudRIGState.instanceReady || this.state.cloudRIGState.instanceStopping) {
+
+			if (!this.state.cloudRIGState.instanceStopping && !this.state.immediateIsStopping) {
 				actionButtons = <div>
 					<Button content='Stop' icon='stop' labelPosition='right' onClick={this.stop.bind(this)} />
 					{this.state.cloudRIGState.scheduledStop ?
@@ -205,27 +205,27 @@ class Play extends Component {
 			}
 
 		} else {
-			
-			if(!this.state.cloudRIGState.instanceReady) {
 
-				if(!this.state.cloudRIGState.activeInstance && !this.state.immediateIsStarting) {
+			if (!this.state.cloudRIGState.instanceReady) {
+
+				if (!this.state.cloudRIGState.activeInstance && !this.state.immediateIsStarting) {
 
 					let manageAction = this.state.volumesInAZ.length > 0 ? 'Manage storage' : 'Add storage'
-					
 
-					actionButtons = 
-					<div>
-						<Button content='Start' icon='play' labelPosition='right' onClick={this.start.bind(this)} />
 
-						<Modal open={this.state.manageDrivesOpen} onClose={this.manageDrivesClose.bind(this)} closeIcon trigger={<Button onClick={this.manageDrivesOpen.bind(this)} content={manageAction} icon='hdd outline' labelPosition='right' />}>
-							<Modal.Header><Icon name='hdd outline' /> {manageAction}</Modal.Header>
-							<Modal.Content>
-								<Modal.Description>
-									<Storage volumesNotInAZ={this.state.volumesNotInAZ} volumesInAZ={this.state.volumesInAZ} handleSubmit={this.addStorage.bind(this)} handleDelete={this.deleteStorage.bind(this)} handleTransfer={this.transferStorage.bind(this)} handleExpand={this.expandStorage.bind(this)}  />
-								</Modal.Description>
-							</Modal.Content>
-						</Modal>
-					</div>
+					actionButtons =
+						<div>
+							<Button content='Start' icon='play' labelPosition='right' onClick={this.start.bind(this)} />
+
+							<Modal open={this.state.manageDrivesOpen} onClose={this.manageDrivesClose.bind(this)} closeIcon trigger={<Button onClick={this.manageDrivesOpen.bind(this)} content={manageAction} icon='hdd outline' labelPosition='right' />}>
+								<Modal.Header><Icon name='hdd outline' /> {manageAction}</Modal.Header>
+								<Modal.Content>
+									<Modal.Description>
+										<Storage volumesNotInAZ={this.state.volumesNotInAZ} volumesInAZ={this.state.volumesInAZ} handleSubmit={this.addStorage.bind(this)} handleDelete={this.deleteStorage.bind(this)} handleTransfer={this.transferStorage.bind(this)} handleExpand={this.expandStorage.bind(this)} />
+									</Modal.Description>
+								</Modal.Content>
+							</Modal>
+						</div>
 				} else {
 					actionButtons = <div><Button content='Starting...' icon='play' labelPosition='right' disabled /></div>
 				}
@@ -234,9 +234,9 @@ class Play extends Component {
 
 		}
 
-		if(this.state.isLoading) {
+		if (this.state.isLoading) {
 
-			return(<Loading message="Setting up" />)
+			return (<Loading message="Setting up" />)
 
 		} else {
 
@@ -250,14 +250,14 @@ class Play extends Component {
 
 			const spotCell = this.state.cloudRIGState.currentSpotPrice;
 
-			return(
+			return (
 
 				<Grid>
 					<Grid.Row>
 						<Grid.Column width={10}>
 							{actionButtons}
 							<br /><br />
-							<iframe title="Watch Parsec videos" src="https://www.youtube.com/embed?listType=user_uploads&amp;list=jamesstringerphoto" width="100%" height="265" frameBorder='0'></iframe> 
+							<iframe title="Watch Parsec videos" src="https://www.youtube.com/embed?listType=user_uploads&amp;list=jamesstringerphoto" width="100%" height="265" frameBorder='0'></iframe>
 						</Grid.Column>
 						<Grid.Column width={6}>
 
@@ -286,13 +286,13 @@ class Play extends Component {
 									</Table.Row>
 
 								</Table.Body>
-							</Table>	
+							</Table>
 
 							<List>
 								<List.Item>
-										<Image width="14" src={DiscordIcon} verticalAlign="middle" style={{marginRight: 4}} />
-										<List.Content><a href='https://discordapp.com/invite/3TS2emF' target='_blank' rel='noopener noreferrer'>Discord (javagoogles)</a></List.Content>
-									</List.Item>
+									<Image width="14" src={DiscordIcon} verticalAlign="middle" style={{ marginRight: 4 }} />
+									<List.Content><a href='https://discordapp.com/invite/3TS2emF' target='_blank' rel='noopener noreferrer'>Discord (javagoogles)</a></List.Content>
+								</List.Item>
 								<List.Item>
 									<List.Icon name='mail' />
 									<List.Content><a href='mailto:williamparry@gmail.com' target='_blank' rel='noopener noreferrer'>williamparry@gmail.com</a></List.Content>
@@ -303,7 +303,7 @@ class Play extends Component {
 										<a href='https://github.com/williamparry/cloudRIG' target='_blank' rel='noopener noreferrer'>Github</a>
 									</List.Content>
 								</List.Item>
-								
+
 							</List>
 
 							<Divider horizontal><small>Powered by</small></Divider>
@@ -320,7 +320,7 @@ class Play extends Component {
 			)
 		}
 
-		
+
 
 	}
 
