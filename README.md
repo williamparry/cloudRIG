@@ -9,6 +9,7 @@ cloudRIG is the cheapest way to use AWS + Parsec for game and other application 
 * Stream games and applications for <small>approx.</small> $0.13/hr
 * Schedule shut down for the end of the current billing hour (AWS charges by the hour)
 * Auto-saves your rig when you stop or are booted off
+* Add a drive for your games, which can be expanded and transferred across Availability Zones
 
 There are 2 ways to use cloudRIG: [GUI](#gui) or [CLI](#cli).
 

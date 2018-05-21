@@ -272,7 +272,7 @@ class App extends Component {
 		} else {
 
 			return (<Grid stretched className={this.state.isPossessive ? 'possessive' : ''}>
-				<Grid.Row style={{ height: 476 }}>
+				<Grid.Row style={{ height: 700 }}>
 					<Grid.Column>
 						<Step.Group attached='top'>
 							<Step link

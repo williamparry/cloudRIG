@@ -102,7 +102,7 @@ function cmdHandler(event, op, data) {
 					event.sender.send('error', err)
 					return;
 				}
-				opn(`vnc://admin:4ubg9sde@${activeInstances[0].PublicDnsName}`);
+				opn(`vnc://admin:4ubg9sde@${activeInstances[0].PublicDnsName}`).then(()=>{}).catch((error) => console.log(error));
 			})
 
 			break;
@@ -314,6 +314,15 @@ function cmdHandler(event, op, data) {
 		case 'expandStorage':
 			event.sender.send('possessiveStarted')
 			cloudrig.expandEBSVolume(data.VolumeId, data.newVolumeSize, function (err) {
+				if (err) { event.sender.send('error', err); return; }
+				event.sender.send('possessiveFinished')
+			});
+
+			break;
+		
+		case 'installEmulator':
+			event.sender.send('possessiveStarted')
+			cloudrig.installEmulator(data, function (err) {
 				if (err) { event.sender.send('error', err); return; }
 				event.sender.send('possessiveFinished')
 			});
