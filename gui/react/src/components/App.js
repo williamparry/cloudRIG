@@ -322,6 +322,9 @@ class App extends Component {
 							<Icon name='download' /><Message.Content>New version available. <Button onClick={this.triggerUpdate.bind(this)} size='tiny'>Update</Button></Message.Content></Message> : ''}
 						<Container>
 							<pre id='output' style={{ height: 60, overflowY: 'scroll' }}>{this.state.logOutput.join("\n")}</pre>
+							{/* <Button size='mini' onClick={() => {
+								ipcRenderer.send('cmd', 'prepareUpdate');
+							}}>Prepare update</Button> */}
 						</Container>
 					</Grid.Column>
 

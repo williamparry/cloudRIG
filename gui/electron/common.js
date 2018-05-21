@@ -177,11 +177,6 @@ function cmdHandler(event, op, data) {
 					event.sender.send('error', err)
 					return;
 				}
-				// Update not ready
-				if (resp.code === -1) {
-					event.sender.send('updateNotReady');
-					return;
-				}
 				// Has setup questions
 				if (resp.code === 2) {
 					event.sender.send('setups', resp.questions);
@@ -196,9 +191,9 @@ function cmdHandler(event, op, data) {
 
 		case 'runSetupSteps':
 
-			cloudrig.setup(function (err, setups) {
+			cloudrig.setup(function (err, resp) {
 
-				var toProcess = setups.map(step => {
+				var toProcess = resp.questions.map(step => {
 					return step.m
 				});
 
@@ -359,8 +354,18 @@ function cmdHandler(event, op, data) {
 
 				// Config is valid
 				if (!err) {
-					cloudrig.prepareUpdate();
-					event.sender.send('updateReady')
+					cloudrig.prepareUpdate((err, resp) => {
+						if (err) {
+							event.sender.send('error', err)
+							return;
+						}
+						// Update not ready
+						if (resp.code === -1) {
+							event.sender.send('updateNotReady');
+							return;
+						}
+						event.sender.send('updateReady')
+					});
 
 				}
 
