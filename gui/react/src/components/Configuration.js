@@ -6,7 +6,7 @@ const { ipcRenderer } = window.require('electron');
 
 const zonesArr = {
 	"eu-central-1": ['a', 'b'],
-	"us-east-1": ['a','b','c','d','e'],
+	"us-east-1": ['a', 'b', 'c', 'd', 'e'],
 	"us-west-1": ['a', 'b', 'c'],
 	"us-west-2": ['a', 'b', 'c'],
 	"ap-southeast-1": ['a', 'b'],
@@ -26,16 +26,16 @@ class Configuration extends Component {
 
 		allRegions = [];
 		allZones = [];
-		
+
 		Object.keys(zonesArr).forEach((region) => {
-			
+
 			allRegions.push({ key: region, text: region, value: region })
-		
+
 			zonesArr[region].forEach((zone) => {
 				let z = region + zone
 				allZones.push({ key: z, text: z, value: z })
 			})
-			
+
 		});
 
 		const config = ipcRenderer.sendSync('cmd', 'getConfiguration');
@@ -52,7 +52,7 @@ class Configuration extends Component {
 			allCredentials: credentials,
 			currentCredentials: config.AWSCredentialsProfile ? this.getCurrentCredentials(credentials, profiles, config.AWSCredentialsProfile) : {}
 		}
-		
+
 	}
 
 
@@ -62,10 +62,10 @@ class Configuration extends Component {
 
 	extractProfileCredentials(credentials) {
 
-		if(!credentials) {
+		if (!credentials) {
 			return [];
 		}
-		
+
 		return credentials.match(/\[(.*?)\]/g).map((profile) => {
 			return profile.substring(1, profile.length - 1)
 		})
@@ -75,7 +75,7 @@ class Configuration extends Component {
 	handleChange(e, data) {
 		// If you are using babel, you can use ES 6 dictionary syntax { [e.target.name] = e.target.value }
 		var change = {
-			config: {...this.state.config}
+			config: { ...this.state.config }
 		}
 		change['config'][data.name] = data.value
 		this.setState(change)
@@ -101,11 +101,11 @@ class Configuration extends Component {
 			aws_access_key_id: creds[0],
 			aws_secret_access_key: creds[1]
 		}
-		
+
 	}
 
 	setCurrentCredentials(profile) {
-		
+
 		this.setState({
 			currentCredentials: this.getCurrentCredentials(this.state.allCredentials, this.state.profiles, profile)
 		})
@@ -113,7 +113,7 @@ class Configuration extends Component {
 	}
 
 	getCredentialsBounds(allCredentials, profiles, profile) {
-		
+
 		const startIndex = allCredentials.indexOf('[' + profile + ']') + (profile.length + 2)
 		const nextProfile = profiles[profiles.indexOf(profile) + 1]
 		const endIndex = nextProfile ? allCredentials.indexOf('[' + nextProfile + ']') : allCredentials.length
@@ -150,7 +150,7 @@ aws_secret_access_key=${credentialsObject.aws_secret_access_key}\n`
 	}
 
 	handleCredentialsDelete() {
-		
+
 		let credentialsFile = this.state.allCredentials;
 
 		var bounds = this.getCredentialsBounds(this.state.allCredentials, this.state.profiles, this.state.config.AWSCredentialsProfile)
@@ -177,7 +177,7 @@ aws_secret_access_key=${credentialsObject.aws_secret_access_key}\n`
 	handleCredentialsAdd(credentialsObject) {
 
 		let credentialsFile = this.state.allCredentials;
-		
+
 		credentialsFile += `\n[${credentialsObject.profile}]
 aws_access_key_id=${credentialsObject.aws_access_key_id}
 aws_secret_access_key=${credentialsObject.aws_secret_access_key}`
@@ -205,9 +205,9 @@ aws_secret_access_key=${credentialsObject.aws_secret_access_key}`
 		});
 
 	}
-	
+
 	handleRegionChange(e, data) {
-		
+
 		const currentZones = this.getZones(data.value);
 
 		this.setState({
@@ -216,15 +216,15 @@ aws_secret_access_key=${credentialsObject.aws_secret_access_key}`
 
 		setTimeout(() => {
 
-			var newConfig = {...this.state.config}
+			var newConfig = { ...this.state.config }
 			newConfig.AWSAvailabilityZone = currentZones[0].key;
-	
+
 			this.setState({
 				config: newConfig
 			});
 
 		}, 0);
-		
+
 		this.handleChange(e, data);
 	}
 
@@ -252,13 +252,13 @@ aws_secret_access_key=${credentialsObject.aws_secret_access_key}`
 		})
 	}
 
-	openConfirmRemoveModal () {
+	openConfirmRemoveModal() {
 		this.setState({
 			confirmRemoveModalOpen: true
 		})
 	}
 
-	handleCancelRemoveModal () {
+	handleCancelRemoveModal() {
 		this.setState({
 			confirmRemoveModalOpen: false
 		})
@@ -266,7 +266,7 @@ aws_secret_access_key=${credentialsObject.aws_secret_access_key}`
 
 	render() {
 
-		return(
+		return (
 
 			<div>
 
@@ -280,15 +280,15 @@ aws_secret_access_key=${credentialsObject.aws_secret_access_key}`
 					<Grid>
 						<Grid.Row>
 							<Grid.Column width={8}>
-								<Form.Field control={Select} 
-									label='AWS Profile' 
+								<Form.Field control={Select}
+									label='AWS Profile'
 									options={this.state.profiles.map(profile => {
 										return { key: profile, text: profile, value: profile }
-									})} 
+									})}
 									value={this.state.config.AWSCredentialsProfile}
 									disabled={this.state.profiles.length === 0}
 									name="AWSCredentialsProfile"
-									onChange={this.handleCredentialsProfileChange.bind(this)} 
+									onChange={this.handleCredentialsProfileChange.bind(this)}
 									placeholder="- Select -"
 									required />
 							</Grid.Column>
@@ -297,7 +297,7 @@ aws_secret_access_key=${credentialsObject.aws_secret_access_key}`
 									<Modal.Header>Add AWS Profile</Modal.Header>
 									<Modal.Content>
 										<Modal.Description>
-											<AWSProfile disallowedProfileNames={this.state.profiles.filter(p => { return p !== this.state.config.AWSCredentialsProfile} )} handleSubmit={this.handleCredentialsAdd.bind(this)} />
+											<AWSProfile disallowedProfileNames={this.state.profiles.filter(p => { return p !== this.state.config.AWSCredentialsProfile })} handleSubmit={this.handleCredentialsAdd.bind(this)} />
 										</Modal.Description>
 									</Modal.Content>
 								</Modal>
@@ -305,7 +305,7 @@ aws_secret_access_key=${credentialsObject.aws_secret_access_key}`
 									<Modal.Header>Edit AWS Profile</Modal.Header>
 									<Modal.Content>
 										<Modal.Description>
-											<AWSProfile disallowedProfileNames={this.state.profiles.filter(p => { return p !== this.state.config.AWSCredentialsProfile} )} currentCredentials={this.state.currentCredentials} handleSubmit={this.handleCredentialsEdit.bind(this)} />
+											<AWSProfile disallowedProfileNames={this.state.profiles.filter(p => { return p !== this.state.config.AWSCredentialsProfile })} currentCredentials={this.state.currentCredentials} handleSubmit={this.handleCredentialsEdit.bind(this)} />
 										</Modal.Description>
 									</Modal.Content>
 								</Modal>
@@ -314,68 +314,68 @@ aws_secret_access_key=${credentialsObject.aws_secret_access_key}`
 						</Grid.Row>
 						<Grid.Row>
 							<Grid.Column width={8}>
-								<Form.Field control={Select} 
-									label='AWS Region' 
-									options={allRegions} 
-									value={this.state.config.AWSRegion} 
+								<Form.Field control={Select}
+									label='AWS Region'
+									options={allRegions}
+									value={this.state.config.AWSRegion}
 									name="AWSRegion"
-									onChange={this.handleRegionChange.bind(this)} 
-									placeholder="- Select -" 
+									onChange={this.handleRegionChange.bind(this)}
+									placeholder="- Select -"
 									required />
 							</Grid.Column>
 							<Grid.Column width={8}>
-								<Form.Field control={Select} 
-									label='AWS Availability Zone' 
-									options={this.state.currentZones} 
-									value={this.state.config.AWSAvailabilityZone} 
+								<Form.Field control={Select}
+									label='AWS Availability Zone'
+									options={this.state.currentZones}
+									value={this.state.config.AWSAvailabilityZone}
 									name="AWSAvailabilityZone"
-									onChange={this.handleChange.bind(this)} 
-									placeholder="- Select -" 
+									onChange={this.handleChange.bind(this)}
+									placeholder="- Select -"
 									required />
 							</Grid.Column>
 						</Grid.Row>
 						<Grid.Row>
 							<Grid.Column width={3}>
-								<Form.Input label='AWS Max Price' 
-									value={this.state.config.AWSMaxPrice} 
+								<Form.Input label='AWS Max Price'
+									value={this.state.config.AWSMaxPrice}
 									name="AWSMaxPrice"
-									onChange={this.handleChange.bind(this)} 
-									placeholder='0.5' 
+									onChange={this.handleChange.bind(this)}
+									placeholder='0.5'
 									required />
 							</Grid.Column>
 							<Grid.Column width={13}>
 
 
-							<Popup
-								trigger={<Form.Input label='Parsec Server Id' 
-									value={this.state.config.ParsecServerId} 
-									name="ParsecServerId" 
-									onChange={this.handleChange.bind(this)} 
-									placeholder='server_id' 
-									required />}
-								hoverable={true}
-								on='focus'
-								size='small'
-								position='bottom left'>
-								<Popup.Header>Where can I find my server_id?</Popup.Header>
-								<Popup.Content>
-									<ol>
-										<li>Make a Parsec account</li>
-										<li>Download the Parsec client</li>
-										<li><a href="https://parsec.tv/add-computer/own" rel="noopener noreferrer" target="_blank">Get the self-hosting key</a></li>
-									</ol>
-									
-									<Image
-										src='https://user-images.githubusercontent.com/348091/32673294-ef117400-c64e-11e7-949f-a34344b1368e.jpg'
-										as='a'
-										size='tiny'
-										href='https://user-images.githubusercontent.com/348091/32673294-ef117400-c64e-11e7-949f-a34344b1368e.jpg'
-										target='_blank'/>
-																
-								</Popup.Content>
-							</Popup>
+								<Popup
+									trigger={<Form.Input type="password" label='Parsec Server Id'
+										value={this.state.config.ParsecServerId}
+										name="ParsecServerId"
+										onChange={this.handleChange.bind(this)}
+										placeholder='server_id'
+										required />}
+									hoverable={true}
+									on='focus'
+									size='small'
+									position='bottom left'>
+									<Popup.Header>Where can I find my server_id?</Popup.Header>
+									<Popup.Content>
+										<ol>
+											<li>Make a Parsec account</li>
+											<li>Download the Parsec client</li>
+											<li><a href="https://parsecgaming.com/add-computer/own" rel="noopener noreferrer" target="_blank">Get the self-hosting key</a></li>
+										</ol>
 
-								
+										<Image
+											src='https://user-images.githubusercontent.com/348091/32673294-ef117400-c64e-11e7-949f-a34344b1368e.jpg'
+											as='a'
+											size='tiny'
+											href='https://user-images.githubusercontent.com/348091/32673294-ef117400-c64e-11e7-949f-a34344b1368e.jpg'
+											target='_blank' />
+
+									</Popup.Content>
+								</Popup>
+
+
 							</Grid.Column>
 						</Grid.Row>
 						<Grid.Row>
@@ -385,9 +385,9 @@ aws_secret_access_key=${credentialsObject.aws_secret_access_key}`
 						</Grid.Row>
 
 					</Grid>
-						
+
 				</Form>
-				
+
 			</div>
 		)
 

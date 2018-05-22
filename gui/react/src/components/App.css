@@ -27,3 +27,15 @@ body {
   background: transparent;
   z-index: 999999;
 }
+
+/*
+Temp fix
+https://github.com/Semantic-Org/Semantic-UI-React/issues/2550
+*/
+.ui.dimmer {
+  display: flex !important;
+}
+
+.ui.modal {
+  margin-top: 0;
+}

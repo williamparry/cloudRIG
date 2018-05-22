@@ -1,13 +1,14 @@
 {
 	"name": "cloudrig",
 	"productName": "cloudRIG",
+	"license": "MIT",
 	"author": {
 		"name": "William Parry",
 		"email": "williamparry@gmail.com"
 	},
 	"main": "index.js",
 	"description": "Play games with Parsec on AWS for cheap.",
-	"version": "0.0.1-alpha.2",
+	"version": "0.0.1-alpha.3",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/williamparry/cloudRIG"
@@ -29,12 +30,12 @@
 	},
 	"dependencies": {
 		"async": "^2.6.0",
-		"cloudriglib": "file:../../lib",
 		"electron-context-menu": "^0.9.1",
-		"electron-updater": "^2.21.0",
-		"open": "0.0.5"
+		"electron-updater": "^2.21.10",
+		"cloudriglib": "file:../../lib",
+		"opn": "^5.3.0"
 	},
 	"devDependencies": {
-		"electron": "1.8.2"
+		"electron": "2.0.1"
 	}
 }

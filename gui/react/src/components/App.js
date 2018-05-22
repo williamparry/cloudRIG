@@ -16,7 +16,9 @@ class App extends Component {
 		isPossessive: false,
 		currentPage: pages.Loading,
 		config: {},
+		setupValid: false,
 		updateTriggered: false,
+		updateNotReady: false,
 		updateAvailable: false,
 		updateDownloading: false,
 		updateDownloadData: {
@@ -31,13 +33,13 @@ class App extends Component {
 		super();
 
 		ipcRenderer.on('getConfigurationValidity', (event, valid) => {
-			if(valid) {
+			if (valid) {
 				ipcRenderer.sendSync('cmd', 'setConfiguration');
 				this.setState({
 					currentPage: pages.Initialization
 				});
-				event.sender.send('cmd', 'log', '✓ Configured')
-				return;		
+				event.sender.send('cmd', 'log', 'Configured')
+				return;
 			}
 			this.setState({
 				currentPage: pages.Configuration
@@ -54,6 +56,12 @@ class App extends Component {
 			ipcRenderer.send('cmd', 'doUpdate');
 		});
 
+		ipcRenderer.on('updateNotReady', (event, message) => {
+			this.setState({
+				updateNotReady: message,
+			})
+		})
+
 		ipcRenderer.on('updateDownloading', (event) => {
 			this.setState({
 				updateDownloading: true
@@ -68,9 +76,10 @@ class App extends Component {
 
 		ipcRenderer.on('setupValid', (event, valid) => {
 			this.setState({
+				setupValid: valid,
 				currentPage: pages.Play
 			})
-			event.sender.send('cmd', 'log', '✓ Initialized')
+			event.sender.send('cmd', 'log', 'Initialized')
 		})
 
 		ipcRenderer.on('disableNonPlay', (event, isRunning) => {
@@ -84,14 +93,14 @@ class App extends Component {
 				currentPage: newPage
 			})
 		})
-		
+
 		ipcRenderer.on('log', (event, arg) => {
 			this.setState({
 				logOutput: [...this.state.logOutput, typeof arg === "string" ? arg : JSON.stringify(arg, null, 4)]
 			})
 			setTimeout(() => {
 				var objDiv = document.getElementById("output");
-				if(objDiv) {
+				if (objDiv) {
 					objDiv.scrollTop = objDiv.scrollHeight;
 				}
 			})
@@ -118,8 +127,8 @@ class App extends Component {
 		})
 
 		ipcRenderer.on('credentialsFileChosen', (event, filePaths) => {
-			if(filePaths) {
-				var newConfig = {...this.state.config, AWSCredentialsFile: filePaths[0]}
+			if (filePaths) {
+				var newConfig = { ...this.state.config, AWSCredentialsFile: filePaths[0] }
 				ipcRenderer.send('cmd', 'saveInitialConfiguration', newConfig);
 			} else {
 				ipcRenderer.send('cmd', 'error', 'You have to select an AWS credentials file or have a test account to use cloudRIG');
@@ -132,20 +141,20 @@ class App extends Component {
 			});
 			ipcRenderer.send('cmd', 'getConfigurationValidity');
 		});
-		
+
 		const config = ipcRenderer.sendSync('cmd', 'getConfiguration');
 
-		if(config.AWSCredentialsFile) {	
+		if (config.AWSCredentialsFile) {
 			ipcRenderer.sendSync('cmd', 'setConfiguration');
 			ipcRenderer.send('cmd', 'getConfigurationValidity');
 		}
 
 		this.state.config = config
 
-		setTimeout(function() {
+		setTimeout(function () {
 			ipcRenderer.send('cmd', 'checkForUpdates');
 		}, 2000)
-		
+
 	}
 
 	changePage(e) {
@@ -163,17 +172,17 @@ class App extends Component {
 			updateTriggered: true,
 			logOutput: ['Starting update']
 		})
-		ipcRenderer.send('cmd', 'preUpdate');
+		ipcRenderer.send('cmd', 'prepareUpdate');
 	};
 
 	render() {
-		
-		const currentPage = 
-			this.state.currentPage === pages.Configuration ? <Configuration /> : 
-			this.state.currentPage === pages.Initialization ? <Initialization /> :
-			this.state.currentPage === pages.Play ? <Play /> : null
 
-		if(this.state.updateTriggered && !this.state.updateDownloading) {
+		const currentPage =
+			this.state.currentPage === pages.Configuration ? <Configuration /> :
+				this.state.currentPage === pages.Initialization ? <Initialization /> :
+					this.state.currentPage === pages.Play ? <Play /> : null
+
+		if (this.state.updateTriggered && !this.state.updateDownloading) {
 
 			return (<div>
 				<Modal open={true}>
@@ -186,11 +195,11 @@ class App extends Component {
 				</Modal>
 			</div>)
 
-		} else if(this.state.updateTriggered && this.state.updateDownloading) {
+		} else if (this.state.updateTriggered && this.state.updateDownloading) {
 
 			return (<div>
 				<Modal open={true}>
-					
+
 					<Modal.Header>Downloading update...</Modal.Header>
 					<Modal.Content>
 						<Modal.Description>
@@ -199,13 +208,32 @@ class App extends Component {
 					</Modal.Content>
 				</Modal>
 			</div>)
+		} else if (!this.setupValid && this.state.updateNotReady) {
 
-		} else if(!this.state.config.AWSCredentialsFile) {
+			return (<div>
+				<Modal open={true}>
+
+					<Modal.Header>Update not ready</Modal.Header>
+					<Modal.Content>
+						<Modal.Description>
+							<p>{this.state.updateNotReady}</p>
+							<Button onClick={() => {
+								ipcRenderer.send('cmd', 'setup');
+								this.setState({
+									updateNotReady: false
+								})
+							}}>Close</Button>
+						</Modal.Description>
+					</Modal.Content>
+				</Modal>
+			</div>)
+
+		} else if (!this.state.config.AWSCredentialsFile) {
 
 			return (<div>
 				<Modal open={true}>
 					<Modal.Header>Welcome to cloudRIG <Icon name='smile' /></Modal.Header>
-					<Modal.Content>	
+					<Modal.Content>
 						<Modal.Description>
 							<Header>Choose your account type</Header>
 							<Grid>
@@ -244,11 +272,11 @@ class App extends Component {
 		} else {
 
 			return (<Grid stretched className={this.state.isPossessive ? 'possessive' : ''}>
-				<Grid.Row style={{height: 476}}>
+				<Grid.Row style={{ height: 476 }}>
 					<Grid.Column>
 						<Step.Group attached='top'>
-							<Step link 
-								active={this.state.currentPage === pages.Configuration} 
+							<Step link
+								active={this.state.currentPage === pages.Configuration}
 								onClick={this.changePage.bind(this, pages.Configuration)}
 								disabled={this.state.disableNonStartPages}>
 								<Icon name='configure' />
@@ -256,8 +284,8 @@ class App extends Component {
 									<Step.Title>Configure</Step.Title>
 								</Step.Content>
 							</Step>
-							<Step link 
-								active={this.state.currentPage === pages.Initialization} 
+							<Step link
+								active={this.state.currentPage === pages.Initialization}
 								onClick={this.changePage.bind(this, pages.Initialization)}
 								disabled={this.state.currentPage === pages.Configuration || this.state.disableNonStartPages}>
 								<Icon name='tasks' />
@@ -265,12 +293,12 @@ class App extends Component {
 									<Step.Title>Initialize</Step.Title>
 								</Step.Content>
 							</Step>
-							<Step link 
+							<Step link
 								active={this.state.currentPage === pages.Play}
 								disabled={this.state.currentPage === pages.Configuration || this.state.currentPage === pages.Initialization}>
 								<Icon name='game' />
 								<Step.Content>
-								<Step.Title>Play</Step.Title>
+									<Step.Title>Play</Step.Title>
 								</Step.Content>
 							</Step>
 						</Step.Group>
@@ -281,22 +309,25 @@ class App extends Component {
 				</Grid.Row>
 				<Grid.Row verticalAlign="bottom">
 					<Grid.Column>
-					{this.state.updateAvailable ? <Message icon 
-						info size='tiny' 
-						style={{
-							position: 'absolute',
-							top: '-3.4em',
-							left: '0',
-							width: '100%',
-							paddingTop: '.5em',
-							paddingBottom: '.5em'
-						}}>
-						<Icon name='download' /><Message.Content>New version available. <Button onClick={this.triggerUpdate.bind(this)} size='tiny'>Update</Button></Message.Content></Message> : ''}
+						{this.state.updateAvailable ? <Message icon
+							info size='tiny'
+							style={{
+								position: 'absolute',
+								top: '-3.4em',
+								left: '0',
+								width: '100%',
+								paddingTop: '.5em',
+								paddingBottom: '.5em'
+							}}>
+							<Icon name='download' /><Message.Content>New version available. <Button onClick={this.triggerUpdate.bind(this)} size='tiny'>Update</Button></Message.Content></Message> : ''}
 						<Container>
 							<pre id='output' style={{ height: 60, overflowY: 'scroll' }}>{this.state.logOutput.join("\n")}</pre>
+							{/* <Button size='mini' onClick={() => {
+								ipcRenderer.send('cmd', 'prepareUpdate');
+							}}>Prepare update</Button> */}
 						</Container>
 					</Grid.Column>
-					
+
 				</Grid.Row>
 			</Grid>);
 
