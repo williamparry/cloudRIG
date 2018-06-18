@@ -69,9 +69,6 @@ If ($reason -eq "AWS") {
 
     $okBtn.Add_Click({
         Unregister-ScheduledTask -TaskName CloudRIGScheduledShutdownNotification -Confirm:$false
-        $webclient = new-object net.webclient
-        $instanceid = $webclient.Downloadstring('http://169.254.169.254/latest/meta-data/instance-id')
-        Remove-EC2Tag -Resource $instanceid -Tag @{Key="scheduledstop"} -Force
 
         $Form.Close()
     })
