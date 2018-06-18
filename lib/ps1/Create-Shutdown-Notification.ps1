@@ -36,7 +36,7 @@ $Form.controls.Add($Text)
 If ($reason -eq "AWS") {
 
     $Ack = New-Object System.Windows.Forms.Button
-    $Ack.Text = 'Cancel shutdown'
+    $Ack.Text = 'OK'
     $Ack.Width = 200
     $Ack.Height = 35
     $Ack.FlatStyle = 'Flat'
@@ -69,6 +69,10 @@ If ($reason -eq "AWS") {
 
     $okBtn.Add_Click({
         Unregister-ScheduledTask -TaskName CloudRIGScheduledShutdownNotification -Confirm:$false
+        $webclient = new-object net.webclient
+        $instanceid = $webclient.Downloadstring('http://169.254.169.254/latest/meta-data/instance-id')
+        Remove-EC2Tag -Resource $instanceid -Tag @{Key="scheduledstop"} -Force
+
         $Form.Close()
     })
 
@@ -87,8 +91,14 @@ If ($reason -eq "AWS") {
     $cancelBtn.Location = New-Object System.Drawing.Point($cancelBtnX,$cancelBtnY)
 
     $cancelBtn.Add_Click({
+        $cancelBtn.Text = 'Cancelling...'
+        $cancelBtn.Enabled = $false
+        $okBtn.Enabled = $false
         Unregister-ScheduledTask -TaskName CloudRIGScheduledShutdownNotification -Confirm:$false
         Unregister-ScheduledTask -TaskName CloudRIGScheduledShutdown -Confirm:$false
+        $webclient = new-object net.webclient
+        $instanceid = $webclient.Downloadstring('http://169.254.169.254/latest/meta-data/instance-id')
+        Remove-EC2Tag -Resource $instanceid -Tag @{Key="scheduledstop"} -Force
         $Form.Close()
     })
 
