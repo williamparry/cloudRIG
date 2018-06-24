@@ -41,7 +41,7 @@ async@^2.6.0:
   dependencies:
     lodash "^4.17.10"
 
-aws-sdk@^2.243.1:
+aws-sdk@^2.259.1:
   version "2.259.1"
   resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.259.1.tgz#df4814b65d5654f250d097951aa84e27a472b5aa"
   dependencies:
@@ -105,7 +105,7 @@ cliui@^4.0.0:
   version "0.0.1"
   dependencies:
     async "^2.6.0"
-    aws-sdk "^2.243.1"
+    aws-sdk "^2.259.1"
     external-ip "^2.0.3"
     jszip "^3.1.5"
     moment "^2.22.1"
