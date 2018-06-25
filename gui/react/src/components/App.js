@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Icon, Segment, Container, Step, Grid, Button, Form, Header, Divider, Modal, Message } from 'semantic-ui-react'
+import { Icon, Segment, Container, Step, Grid, Button, Form, Header, List, Modal, Message } from 'semantic-ui-react'
 import 'semantic-ui-css/semantic.min.css';
 import './App.css';
 import Configuration from './Configuration';
@@ -235,25 +235,30 @@ class App extends Component {
 					<Modal.Header>Welcome to cloudRIG <Icon name='smile' /></Modal.Header>
 					<Modal.Content>
 						<Modal.Description>
-							<Header>Choose your account type</Header>
+							<Header>Please select your AWS credentials file</Header>
+							<br />
 							<Grid>
 								<Grid.Row>
-									<Grid.Column width={7}>
-										<p>
-											<i>I have my own <a href="http://docs.aws.amazon.com/ses/latest/DeveloperGuide/create-shared-credentials-file.html" rel="noopener noreferrer" target="_blank">AWS Credentials File</a>.</i>
-										</p>
+									<Grid.Column width={5}>
 										<Button content='Choose' icon='download' labelPosition='right' size='large' onClick={this.handleChoose.bind(this)} />
 									</Grid.Column>
-									<Grid.Column width={2}>
-										<Divider vertical>Or</Divider>
-									</Grid.Column>
-									<Grid.Column width={7}>
-										<p>
-											<i>I have a test account from <a href="https://cloudrig.io" rel="noopener noreferrer" target="_blank">cloudrig.io</a>.</i>
-										</p>
-										<Form>
-											<Form.Input label='Redemption code' disabled placeholder='----- ----- ----- -----' />
-										</Form>
+									
+									<Grid.Column width={11}>
+										<List>
+											<List.Item>
+												<List.Icon name='warning sign' />
+      											<List.Content>It is advised that you use a separate AWS account for cloudRIG</List.Content>
+											</List.Item>
+											<List.Item>
+												<List.Icon name='warning sign' />
+												<List.Content>It is advised that you use a separate credentials file for cloudRIG</List.Content>
+											</List.Item>
+											<List.Item>
+												<List.Icon name='info circle' />
+												<List.Content>More information on <a href="http://docs.aws.amazon.com/ses/latest/DeveloperGuide/create-shared-credentials-file.html" rel="noopener noreferrer" target="_blank">AWS Credentials File</a></List.Content>
+											</List.Item>
+										</List>
+										
 									</Grid.Column>
 								</Grid.Row>
 							</Grid>
