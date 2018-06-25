@@ -4,7 +4,7 @@ param (
 )
 Add-Type -AssemblyName System.Windows.Forms
 $Screen = [System.Windows.Forms.Screen]::PrimaryScreen
-$Message = "Your computer is going to shut down in about 2 minutes.`nNow's a good time to save your game."
+$Message = "Your computer is going to shut down in about a minute. `nNow's a good time to save your game."
 
 If ($reason -eq "AWS") {
     $Message += "`n(AWS is kicking you off)"
@@ -43,7 +43,7 @@ If ($reason -eq "AWS") {
     $Ack.FlatAppearance.BorderColor = '#FFFFFF'
     $Ack.Font = "Microsoft Sans Serif,14,style=Bold"
     $Ack.ForeColor = "#ffffff"
-    $AckX = $Form.Width / 2 - $Ack.Width
+    $AckX = $Form.Width / 2 - $Ack.Width / 2
     $AckY = $Form.Height - $Ack.Height - 5
     $Ack.Location = new-object system.drawing.point($AckX,$AckY)
 
