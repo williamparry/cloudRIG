@@ -18,6 +18,7 @@ class Play extends Component {
 		super();
 
 		this.state = {
+			isOnline: true,
 			isLoading: true,
 			immediateIsStarting: false,
 			immediateIsStopping: false,
@@ -61,7 +62,7 @@ class Play extends Component {
 		});
 
 		ipcRenderer.on('gotState', (event, state) => {
-
+			
 			if (!state.currentSpotPrice) {
 				event.sender.send('cmd', 'error', 'This Availability Zone does not appear to have a spot price. Please select another in Configuration.')
 				ipcRenderer.send('cmd', 'changePage', 1)
@@ -93,12 +94,19 @@ class Play extends Component {
 				this.state.cloudRIGState.instanceStopping ||
 				!!this.state.cloudRIGState.activeInstance)
 
-			stateTimeout = setTimeout(() => {
-				ipcRenderer.send('cmd', 'getState')
-			}, 5000)
+
+			if(this.state.isOnline) {
+				this.getStateWithTimeout();
+			}
 
 		});
 
+	}
+
+	getStateWithTimeout() {
+		stateTimeout = setTimeout(() => {
+			ipcRenderer.send('cmd', 'getState')
+		}, 5000)
 	}
 
 	componentWillUnmount() {
@@ -107,6 +115,8 @@ class Play extends Component {
 		ipcRenderer.removeAllListeners('stopping')
 		ipcRenderer.removeAllListeners('gotState')
 		ipcRenderer.removeAllListeners('errorPlay')
+		window.removeEventListener('online', this.handleOnline);
+		window.removeEventListener('offline', this.handleOffline);
 
 		clearTimeout(stateTimeout)
 
@@ -159,12 +169,42 @@ class Play extends Component {
 		ipcRenderer.send('cmd', 'openVNC');
 	}
 
+	handleOnline() {
+		ipcRenderer.send('cmd', 'log', 'Online')
+		if(this.state.isLoading) {
+			this.setFirstStateListener();
+		}
+		this.setState({isOnline: true})
+		ipcRenderer.send('cmd', 'getState')
+	}
+
+	handleOffline() {
+		ipcRenderer.send('cmd', 'log', 'Offline')
+		clearTimeout(stateTimeout)
+		this.setState({isOnline: false})
+	}
+
 	componentDidMount() {
 
+		const isOnline = navigator.onLine;
+
 		this.setState({
-			isLoading: true
+			isLoading: true,
+			isOnline: isOnline
 		});
 
+		window.addEventListener('online', this.handleOnline.bind(this));
+		window.addEventListener('offline', this.handleOffline.bind(this));
+
+		if(isOnline) {
+
+			this.setFirstStateListener();
+
+			ipcRenderer.send('cmd', 'getState')
+		}
+	}
+
+	setFirstStateListener() {
 		ipcRenderer.once('gotState', (event, state) => {
 
 			event.sender.send('cmd', 'log', 'Ready')
@@ -174,9 +214,6 @@ class Play extends Component {
 			});
 
 		});
-
-		ipcRenderer.send('cmd', 'getState')
-
 	}
 
 	render() {
@@ -251,71 +288,82 @@ class Play extends Component {
 			const spotCell = this.state.cloudRIGState.currentSpotPrice;
 
 			return (
+				<React.Fragment>
+					{!this.state.isOnline && <Modal open={true}>
+						<Modal.Header>You are currently offline</Modal.Header>
+						<Modal.Content>
+							<Modal.Description>
+								Please your restore connection.
+							</Modal.Description>
+						</Modal.Content>
+					</Modal>}
 
-				<Grid>
-					<Grid.Row>
-						<Grid.Column width={10}>
-							{actionButtons}
-							<br /><br />
-							<iframe title="Watch Parsec videos" src="https://www.youtube.com/embed?listType=user_uploads&amp;list=jamesstringerphoto" width="100%" height="265" frameBorder='0'></iframe>
-						</Grid.Column>
-						<Grid.Column width={6}>
+					<Grid>
+						<Grid.Row>
+							<Grid.Column width={10}>
+								{actionButtons}
+								<br />
+								<small>Check out the <a href='https://archive.org/details/softwarelibrary_msdos_games' target='_blank' rel='noopener noreferrer'>Internet Archive</a> for something to play while you wait.</small>
+							</Grid.Column>
+							<Grid.Column width={6}>
 
-							<Table definition>
+								<Table definition>
 
-								<Table.Body>
-									<Table.Row>
-										<Table.Cell>Ready</Table.Cell>
-										<Table.Cell>{readyCell}</Table.Cell>
-									</Table.Row>
-									<Table.Row>
-										<Table.Cell>Stopping</Table.Cell>
-										<Table.Cell>{stoppingCell}</Table.Cell>
-									</Table.Row>
-									<Table.Row>
-										<Table.Cell>Saving</Table.Cell>
-										<Table.Cell>{savingCell}</Table.Cell>
-									</Table.Row>
-									<Table.Row>
-										<Table.Cell>Remaining time</Table.Cell>
-										<Table.Cell>{remainingCell}</Table.Cell>
-									</Table.Row>
-									<Table.Row>
-										<Table.Cell>Current Spot Price</Table.Cell>
-										<Table.Cell>${spotCell}</Table.Cell>
-									</Table.Row>
+									<Table.Body>
+										<Table.Row>
+											<Table.Cell>Ready</Table.Cell>
+											<Table.Cell>{readyCell}</Table.Cell>
+										</Table.Row>
+										<Table.Row>
+											<Table.Cell>Stopping</Table.Cell>
+											<Table.Cell>{stoppingCell}</Table.Cell>
+										</Table.Row>
+										<Table.Row>
+											<Table.Cell>Saving</Table.Cell>
+											<Table.Cell>{savingCell}</Table.Cell>
+										</Table.Row>
+										<Table.Row>
+											<Table.Cell>Remaining time</Table.Cell>
+											<Table.Cell>{remainingCell}</Table.Cell>
+										</Table.Row>
+										<Table.Row>
+											<Table.Cell>Current Spot Price</Table.Cell>
+											<Table.Cell>${spotCell}</Table.Cell>
+										</Table.Row>
 
-								</Table.Body>
-							</Table>
+									</Table.Body>
+								</Table>
 
-							<List>
-								<List.Item>
-									<Image width="14" src={DiscordIcon} verticalAlign="middle" style={{ marginRight: 4 }} />
-									<List.Content><a href='https://discordapp.com/invite/3TS2emF' target='_blank' rel='noopener noreferrer'>Discord (javagoogles)</a></List.Content>
-								</List.Item>
-								<List.Item>
-									<List.Icon name='mail' />
-									<List.Content><a href='mailto:williamparry@gmail.com' target='_blank' rel='noopener noreferrer'>williamparry@gmail.com</a></List.Content>
-								</List.Item>
-								<List.Item>
-									<List.Icon name='github' />
-									<List.Content>
-										<a href='https://github.com/williamparry/cloudRIG' target='_blank' rel='noopener noreferrer'>Github</a>
-									</List.Content>
-								</List.Item>
+								<List>
+									<List.Item>
+										<Image width="14" src={DiscordIcon} verticalAlign="middle" style={{ marginRight: 4 }} />
+										<List.Content><a href='https://discordapp.com/invite/3TS2emF' target='_blank' rel='noopener noreferrer'>Discord (javagoogles)</a></List.Content>
+									</List.Item>
+									<List.Item>
+										<List.Icon name='mail' />
+										<List.Content><a href='mailto:williamparry@gmail.com' target='_blank' rel='noopener noreferrer'>williamparry@gmail.com</a></List.Content>
+									</List.Item>
+									<List.Item>
+										<List.Icon name='github' />
+										<List.Content>
+											<a href='https://github.com/williamparry/cloudRIG' target='_blank' rel='noopener noreferrer'>Github</a>
+										</List.Content>
+									</List.Item>
 
-							</List>
+								</List>
 
-							<Divider horizontal><small>Powered by</small></Divider>
-							<a href='https://parsecgaming.com' target='_blank' rel='noopener noreferrer'>
-								<Image width="100" src={ParsecLogo} />
-							</a>
+								<Divider horizontal><small>Powered by</small></Divider>
+								<a href='https://parsecgaming.com' target='_blank' rel='noopener noreferrer'>
+									<Image width="100" src={ParsecLogo} />
+								</a>
 
-						</Grid.Column>
+							</Grid.Column>
 
-					</Grid.Row>
+						</Grid.Row>
 
-				</Grid>
+					</Grid>
+
+				</React.Fragment>
 
 			)
 		}
