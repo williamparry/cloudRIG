@@ -124,6 +124,16 @@ function cmdHandler(event, op, data) {
 
 			break;
 
+		case 'getZones':
+
+			event.returnValue = cloudrig.getZonesArr();
+			
+			break;
+
+		case 'getInstanceTypes':
+
+			event.returnValue = cloudrig.getInstanceTypesArr();
+			
 		case 'getConfiguration':
 
 			event.returnValue = cloudrig.getConfigFile()

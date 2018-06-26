@@ -4,17 +4,7 @@ import 'semantic-ui-css/semantic.min.css';
 import AWSProfile from './configuration/AWSProfile.js';
 const { ipcRenderer } = window.require('electron');
 
-const zonesArr = {
-	"eu-central-1": ['a', 'b'],
-	"us-east-1": ['a', 'b', 'c', 'd', 'e'],
-	"us-west-1": ['a', 'b', 'c'],
-	"us-west-2": ['a', 'b', 'c'],
-	"ap-southeast-1": ['a', 'b'],
-	"ap-northeast-1": ['a', 'b', 'c'],
-	"ap-southeast-2": ['a', 'b'],
-	"sa-east-1": ['a', 'b'],
-}
-
+let instanceTypes;
 let allRegions;
 let allZones;
 
@@ -23,6 +13,11 @@ class Configuration extends Component {
 	constructor(props) {
 
 		super(props)
+
+		const config = ipcRenderer.sendSync('cmd', 'getConfiguration');
+		const credentials = ipcRenderer.sendSync('cmd', 'getCredentials');
+		const zonesArr = ipcRenderer.sendSync('cmd', 'getZones');
+		const instanceTypesArr = ipcRenderer.sendSync('cmd', 'getInstanceTypes')
 
 		allRegions = [];
 		allZones = [];
@@ -38,8 +33,8 @@ class Configuration extends Component {
 
 		});
 
-		const config = ipcRenderer.sendSync('cmd', 'getConfiguration');
-		const credentials = ipcRenderer.sendSync('cmd', 'getCredentials');
+		instanceTypes = instanceTypesArr.map((instanceType) => ({ key: instanceType, text: instanceType, value: instanceType }))
+		
 		const profiles = this.extractProfileCredentials(credentials);
 
 		this.state = {
@@ -343,9 +338,30 @@ aws_secret_access_key=${credentialsObject.aws_secret_access_key}`
 									placeholder='0.5'
 									required />
 							</Grid.Column>
-							<Grid.Column width={13}>
-
-
+							<Grid.Column width={5}>
+								<Popup
+									trigger={<Form.Field control={Select}
+									label='Instance Type'
+									options={instanceTypes}
+									value={this.state.config.AWSInstanceType}
+									name="AWSInstanceType"
+									onChange={this.handleChange.bind(this)}
+									placeholder="- Select -"
+									required />}
+								hoverable={true}
+								on='focus'
+								position='top left'>
+									<Popup.Header>What's the difference?</Popup.Header>
+									<Popup.Content>
+										<ul>
+											<li>g2.2xlarge is cheaper and probably fine for most games</li>
+											<li>g3.4xlarge is more expensive, but more powerful</li>
+										</ul>
+									</Popup.Content>
+								</Popup>
+							</Grid.Column>
+							
+							<Grid.Column width={8}>
 								<Popup
 									trigger={<Form.Input type="password" label='Parsec Server Id'
 										value={this.state.config.ParsecServerId}

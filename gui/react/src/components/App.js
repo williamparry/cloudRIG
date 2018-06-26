@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Icon, Segment, Container, Step, Grid, Button, Form, Header, List, Modal, Message } from 'semantic-ui-react'
+import { Icon, Segment, Container, Step, Grid, Button, Header, List, Modal, Message } from 'semantic-ui-react'
 import 'semantic-ui-css/semantic.min.css';
 import './App.css';
 import Configuration from './Configuration';
@@ -255,7 +255,7 @@ class App extends Component {
 											</List.Item>
 											<List.Item>
 												<List.Icon name='info circle' />
-												<List.Content>More information on <a href="http://docs.aws.amazon.com/ses/latest/DeveloperGuide/create-shared-credentials-file.html" rel="noopener noreferrer" target="_blank">AWS Credentials File</a></List.Content>
+												<List.Content>More information on <a href="https://docs.aws.amazon.com/ses/latest/DeveloperGuide/create-shared-credentials-file.html" rel="noopener noreferrer" target="_blank">AWS Credentials File</a></List.Content>
 											</List.Item>
 										</List>
 										

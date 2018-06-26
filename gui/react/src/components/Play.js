@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Button, Grid, List, Image, Table, Divider, Icon, Modal } from 'semantic-ui-react'
+import { Button, Grid, List, Image, Table, Divider, Icon, Modal, Message } from 'semantic-ui-react'
 import Loading from './Loading';
 import ParsecLogo from '../img/parsec_logo.svg'
 import DiscordIcon from '../img/discord_icon.svg'
@@ -304,6 +304,14 @@ class Play extends Component {
 								{actionButtons}
 								<br />
 								<small>Check out the <a href='https://archive.org/details/softwarelibrary_msdos_games' target='_blank' rel='noopener noreferrer'>Internet Archive</a> for something to play while you wait.</small>
+								<br />
+								<Message>
+									<Message.Header>Help out!</Message.Header>
+									<p style={{marginTop: '10px'}}>
+										If you'd like to get involved in development, testing or documentation, please check out the Github repo.
+										It would be great to have more maintainers of the project :)
+									</p>
+								</Message>
 							</Grid.Column>
 							<Grid.Column width={6}>
 
