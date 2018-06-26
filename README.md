@@ -8,7 +8,10 @@ cloudRIG is the cheapest way to use AWS + Parsec for game and other application 
 
 * Stream games and applications for <small>approx.</small> $0.13/hr
 * Schedule shut down for the end of the current billing hour (AWS charges by the hour)
+* 2 minute termination warning overlay
 * Auto-saves your rig when you stop or are booted off
+* Attach, extend a separate game drive
+* Choose between g2.2xlarge and g3.4xlarge instances
 
 There are 2 ways to use cloudRIG: [GUI](#gui) or [CLI](#cli).
 
@@ -19,8 +22,6 @@ There are 2 ways to use cloudRIG: [GUI](#gui) or [CLI](#cli).
 ---
 
 ## [GUI](https://github.com/williamparry/cloudRIG/tree/master/gui)
-
-![Travis CI status](https://travis-ci.org/williamparry/cloudRIG.svg?branch=master)
 
 ### [Releases](https://github.com/williamparry/cloudRIG/releases)
 
@@ -62,10 +63,6 @@ cloudRIG will offer to set up all the AWS infrastructure needed for cloudrig. Yo
 ### Software
 
 * NodeJS
-
-## History
-
-There is an old [ZeroTier + Steam Home Streaming branch](https://github.com/williamparry/cloudRIG/tree/zerotier-steamstreaming).
 
 ## Notice
 
