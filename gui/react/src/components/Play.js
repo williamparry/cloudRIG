@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Button, Grid, List, Image, Table, Divider, Icon, Modal, Message } from 'semantic-ui-react'
+import { Button, Grid, List, Image, Table, Divider, Icon, Modal, Tab } from 'semantic-ui-react'
 import Loading from './Loading';
 import ParsecLogo from '../img/parsec_logo.svg'
 import DiscordIcon from '../img/discord_icon.svg'
@@ -287,6 +287,44 @@ class Play extends Component {
 
 			const spotCell = this.state.cloudRIGState.currentSpotPrice;
 
+			const panes = [
+				{ menuItem: 'Performance tweaks', render: () => <Tab.Pane>
+
+					<List bulleted>
+						<List.Item>
+							Run your game in a borderless window rather than "fullscreen"
+						</List.Item>
+						<List.Item>
+							Try disabling vsync
+						</List.Item>
+						<List.Item>
+							Check that <a href="https://support.parsecgaming.com/hc/en-us/articles/360004032651-DirectX-Renderer" target='_blank' rel='noopener noreferrer'>DirectX is enabled</a>
+						</List.Item>
+					</List>
+					
+					<p>For more information, read the <a href="https://support.parsecgaming.com/hc/en-us/articles/360001667391-Welcome-to-your-Parsec-gaming-PC-in-the-cloud-" target='_blank' rel='noopener noreferrer'>Parsec welcome page</a></p>
+
+				</Tab.Pane> },
+				{ menuItem: 'Co-op game ideas', render: () => <Tab.Pane>
+					<p>Get your friends to connect to your cloudRIG and play some local co-op games together! Here's some recommended games:</p>
+					<List bulleted>
+						<List.Item>
+							<a href="https://store.steampowered.com/app/268910/Cuphead/" target='_blank' rel='noopener noreferrer'>Cuphead</a>
+						</List.Item>
+						<List.Item>
+							<a href="https://store.steampowered.com/app/448510/Overcooked/" target='_blank' rel='noopener noreferrer'>Overcooked</a>
+						</List.Item>
+					</List>
+				</Tab.Pane> },
+				{ menuItem: 'Help cloudRIG', render: () => <Tab.Pane>
+					<p>
+						If you'd like to get involved in development, testing or documentation, please check out the Github repo.
+						It would be great to have more maintainers of the project :)
+					</p>
+				
+			</Tab.Pane> }
+			  ]
+
 			return (
 				<React.Fragment>
 					{!this.state.isOnline && <Modal open={true}>
@@ -304,14 +342,9 @@ class Play extends Component {
 								{actionButtons}
 								<br />
 								<small>Check out the <a href='https://archive.org/details/softwarelibrary_msdos_games' target='_blank' rel='noopener noreferrer'>Internet Archive</a> for something to play while you wait.</small>
-								<br />
-								<Message>
-									<Message.Header>Help out!</Message.Header>
-									<p style={{marginTop: '10px'}}>
-										If you'd like to get involved in development, testing or documentation, please check out the Github repo.
-										It would be great to have more maintainers of the project :)
-									</p>
-								</Message>
+								<br /><br />
+								<Tab panes={panes} />
+
 							</Grid.Column>
 							<Grid.Column width={6}>
 
