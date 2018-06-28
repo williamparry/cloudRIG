@@ -28,10 +28,6 @@ If($driverData.driver_version -notmatch $onlineDriverVersion) {
 
     & c:\cloudRIG\nvidia.exe -s -clean -noreboot -noeula | Out-Null
 
-    Write-Host "graphicsupdated"
-
-} Else {
-
-    Write-Host "ok"
-
 }
+
+Write-Host "ok"
