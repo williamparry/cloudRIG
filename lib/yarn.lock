@@ -18,8 +18,8 @@ async@^2.6.0:
     lodash "^4.17.10"
 
 aws-sdk@^2.259.1:
-  version "2.263.1"
-  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.263.1.tgz#217e2459ebff3702cc72260bcafca0bf16edc4cd"
+  version "2.266.1"
+  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.266.1.tgz#1d0f14cbf82c95cec97752cd5b00df0315a67ff4"
   dependencies:
     buffer "4.9.1"
     events "1.1.1"

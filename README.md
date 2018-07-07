@@ -27,10 +27,11 @@ There are 2 ways to use cloudRIG: [GUI](#gui) or [CLI](#cli).
 
 ### Screenshots
 
-![Configuration Screen](https://user-images.githubusercontent.com/348091/32979619-fbe44170-cc58-11e7-9428-747dd3a0f9fb.png)
-![Initialization Screen](https://user-images.githubusercontent.com/348091/32982361-59593b60-cc83-11e7-822a-f23320bec151.png)
-![Play Screen](https://user-images.githubusercontent.com/348091/33514039-23bc3d34-d74d-11e7-93dc-7d7725efb743.png)
-![Scheduled Stop](https://user-images.githubusercontent.com/348091/33574118-509dbe3a-d938-11e7-905f-476771a5a65f.png)
+![Welcome screen](https://user-images.githubusercontent.com/348091/42406162-814bc76a-81e5-11e8-800d-84fb5e84a413.png)
+![Configuration Screen](https://user-images.githubusercontent.com/348091/42406163-817fb4d0-81e5-11e8-979f-1918732aca61.png)
+![Initialization Screen](https://user-images.githubusercontent.com/348091/42406160-80e67fea-81e5-11e8-9c81-31cb07548666.png)
+![Play Screen](https://user-images.githubusercontent.com/348091/42406161-811945d8-81e5-11e8-8127-ce99171aca1d.png)
+![Scheduled Stop](https://user-images.githubusercontent.com/348091/42406190-e345f7ec-81e5-11e8-9704-9f0716218b3b.png)
 
 ## [CLI](https://github.com/williamparry/cloudRIG/tree/master/cli)
 

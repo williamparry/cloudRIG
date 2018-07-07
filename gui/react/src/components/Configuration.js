@@ -341,7 +341,7 @@ aws_secret_access_key=${credentialsObject.aws_secret_access_key}`
 							<Grid.Column width={5}>
 								<Popup
 									trigger={<Form.Field control={Select}
-									label='Instance Type'
+									label='AWS Instance Type'
 									options={instanceTypes}
 									value={this.state.config.AWSInstanceType}
 									name="AWSInstanceType"

@@ -39,68 +39,6 @@ class Play extends Component {
 
 		config = ipcRenderer.sendSync('cmd', 'getConfiguration');
 
-		ipcRenderer.on('starting', (event, isStarting) => {
-			this.setState({
-				immediateIsStarting: isStarting
-			})
-		})
-
-		ipcRenderer.on('stopping', (event, isStopping) => {
-			this.setState({
-				immediateIsStopping: isStopping
-			})
-		})
-
-		ipcRenderer.on('errorPlay', (event, err) => {
-
-			ipcRenderer.send('cmd', 'error', err)
-
-			this.setState({
-				immediateIsStarting: false,
-				immediateIsStopping: false
-			})
-		});
-
-		ipcRenderer.on('gotState', (event, state) => {
-			
-			if (!state.currentSpotPrice) {
-				event.sender.send('cmd', 'error', 'This Availability Zone does not appear to have a spot price. Please select another in Configuration.')
-				ipcRenderer.send('cmd', 'changePage', 1)
-				return;
-			}
-
-			let volumesInAZ = [];
-			let volumesNotInAZ = [];
-
-			state.volumes.forEach((v) => {
-				if (v.AvailabilityZone === config.AWSAvailabilityZone) {
-					volumesInAZ.push(v)
-				} else {
-					volumesNotInAZ.push(v)
-				}
-			});
-			const newVolumeSize = volumesInAZ.length > 0 ? volumesInAZ[0].Size : null;
-			this.setState({
-				volumesInAZ: volumesInAZ,
-				newVolumeSize,
-				volumesNotInAZ: volumesNotInAZ,
-				cloudRIGState: state
-			})
-
-			ipcRenderer.send('cmd', 'disableNonPlay',
-				this.state.immediateIsStarting ||
-				this.state.immediateIsStopping ||
-				this.state.cloudRIGState.savingInstance ||
-				this.state.cloudRIGState.instanceStopping ||
-				!!this.state.cloudRIGState.activeInstance)
-
-
-			if(this.state.isOnline) {
-				this.getStateWithTimeout();
-			}
-
-		});
-
 	}
 
 	getStateWithTimeout() {
@@ -108,6 +46,7 @@ class Play extends Component {
 			ipcRenderer.send('cmd', 'getState')
 		}, 5000)
 	}
+
 
 	componentWillUnmount() {
 
@@ -186,6 +125,70 @@ class Play extends Component {
 
 	componentDidMount() {
 
+		ipcRenderer.on('starting', (event, isStarting) => {
+			this.setState({
+				immediateIsStarting: isStarting
+			})
+		})
+
+		ipcRenderer.on('stopping', (event, isStopping) => {
+			this.setState({
+				immediateIsStopping: isStopping
+			})
+		})
+
+		ipcRenderer.on('errorPlay', (event, err) => {
+
+			ipcRenderer.send('cmd', 'error', err)
+
+			this.setState({
+				immediateIsStarting: false,
+				immediateIsStopping: false
+			})
+		});
+
+		ipcRenderer.on('gotState', (event, state) => {
+			
+			if (!state.currentSpotPrice) {
+				event.sender.send('cmd', 'error', 'This Availability Zone does not appear to have a spot price. Please select another in Configuration.')
+				ipcRenderer.send('cmd', 'changePage', 1)
+				return;
+			}
+
+			let volumesInAZ = [];
+			let volumesNotInAZ = [];
+
+			state.volumes.forEach((v) => {
+				if (v.AvailabilityZone === config.AWSAvailabilityZone) {
+					volumesInAZ.push(v)
+				} else {
+					volumesNotInAZ.push(v)
+				}
+			});
+			const newVolumeSize = volumesInAZ.length > 0 ? volumesInAZ[0].Size : null;
+			this.setState({
+				volumesInAZ: volumesInAZ,
+				newVolumeSize,
+				volumesNotInAZ: volumesNotInAZ,
+				cloudRIGState: state
+			})
+
+			ipcRenderer.send('cmd', 'disableNonPlay',
+				this.state.immediateIsStarting ||
+				this.state.immediateIsStopping ||
+				this.state.cloudRIGState.savingInstance ||
+				this.state.cloudRIGState.instanceStopping ||
+				!!this.state.cloudRIGState.activeInstance)
+
+
+			if(this.state.isOnline) {
+				this.getStateWithTimeout();
+			}
+
+		});
+		
+		
+		
 		const isOnline = navigator.onLine;
 
 		this.setState({
@@ -230,7 +233,7 @@ class Play extends Component {
 				actionButtons = <div>
 					<Button content='Stop' icon='stop' labelPosition='right' onClick={this.stop.bind(this)} />
 					{this.state.cloudRIGState.scheduledStop ?
-						(<Button content='Unscheduled Stop' icon='time' labelPosition='right' onClick={this.unScheduleStop.bind(this)} />)
+						(<Button content='Unschedule Stop' icon='time' labelPosition='right' onClick={this.unScheduleStop.bind(this)} />)
 						:
 						(<Button content='Schedule Stop' icon='time' labelPosition='right' onClick={this.scheduleStop.bind(this)} />)}
 					<Button content='Open VNC' icon='external' labelPosition='right' onClick={this.openVNC.bind(this)} />
@@ -277,11 +280,20 @@ class Play extends Component {
 
 		} else {
 
-			const readyCell = this.state.cloudRIGState.instanceReady ? <Icon name='circle' color='green' /> : '-'
+			let statusCell;
 
-			const stoppingCell = this.state.cloudRIGState.instanceStopping ? <Icon name='circle' color='red' /> : '-'
+			if(this.state.cloudRIGState.instanceReady) {
+				statusCell = <React.Fragment><Icon name='circle' color='green' /> Ready</React.Fragment>
+			} else if(this.state.cloudRIGState.instanceStopping) {
+				statusCell = <React.Fragment><Icon name='circle' color='red' /> Stopping</React.Fragment>
+			} else if(this.state.cloudRIGState.savingInstance) {
+				statusCell = <React.Fragment><Icon loading name='spinner' /> Saving</React.Fragment>
+			} else {
+				statusCell = <React.Fragment>-</React.Fragment>
+			}
+			
 
-			const savingCell = this.state.cloudRIGState.savingInstance ? <Icon loading name='spinner' /> : '-'
+			const instanceTypeCell = config.AWSInstanceType;
 
 			const remainingCell = this.state.cloudRIGState.scheduledStop ? this.state.cloudRIGState.remainingTime + ' mins' : '-'
 
@@ -293,6 +305,11 @@ class Play extends Component {
 					<List bulleted>
 						<List.Item>
 							Run your game in a borderless window rather than "fullscreen"
+							<List bulleted>
+								<List.Item>
+									Here's a <a href="https://westechsolutions.net/sites/WindowedBorderlessGaming/" target='_blank' rel='noopener noreferrer'>Handy Borderless Window program</a>
+								</List.Item>
+							</List>
 						</List.Item>
 						<List.Item>
 							Try disabling vsync
@@ -338,34 +355,40 @@ class Play extends Component {
 
 					<Grid>
 						<Grid.Row>
-							<Grid.Column width={10}>
-								{actionButtons}
-								<br />
-								<small>Check out the <a href='https://archive.org/details/softwarelibrary_msdos_games' target='_blank' rel='noopener noreferrer'>Internet Archive</a> for something to play while you wait.</small>
-								<br /><br />
+							<Grid.Column width={10} style={{
+								display: 'flex',
+								flexDirection: 'column',
+								justifyContent: 'space-between'
+							}}>
+								
+								<div>
+									{actionButtons}
+									<br />
+									<small>Check out the <a href='https://archive.org/details/softwarelibrary_msdos_games' target='_blank' rel='noopener noreferrer'>Internet Archive</a> for something to play while you wait.</small>
+								</div>
 								<Tab panes={panes} />
 
 							</Grid.Column>
-							<Grid.Column width={6}>
+							<Grid.Column width={6} style={{
+								display: 'flex',
+								flexDirection: 'column',
+								justifyContent: 'space-between'
+							}}>
 
 								<Table definition>
 
 									<Table.Body>
 										<Table.Row>
-											<Table.Cell>Ready</Table.Cell>
-											<Table.Cell>{readyCell}</Table.Cell>
-										</Table.Row>
-										<Table.Row>
-											<Table.Cell>Stopping</Table.Cell>
-											<Table.Cell>{stoppingCell}</Table.Cell>
-										</Table.Row>
-										<Table.Row>
-											<Table.Cell>Saving</Table.Cell>
-											<Table.Cell>{savingCell}</Table.Cell>
+											<Table.Cell>Status</Table.Cell>
+											<Table.Cell>{statusCell}</Table.Cell>
 										</Table.Row>
 										<Table.Row>
 											<Table.Cell>Remaining time</Table.Cell>
 											<Table.Cell>{remainingCell}</Table.Cell>
+										</Table.Row>
+										<Table.Row>
+											<Table.Cell>Instance Type</Table.Cell>
+											<Table.Cell>{instanceTypeCell}</Table.Cell>
 										</Table.Row>
 										<Table.Row>
 											<Table.Cell>Current Spot Price</Table.Cell>
@@ -375,7 +398,9 @@ class Play extends Component {
 									</Table.Body>
 								</Table>
 
-								<List>
+								<List style={{
+									margin: 0	
+								}}>
 									<List.Item>
 										<Image width="14" src={DiscordIcon} verticalAlign="middle" style={{ marginRight: 4 }} />
 										<List.Content><a href='https://discordapp.com/invite/3TS2emF' target='_blank' rel='noopener noreferrer'>Discord (javagoogles)</a></List.Content>
@@ -392,11 +417,12 @@ class Play extends Component {
 									</List.Item>
 
 								</List>
-
-								<Divider horizontal><small>Powered by</small></Divider>
-								<a href='https://parsecgaming.com' target='_blank' rel='noopener noreferrer'>
-									<Image width="100" src={ParsecLogo} />
-								</a>
+								<div>
+									<Divider horizontal><small>Powered by</small></Divider>
+									<a href='https://parsecgaming.com' target='_blank' rel='noopener noreferrer'>
+										<Image width="100" src={ParsecLogo} />
+									</a>
+								</div>
 
 							</Grid.Column>
 

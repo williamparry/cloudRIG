@@ -28,11 +28,47 @@ class App extends Component {
 		logOutput: ["Welcome :)"]
 	}
 
-	constructor() {
+	changePage(e) {
+		this.setState({
+			currentPage: e
+		})
+	}
 
-		super();
+	handleChoose(e) {
+		ipcRenderer.send('cmd', 'selectCredentialsFile');
+	}
+
+	triggerUpdate(event, config) {
+		this.setState({
+			updateTriggered: true,
+			logOutput: ['Starting update']
+		})
+		ipcRenderer.send('cmd', 'prepareUpdate');
+	};
+
+	componentWillUnmount() {
+		
+		ipcRenderer.removeAllListeners('getConfigurationValidity');
+		ipcRenderer.removeAllListeners('updateCheck');
+		ipcRenderer.removeAllListeners('updateReady');
+		ipcRenderer.removeAllListeners('updateNotReady');
+		ipcRenderer.removeAllListeners('updateDownloading');
+		ipcRenderer.removeAllListeners('updateDownloadProgress');
+		ipcRenderer.removeAllListeners('setupValid');
+		ipcRenderer.removeAllListeners('disableNonPlay');
+		ipcRenderer.removeAllListeners('changePage');
+		ipcRenderer.removeAllListeners('log');
+		ipcRenderer.removeAllListeners('error');
+		ipcRenderer.removeAllListeners('possessiveStarted');
+		ipcRenderer.removeAllListeners('possessiveFinished');
+		ipcRenderer.removeAllListeners('credentialsFileChosen');
+		ipcRenderer.removeAllListeners('savedInitialConfiguration');
+	}
+
+	componentDidMount() {
 
 		ipcRenderer.on('getConfigurationValidity', (event, valid) => {
+			
 			if (valid) {
 				ipcRenderer.sendSync('cmd', 'setConfiguration');
 				this.setState({
@@ -142,38 +178,22 @@ class App extends Component {
 			ipcRenderer.send('cmd', 'getConfigurationValidity');
 		});
 
+
 		const config = ipcRenderer.sendSync('cmd', 'getConfiguration');
 
 		if (config.AWSCredentialsFile) {
 			ipcRenderer.sendSync('cmd', 'setConfiguration');
-			ipcRenderer.send('cmd', 'getConfigurationValidity');
 		}
-
-		this.state.config = config
-
-		setTimeout(function () {
-			ipcRenderer.send('cmd', 'checkForUpdates');
-		}, 2000)
-
-	}
-
-	changePage(e) {
 		this.setState({
-			currentPage: e
+			config
+		}, () => {
+			ipcRenderer.send('cmd', 'getConfigurationValidity');
+			setTimeout(() => {
+				ipcRenderer.send('cmd', 'checkForUpdates');
+			}, 2000)
 		})
-	}
 
-	handleChoose(e) {
-		ipcRenderer.send('cmd', 'selectCredentialsFile');
 	}
-
-	triggerUpdate(event, config) {
-		this.setState({
-			updateTriggered: true,
-			logOutput: ['Starting update']
-		})
-		ipcRenderer.send('cmd', 'prepareUpdate');
-	};
 
 	render() {
 
