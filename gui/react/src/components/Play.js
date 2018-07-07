@@ -3,6 +3,7 @@ import { Button, Grid, List, Image, Table, Divider, Icon, Modal, Tab } from 'sem
 import Loading from './Loading';
 import ParsecLogo from '../img/parsec_logo.svg'
 import DiscordIcon from '../img/discord_icon.svg'
+import BecomeAPatron from '../img/become_a_patron_button.png';
 import Storage from './play/Storage'
 
 const { ipcRenderer } = window.require('electron');
@@ -366,7 +367,9 @@ class Play extends Component {
 									<br />
 									<small>Check out the <a href='https://archive.org/details/softwarelibrary_msdos_games' target='_blank' rel='noopener noreferrer'>Internet Archive</a> for something to play while you wait.</small>
 								</div>
-								<Tab panes={panes} />
+								<Tab panes={panes} style={{
+									minHeight: '200px'
+								}} />
 
 							</Grid.Column>
 							<Grid.Column width={6} style={{
@@ -419,9 +422,20 @@ class Play extends Component {
 								</List>
 								<div>
 									<Divider horizontal><small>Powered by</small></Divider>
-									<a href='https://parsecgaming.com' target='_blank' rel='noopener noreferrer'>
-										<Image width="100" src={ParsecLogo} />
-									</a>
+									<div style={{
+										display: 'flex',
+										justifyContent: 'space-between',
+										alignItems: 'center'
+									}}>
+										<a href='https://parsecgaming.com' target='_blank' rel='noopener noreferrer' style={{
+											width: '48%'
+										}}>
+											<Image src={ParsecLogo} alt="Parsec" />
+										</a>
+										<a href="https://www.patreon.com/bePatron?u=6484976" data-patreon-widget-type="become-patron-button" target='_blank' rel='noopener noreferrer' style={{
+											width: '48%'
+										}}><Image src={BecomeAPatron} alt="Become a Patron!"  /></a>
+									</div>
 								</div>
 
 							</Grid.Column>
