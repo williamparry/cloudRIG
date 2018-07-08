@@ -8,8 +8,10 @@ cloudRIG is the cheapest way to use AWS + Parsec for game and other application 
 
 * Stream games and applications for <small>approx.</small> $0.13/hr
 * Schedule shut down for the end of the current billing hour (AWS charges by the hour)
+* 2 minute termination warning overlay
 * Auto-saves your rig when you stop or are booted off
-* Add a drive for your games, which can be expanded and transferred across Availability Zones
+* Attach, extend a separate game drive
+* Choose either g2.2xlarge and g3.4xlarge instance types
 
 There are 2 ways to use cloudRIG: [GUI](#gui) or [CLI](#cli).
 
@@ -21,16 +23,15 @@ There are 2 ways to use cloudRIG: [GUI](#gui) or [CLI](#cli).
 
 ## [GUI](https://github.com/williamparry/cloudRIG/tree/master/gui)
 
-![Travis CI status](https://travis-ci.org/williamparry/cloudRIG.svg?branch=master)
-
 ### [Releases](https://github.com/williamparry/cloudRIG/releases)
 
 ### Screenshots
 
-![Configuration Screen](https://user-images.githubusercontent.com/348091/32979619-fbe44170-cc58-11e7-9428-747dd3a0f9fb.png)
-![Initialization Screen](https://user-images.githubusercontent.com/348091/32982361-59593b60-cc83-11e7-822a-f23320bec151.png)
-![Play Screen](https://user-images.githubusercontent.com/348091/33514039-23bc3d34-d74d-11e7-93dc-7d7725efb743.png)
-![Scheduled Stop](https://user-images.githubusercontent.com/348091/33574118-509dbe3a-d938-11e7-905f-476771a5a65f.png)
+![Welcome screen](https://user-images.githubusercontent.com/348091/42406162-814bc76a-81e5-11e8-800d-84fb5e84a413.png)
+![Configuration Screen](https://user-images.githubusercontent.com/348091/42406163-817fb4d0-81e5-11e8-979f-1918732aca61.png)
+![Initialization Screen](https://user-images.githubusercontent.com/348091/42406160-80e67fea-81e5-11e8-9c81-31cb07548666.png)
+![AWS setup Screen](https://user-images.githubusercontent.com/348091/42418364-18d057c0-82e2-11e8-9877-c58a3120c0dd.png)
+![Play Screen](https://user-images.githubusercontent.com/348091/42418357-ef8cd33e-82e1-11e8-838c-087e5422c0d5.png)
 
 ## [CLI](https://github.com/williamparry/cloudRIG/tree/master/cli)
 
@@ -63,10 +64,6 @@ cloudRIG will offer to set up all the AWS infrastructure needed for cloudrig. Yo
 ### Software
 
 * NodeJS
-
-## History
-
-There is an old [ZeroTier + Steam Home Streaming branch](https://github.com/williamparry/cloudRIG/tree/zerotier-steamstreaming).
 
 ## Notice
 

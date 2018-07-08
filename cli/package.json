@@ -4,6 +4,7 @@
   "description": "Stream your games on the cheap.",
   "main": "index.js",
   "scripts": {
+    "postinstall": "cd ../lib && rm -rf node_modules && yarn install && yarn link && cd ../cli && yarn link cloudriglib",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

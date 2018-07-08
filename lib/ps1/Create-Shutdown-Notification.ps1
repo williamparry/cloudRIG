@@ -4,7 +4,7 @@ param (
 )
 Add-Type -AssemblyName System.Windows.Forms
 $Screen = [System.Windows.Forms.Screen]::PrimaryScreen
-$Message = "Your computer is going to shut down in about 2 minutes.`nNow's a good time to save your game."
+$Message = "Your computer is going to shut down in about a minute. `nNow's a good time to save your game."
 
 If ($reason -eq "AWS") {
     $Message += "`n(AWS is kicking you off)"
@@ -36,14 +36,14 @@ $Form.controls.Add($Text)
 If ($reason -eq "AWS") {
 
     $Ack = New-Object System.Windows.Forms.Button
-    $Ack.Text = 'Cancel shutdown'
+    $Ack.Text = 'OK'
     $Ack.Width = 200
     $Ack.Height = 35
     $Ack.FlatStyle = 'Flat'
     $Ack.FlatAppearance.BorderColor = '#FFFFFF'
     $Ack.Font = "Microsoft Sans Serif,14,style=Bold"
     $Ack.ForeColor = "#ffffff"
-    $AckX = $Form.Width / 2 - $Ack.Width
+    $AckX = $Form.Width / 2 - $Ack.Width / 2
     $AckY = $Form.Height - $Ack.Height - 5
     $Ack.Location = new-object system.drawing.point($AckX,$AckY)
 
@@ -69,6 +69,7 @@ If ($reason -eq "AWS") {
 
     $okBtn.Add_Click({
         Unregister-ScheduledTask -TaskName CloudRIGScheduledShutdownNotification -Confirm:$false
+
         $Form.Close()
     })
 
@@ -87,8 +88,14 @@ If ($reason -eq "AWS") {
     $cancelBtn.Location = New-Object System.Drawing.Point($cancelBtnX,$cancelBtnY)
 
     $cancelBtn.Add_Click({
+        $cancelBtn.Text = 'Cancelling...'
+        $cancelBtn.Enabled = $false
+        $okBtn.Enabled = $false
         Unregister-ScheduledTask -TaskName CloudRIGScheduledShutdownNotification -Confirm:$false
         Unregister-ScheduledTask -TaskName CloudRIGScheduledShutdown -Confirm:$false
+        $webclient = new-object net.webclient
+        $instanceid = $webclient.Downloadstring('http://169.254.169.254/latest/meta-data/instance-id')
+        Remove-EC2Tag -Resource $instanceid -Tag @{Key="scheduledstop"} -Force
         $Form.Close()
     })
 

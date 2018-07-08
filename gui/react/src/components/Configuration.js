@@ -1,28 +1,24 @@
 import React, { Component } from 'react';
-import { Form, Grid, Select, Button, Confirm, Popup, Image, Modal } from 'semantic-ui-react'
+import { Form, Grid, Select, Button, Confirm, Popup, Image, Modal, List, Message } from 'semantic-ui-react'
 import 'semantic-ui-css/semantic.min.css';
 import AWSProfile from './configuration/AWSProfile.js';
 const { ipcRenderer } = window.require('electron');
 
-const zonesArr = {
-	"eu-central-1": ['a', 'b'],
-	"us-east-1": ['a', 'b', 'c', 'd', 'e'],
-	"us-west-1": ['a', 'b', 'c'],
-	"us-west-2": ['a', 'b', 'c'],
-	"ap-southeast-1": ['a', 'b'],
-	"ap-northeast-1": ['a', 'b', 'c'],
-	"ap-southeast-2": ['a', 'b'],
-	"sa-east-1": ['a', 'b'],
-}
-
+let instanceTypes;
 let allRegions;
 let allZones;
+let initialConfig;
 
 class Configuration extends Component {
 
 	constructor(props) {
 
 		super(props)
+
+		initialConfig = ipcRenderer.sendSync('cmd', 'getConfiguration');
+		const credentials = ipcRenderer.sendSync('cmd', 'getCredentials');
+		const zonesArr = ipcRenderer.sendSync('cmd', 'getZones');
+		const instanceTypesArr = ipcRenderer.sendSync('cmd', 'getInstanceTypes')
 
 		allRegions = [];
 		allZones = [];
@@ -38,19 +34,19 @@ class Configuration extends Component {
 
 		});
 
-		const config = ipcRenderer.sendSync('cmd', 'getConfiguration');
-		const credentials = ipcRenderer.sendSync('cmd', 'getCredentials');
+		instanceTypes = instanceTypesArr.map((instanceType) => ({ key: instanceType, text: instanceType, value: instanceType }))
+		
 		const profiles = this.extractProfileCredentials(credentials);
 
 		this.state = {
-			currentZones: this.getZones(config.AWSRegion),
+			currentZones: this.getZones(initialConfig.AWSRegion),
 			profiles: profiles,
 			addCredentialsOpen: false,
 			editCredentialsOpen: false,
 			confirmRemoveModalOpen: false,
-			config: config,
+			config: initialConfig,
 			allCredentials: credentials,
-			currentCredentials: config.AWSCredentialsProfile ? this.getCurrentCredentials(credentials, profiles, config.AWSCredentialsProfile) : {}
+			currentCredentials: initialConfig.AWSCredentialsProfile ? this.getCurrentCredentials(credentials, profiles, initialConfig.AWSCredentialsProfile) : {}
 		}
 
 	}
@@ -343,9 +339,38 @@ aws_secret_access_key=${credentialsObject.aws_secret_access_key}`
 									placeholder='0.5'
 									required />
 							</Grid.Column>
-							<Grid.Column width={13}>
+							<Grid.Column width={5}>
+								<Popup
+									trigger={<Form.Field control={Select}
+									label='AWS Instance Type'
+									options={instanceTypes}
+									value={this.state.config.AWSInstanceType}
+									disabled={!!initialConfig.AWSInstanceType}
+									name="AWSInstanceType"
+									onChange={this.handleChange.bind(this)}
+									placeholder="- Select -"
+									wide="very"
+									required />}
+								hoverable={true}
+								on='focus'
+								position='top left'>
+									<Popup.Header>What's the difference?</Popup.Header>
+									<Popup.Content>
+										<List bulleted>
+											<List.Item><a href="https://aws.amazon.com/blogs/aws/build-3d-streaming-applications-with-ec2s-new-g2-instance-type/" rel="noopener noreferrer" target="_blank">g2.2xlarge</a> is cheaper and probably fine for most games</List.Item>
+											<List.Item><a href="https://aws.amazon.com/ec2/instance-types/g3/" rel="noopener noreferrer" target="_blank">g3.4xlarge</a> is more expensive, but more powerful</List.Item>
+										</List>
 
+										<Message warning>
+											<Message.Header>Changing Instance Type is <em>not supported</em></Message.Header>
+											<p>Once you set this, you're stuck with it. This should be fixed in future - <a href="https://github.com/williamparry/cloudRIG/issues/89" rel="noopener noreferrer" target="_blank">see more on Github</a></p>
+										</Message>
 
+									</Popup.Content>
+								</Popup>
+							</Grid.Column>
+							
+							<Grid.Column width={8}>
 								<Popup
 									trigger={<Form.Input type="password" label='Parsec Server Id'
 										value={this.state.config.ParsecServerId}

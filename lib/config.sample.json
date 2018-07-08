@@ -4,5 +4,6 @@
 	"AWSRegion": "",
 	"AWSAvailabilityZone": "",
 	"AWSMaxPrice": "",
+	"AWSInstanceType": "",
 	"ParsecServerId": ""
 }
