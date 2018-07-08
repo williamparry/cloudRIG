@@ -1,0 +1,7 @@
+{
+    "scripts": {
+        "start": "cd gui && yarn start",
+        "gui": "yarn start",
+        "cli": "cd cli && node index"
+    }
+}
