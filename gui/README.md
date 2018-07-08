@@ -19,5 +19,5 @@ Set the app version number in electron/package.json
 * Make a .env file with `GH_TOKEN="yourtoken"`
 
 ```
-npm run publish
+npm run release
 ```

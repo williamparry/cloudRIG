@@ -1,6 +1,6 @@
 {
 	"name": "cloudrig-gui-builder",
-	"version": "0.0.3",
+	"version": "0.0.4",
 	"license": "MIT",
 	"scripts": {
 		"link-cloudriglib": "cd ../lib && yarn link",
@@ -8,8 +8,8 @@
 		"postinstall": "yarn link-cloudriglib && cd ../gui && yarn run concurrently \"cd ../lib && rm -rf node_modules && yarn install\" \"cd react && rm -rf node_modules && yarn install\" \"cd electron && rm -rf node_modules && yarn install && yarn link-gui-to-cloudriglib\"",
 		"start": "yarn run concurrently \"cd react && yarn start\" \"cd electron && yarn run electron .\"",
 		"pre-build": "rm -rf .tmp && yarn run concurrently \"cd ./electron && rm -rf ./node_modules && yarn install --only=production && cd .. && cp -r ./electron ./.tmp && cd ./.tmp && rm dev.html && rm yarn.lock && rm -f yarn-error.log\" \"cd ./react && rm -rf ./node_modules && yarn install --only=production && yarn build && cd .. && cp -r react/build .tmp && cd .tmp && mv -f index.prod.js index.js\"",
-		"build": "yarn pre-build && cd .tmp && npx electron-builder && cd .. && rm -rf .tmp && yarn link-cloudriglib && yarn link-gui-to-cloudriglib",
-		"publish": "export $(cat .env | xargs) && npm run pre-build && cd .tmp && npx electron-builder -p onTagOrDraft && cd .. && rm -rf .tmp"
+		"build": "yarn pre-build && cd .tmp && npx electron-builder && cd .. && yarn link-cloudriglib && yarn link-gui-to-cloudriglib",
+		"release": "rm -rf .tmp && export $(cat .env | xargs) && npm run pre-build && cd .tmp && npx electron-builder -p onTagOrDraft"
 	},
 	"devDependencies": {
 		"concurrently": "^3.6.0"

@@ -30,8 +30,8 @@ There are 2 ways to use cloudRIG: [GUI](#gui) or [CLI](#cli).
 ![Welcome screen](https://user-images.githubusercontent.com/348091/42406162-814bc76a-81e5-11e8-800d-84fb5e84a413.png)
 ![Configuration Screen](https://user-images.githubusercontent.com/348091/42406163-817fb4d0-81e5-11e8-979f-1918732aca61.png)
 ![Initialization Screen](https://user-images.githubusercontent.com/348091/42406160-80e67fea-81e5-11e8-9c81-31cb07548666.png)
-![Play Screen](https://user-images.githubusercontent.com/348091/42406161-811945d8-81e5-11e8-8127-ce99171aca1d.png)
-![Scheduled Stop](https://user-images.githubusercontent.com/348091/42406190-e345f7ec-81e5-11e8-9704-9f0716218b3b.png)
+![AWS setup Screen](https://user-images.githubusercontent.com/348091/42418364-18d057c0-82e2-11e8-9877-c58a3120c0dd.png)
+![Play Screen](https://user-images.githubusercontent.com/348091/42418357-ef8cd33e-82e1-11e8-838c-087e5422c0d5.png)
 
 ## [CLI](https://github.com/williamparry/cloudRIG/tree/master/cli)
 
