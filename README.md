@@ -11,7 +11,7 @@ cloudRIG is the cheapest way to use AWS + Parsec for game and other application 
 * 2 minute termination warning overlay
 * Auto-saves your rig when you stop or are booted off
 * Attach, extend a separate game drive
-* Choose between g2.2xlarge and g3.4xlarge instances
+* Choose either g2.2xlarge and g3.4xlarge instance types
 
 There are 2 ways to use cloudRIG: [GUI](#gui) or [CLI](#cli).
 

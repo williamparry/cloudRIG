@@ -7,6 +7,7 @@ const { ipcRenderer } = window.require('electron');
 let instanceTypes;
 let allRegions;
 let allZones;
+let initialConfig;
 
 class Configuration extends Component {
 
@@ -14,7 +15,7 @@ class Configuration extends Component {
 
 		super(props)
 
-		const config = ipcRenderer.sendSync('cmd', 'getConfiguration');
+		initialConfig = ipcRenderer.sendSync('cmd', 'getConfiguration');
 		const credentials = ipcRenderer.sendSync('cmd', 'getCredentials');
 		const zonesArr = ipcRenderer.sendSync('cmd', 'getZones');
 		const instanceTypesArr = ipcRenderer.sendSync('cmd', 'getInstanceTypes')
@@ -38,14 +39,14 @@ class Configuration extends Component {
 		const profiles = this.extractProfileCredentials(credentials);
 
 		this.state = {
-			currentZones: this.getZones(config.AWSRegion),
+			currentZones: this.getZones(initialConfig.AWSRegion),
 			profiles: profiles,
 			addCredentialsOpen: false,
 			editCredentialsOpen: false,
 			confirmRemoveModalOpen: false,
-			config: config,
+			config: initialConfig,
 			allCredentials: credentials,
-			currentCredentials: config.AWSCredentialsProfile ? this.getCurrentCredentials(credentials, profiles, config.AWSCredentialsProfile) : {}
+			currentCredentials: initialConfig.AWSCredentialsProfile ? this.getCurrentCredentials(credentials, profiles, initialConfig.AWSCredentialsProfile) : {}
 		}
 
 	}
@@ -344,6 +345,7 @@ aws_secret_access_key=${credentialsObject.aws_secret_access_key}`
 									label='AWS Instance Type'
 									options={instanceTypes}
 									value={this.state.config.AWSInstanceType}
+									disabled={!!initialConfig.AWSInstanceType}
 									name="AWSInstanceType"
 									onChange={this.handleChange.bind(this)}
 									placeholder="- Select -"
@@ -360,9 +362,8 @@ aws_secret_access_key=${credentialsObject.aws_secret_access_key}`
 										</List>
 
 										<Message warning>
-											<Message.Header>Changing Instance Type is <em>Experimental</em></Message.Header>
-											<p>If you change from your initial cloudRIG Instance Type (e.g. g2 to g3), it may not work, and there may be residual software installed.</p>
-											<p>Please check the versions and software once you change.</p>
+											<Message.Header>Changing Instance Type is <em>not supported</em></Message.Header>
+											<p>Once you set this, you're stuck with it. This should be fixed in future - <a href="https://github.com/williamparry/cloudRIG/issues/89" rel="noopener noreferrer" target="_blank">see more on Github</a></p>
 										</Message>
 
 									</Popup.Content>
