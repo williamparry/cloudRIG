@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Form, Grid, Select, Button, Confirm, Popup, Image, Modal } from 'semantic-ui-react'
+import { Form, Grid, Select, Button, Confirm, Popup, Image, Modal, List, Message } from 'semantic-ui-react'
 import 'semantic-ui-css/semantic.min.css';
 import AWSProfile from './configuration/AWSProfile.js';
 const { ipcRenderer } = window.require('electron');
@@ -347,16 +347,24 @@ aws_secret_access_key=${credentialsObject.aws_secret_access_key}`
 									name="AWSInstanceType"
 									onChange={this.handleChange.bind(this)}
 									placeholder="- Select -"
+									wide="very"
 									required />}
 								hoverable={true}
 								on='focus'
 								position='top left'>
 									<Popup.Header>What's the difference?</Popup.Header>
 									<Popup.Content>
-										<ul>
-											<li>g2.2xlarge is cheaper and probably fine for most games</li>
-											<li>g3.4xlarge is more expensive, but more powerful</li>
-										</ul>
+										<List bulleted>
+											<List.Item><a href="https://aws.amazon.com/blogs/aws/build-3d-streaming-applications-with-ec2s-new-g2-instance-type/" rel="noopener noreferrer" target="_blank">g2.2xlarge</a> is cheaper and probably fine for most games</List.Item>
+											<List.Item><a href="https://aws.amazon.com/ec2/instance-types/g3/" rel="noopener noreferrer" target="_blank">g3.4xlarge</a> is more expensive, but more powerful</List.Item>
+										</List>
+
+										<Message warning>
+											<Message.Header>Changing Instance Type is <em>Experimental</em></Message.Header>
+											<p>If you change from your initial cloudRIG Instance Type (e.g. g2 to g3), it may not work, and there may be residual software installed.</p>
+											<p>Please check the versions and software once you change.</p>
+										</Message>
+
 									</Popup.Content>
 								</Popup>
 							</Grid.Column>
