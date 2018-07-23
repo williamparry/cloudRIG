@@ -1,0 +1,86 @@
+#mainNav .navbar-nav li.nav-item a.nav-link-dark {
+	color: #729DBA;
+}
+
+.bg-primary {
+	background-color: #34495e!important;
+}
+
+.bg-secondary {
+	background-color: #2c3e50!important;
+}
+
+.btn-primary:active,.btn-primary:focus,.btn-primary:hover {
+    background-color: #fff;
+    border-color: #fff;
+}
+
+.features {
+	background-color: #F2F9FF;
+	color: #2980b9;
+}
+
+.features .list-group {
+	box-shadow: 0 10px 30px rgba(125, 147, 178, .2);
+}
+
+.features .list-group-item {
+	border: 1px solid rgba(52, 152, 219, .3);
+	padding-top: 1em;
+	padding-bottom: 1em;
+}
+
+.features .list-group-hover .list-group-item:hover {
+    background-color: #E3F2FF;
+}
+
+.usage-ways {
+	background-color: #ED4C67;
+	color: white;
+}
+
+.gui-section img, .cli-section img {
+	display: block;
+	margin: 0 auto;
+	max-width: 85%;
+	/*box-shadow: 0 5px 30px rgba(125, 147, 178, .3);*/
+}
+
+.cli-section {
+	background-color: #fafafa;
+}
+
+.image-group {
+	width: 70%;
+	margin: 0 auto;
+}
+
+.image-group img {
+	width: 100%;
+}
+
+.btn-link {
+	font-weight: 700;
+	color: black;
+}
+
+.bounceEffect {
+  animation: bounce 1s infinite alternate;
+  -webkit-animation: bounce 1s infinite alternate;
+}
+@keyframes bounce {
+  from {
+    transform: translateY(0px);
+  }
+  to {
+    transform: translateY(-7px);
+  }
+}
+@-webkit-keyframes bounce {
+  from {
+    transform: translateY(0px);
+  }
+  to {
+    transform: translateY(-7px);
+  }
+}
