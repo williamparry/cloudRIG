@@ -5,10 +5,14 @@
 
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="">
-    <meta name="author" content="">
+    <meta name="description" content="Stream games with Parsec for cheaper">
+    <meta name="author" content="William Parry">
 
-    <title>cloudRIG</title>
+    <title>cloudRIG - Stream games with Parsec for cheaper</title>
+	
+	<!-- Favicon -->
+	<link rel="icon" type="image/png" href="favicon-32x32.png" sizes="32x32" />
+	<link rel="icon" type="image/png" href="favicon-16x16.png" sizes="16x16" />
 
     <!-- Bootstrap core CSS -->
     <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
@@ -18,11 +22,6 @@
     <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,700" rel="stylesheet" type="text/css">
 	<link href="https://fonts.googleapis.com/css?family=Roboto:300,400,700" rel="stylesheet" type="text/css">
     <link href="https://fonts.googleapis.com/css?family=Lato:300,400,700,400italic,700italic" rel="stylesheet" type="text/css">
-
-    <!-- Plugin CSS -->
-    <link href="vendor/magnific-popup/magnific-popup.css" rel="stylesheet" type="text/css">
-	<link href="vendor/zoomjs/css/zoom.css" rel="stylesheet">
-	<link href="vendor/aos/aos.css" rel="stylesheet">
 
     <!-- Custom styles for this template -->
     <link href="css/freelancer.min.css" rel="stylesheet">
@@ -43,16 +42,16 @@
         <div class="collapse navbar-collapse" id="navbarResponsive">
           <ul class="navbar-nav ml-auto">
             <li class="nav-item mx-0 mx-lg-1">
-              <a class="nav-link py-3 px-0 px-lg-3 rounded js-scroll-trigger" href="#install">Download</a>
+              <a class="nav-link py-3 px-0 px-lg-3 rounded js-scroll-trigger" href="#about">About</a>
             </li>
             <li class="nav-item mx-0 mx-lg-1">
-              <a class="nav-link py-3 px-0 px-lg-3 rounded js-scroll-trigger" href="#connect">Pricing</a>
+              <a class="nav-link py-3 px-0 px-lg-3 rounded js-scroll-trigger" href="#features">Features</a>
             </li>
             <li class="nav-item mx-0 mx-lg-1">
-              <a class="nav-link py-3 px-0 px-lg-3 rounded js-scroll-trigger" href="#download">About</a>
+              <a class="nav-link py-3 px-0 px-lg-3 rounded js-scroll-trigger" href="#usage-ways">Usage</a>
             </li>
 			<li class="nav-item mx-0 mx-lg-1">
-              <a class="nav-link py-3 px-0 px-lg-3 rounded js-scroll-trigger nav-link-dark" href="#faq">Github</a>
+              <a class="nav-link py-3 px-0 px-lg-3 rounded js-scroll-trigger nav-link-dark" target="_blank" href="https://github.com/williamparry/cloudRIG">Github</a>
             </li>
           </ul>
         </div>
@@ -60,7 +59,7 @@
     </nav>
 
     <!-- Header -->
-    <header class="masthead bg-primary text-white text-center" style="background-image: url('img/cloud.png'); background-position: center bottom; background-repeat: repeat-x;">
+    <header class="masthead bg-primary text-white text-center">
       <div class="container">
 		<div class="row align-items-center">
 			<div class="col-sm-4 offset-sm-1">
@@ -68,44 +67,52 @@
 			</div>
 			<div class="col-sm-7 text-left">
 				<h1 style="font-weight: normaL;"><span style="font-weight: lighter;">cloud</span>RIG</h1>
+				<div class="row mb-xl-0 mb-lg-0 mb-md-0 mb-sm-0 mb-5">
+					<div class="col-8 col-sm-auto">
+						<img class="img-fluid float-right powered-by-logo" src="img/parsec-logo.png">
+					</div>
+					<div class="col-4 col-sm-6">
+						<img class="img-fluid powered-by-logo" src="img/aws-logo.png">
+					</div>
+				</div>
 			</div>
 		</div>
 		<div class="row mt-3">
 			<div class="col-sm-8 offset-sm-2">
 				<h2 class="mb-0">Stream games with Parsec for cheaper</h2>
 			</div>
-			<div class="col-sm-2">
-				<img class="img-fluid" src="img/parsec-logo.png">
+		</div>
+		<div class="row mt-xl-2 mt-lg-2 mt-md-2 md-sm-2 mt-4">
+			<div class="col-sm-12 text-center">
+				<div class="d-inline-block align-top">
+				  <a class="btn btn-xl btn-primary btn-outline-light mr-2" href="https://github.com/williamparry/cloudRIG/tree/master/gui">
+					<i class="fa fa-download mr-2"></i>
+					<strong>Download Now!</strong>
+				  </a>
+				  <small class="d-block mt-2 mb-3">v0.0.1-alpha.4 release</small>
+				</div>
+				<div class="d-inline-block align-top">
+				  <a class="btn btn-xl btn-outline-light" href="https://github.com/williamparry/cloudRIG">
+					<i class="fa fa-github mr-2"></i>
+					GitHub
+				  </a>
+				</div>
 			</div>
 		</div>
-		<div class="row mt-2">
-		<div class="col-sm-12">
-			<div class="text-center">
-			  <a class="btn btn-xl btn-primary btn-outline-light mr-2" href="#">
-				<i class="fa fa-download mr-2"></i>
-				Download Now!
-			  </a>
-			  <a class="btn btn-xl btn-outline-light" href="#">
-				<i class="fa fa-github mr-2"></i>
-				GitHub
-			  </a>
-			</div>
-		</div>
-	</div>
 		<i class="fa fa-chevron-circle-down fa-2x mt-5 bounceEffect"></i>
       </div>
     </header>
 	
-	<!-- Portfolio Grid Section -->
-    <section class="description" id="portfolio">
+	<!-- About Grid Section -->
+    <section class="about" id="about">
       <div class="container">
 		<h1 class="text-center">Cheap streaming</h1>
-        <p class="col-lg-8 text-center mx-auto lead" style="font-family: Roboto;">cloudRIG is the cheapest way to use AWS + Parsec for game and other application streaming. When configured, it will set up the requisite AWS infrastructure for you to boot spot instances preloaded with Parsec.</p>
+        <p class="col-lg-8 text-center mx-auto lead">cloudRIG is the cheapest way to use AWS + Parsec for game and other application streaming. When configured, it will set up the requisite AWS infrastructure for you to boot spot instances preloaded with Parsec.</p>
       </div>
     </section>
 	
 	<!-- Features Grid Section -->
-    <section class="features" id="portfolio">
+    <section class="features" id="features">
       <div class="container">
 		<h1 class="text-center">Features</h1>
         <div class="row mt-5">
@@ -123,125 +130,101 @@
     </section>
 	
 	<!-- Usage Ways Grid Section -->
-    <section class="usage-ways pb-4 pt-4" id="portfolio">
+    <section class="usage-ways pb-4 pt-4" id="usage-ways">
       <div class="container">
 		<h3 class="text-center font-weight-normal">There are two ways to use cloudRIG: <strong>GUI</strong> or <strong>CLI</strong>.</h3>
     </section>
 	
-	<!-- GUI Grid Section -->
-    <section class="gui-section" id="portfolio">
+	<!-- GUI and CLI Grid Section -->
+    <section class="gui-cli-section">
       <div class="container">
-		<h1 class="text-center">GUI</h1>
-        <div class="row mt-5 text-center">
+        <div class="row text-center">
 			<div class="col-sm-12">
-				<img class="rounded lazy" data-src="https://user-images.githubusercontent.com/348091/42406162-814bc76a-81e5-11e8-800d-84fb5e84a413.png" data-action="zoom">
-			</div>
-			<div class="col-sm-12">
-				<img class="rounded lazy" data-src="https://user-images.githubusercontent.com/348091/42406163-817fb4d0-81e5-11e8-979f-1918732aca61.png" data-action="zoom">
-			</div>
-			<div class="col-sm-12">
-				<img class="rounded lazy" data-src="https://user-images.githubusercontent.com/348091/42406160-80e67fea-81e5-11e8-9c81-31cb07548666.png" data-action="zoom">
-			</div>
-			<div class="col-sm-12">
-				<img class="rounded lazy" data-src="https://user-images.githubusercontent.com/348091/42418364-18d057c0-82e2-11e8-9877-c58a3120c0dd.png" data-action="zoom">
-			</div>
-			<div class="col-sm-12">
-				<img class="rounded lazy" data-src="https://user-images.githubusercontent.com/348091/42418357-ef8cd33e-82e1-11e8-838c-087e5422c0d5.png" data-action="zoom">
+				<ul class="nav nav-pills mb-3 d-flex justify-content-center" id="pills-tab" role="tablist">
+				  <li class="nav-item">
+					<a class="nav-link active" id="pills-gui-tab" data-toggle="pill" href="#pills-gui" role="tab" aria-controls="pills-gui" aria-selected="true">GUI</a>
+				  </li>
+				  <li class="nav-item">
+					<a class="nav-link" id="pills-cli-tab" data-toggle="pill" href="#pills-cli" role="tab" aria-controls="pills-cli" aria-selected="false">CLI</a>
+				  </li>
+				</ul>
+				<div class="tab-content mt-5" id="pills-tabContent">
+				  <!-- GUI Carousel -->
+				  <div class="tab-pane fade show active" id="pills-gui" role="tabpanel" aria-labelledby="pills-gui-tab">
+					<h1 class="text-center">GUI</h1>
+					<div id="carouselIndicators" class="carousel slide" data-ride="carousel">
+					  <ol class="carousel-indicators">
+						<li data-target="#carouselIndicators" data-slide-to="0" class="active"></li>
+						<li data-target="#carouselIndicators" data-slide-to="1"></li>
+						<li data-target="#carouselIndicators" data-slide-to="2"></li>
+						<li data-target="#carouselIndicators" data-slide-to="3"></li>
+						<li data-target="#carouselIndicators" data-slide-to="4"></li>
+					  </ol>
+					  <div class="carousel-inner">
+						<div class="carousel-item active">
+						  <img class="d-block w-100" src="https://user-images.githubusercontent.com/348091/42406162-814bc76a-81e5-11e8-800d-84fb5e84a413.png" alt="First slide">
+						</div>
+						<div class="carousel-item">
+						  <img class="d-block w-100" src="https://user-images.githubusercontent.com/348091/42406163-817fb4d0-81e5-11e8-979f-1918732aca61.png" alt="Second slide">
+						</div>
+						<div class="carousel-item">
+						  <img class="d-block w-100" src="https://user-images.githubusercontent.com/348091/42406160-80e67fea-81e5-11e8-9c81-31cb07548666.png" alt="Third slide">
+						</div>
+						<div class="carousel-item">
+						  <img class="d-block w-100" src="https://user-images.githubusercontent.com/348091/42418364-18d057c0-82e2-11e8-9877-c58a3120c0dd.png" alt="Fourth slide">
+						</div>
+						<div class="carousel-item">
+						  <img class="d-block w-100" src="https://user-images.githubusercontent.com/348091/42418357-ef8cd33e-82e1-11e8-838c-087e5422c0d5.png" alt="Fifth slide">
+						</div>
+					  </div>
+					  <a class="carousel-control-prev" href="#carouselIndicators" role="button" data-slide="prev">
+						<span class="carousel-control-prev-icon" aria-hidden="true"></span>
+						<span class="sr-only">Previous</span>
+					  </a>
+					  <a class="carousel-control-next" href="#carouselIndicators" role="button" data-slide="next">
+						<span class="carousel-control-next-icon" aria-hidden="true"></span>
+						<span class="sr-only">Next</span>
+					  </a>
+					</div>
+				  </div>
+				  <!-- CLI Carousel -->
+				  <div class="tab-pane fade" id="pills-cli" role="tabpanel" aria-labelledby="pills-cli-tab">
+					<h1 class="text-center">CLI</h1>
+					<p class="lead text-center">Not guaranteed to be up-to-date with the lib, but handy for sending SSM commands.</p>
+					<div id="carouselIndicators" class="carousel slide" data-ride="carousel">
+					  <ol class="carousel-indicators">
+						<li data-target="#carouselIndicators" data-slide-to="0" class="active"></li>
+					  </ol>
+					  <div class="carousel-inner">
+						<div class="carousel-item active">
+						  <img class="d-block w-100" src="https://user-images.githubusercontent.com/348091/31599523-1df1ff3e-b253-11e7-9afc-22b37d4cec04.png" alt="First slide">
+						</div>
+					  </div>
+					  <a class="carousel-control-prev" href="#carouselIndicators" role="button" data-slide="prev">
+						<span class="carousel-control-prev-icon" aria-hidden="true"></span>
+						<span class="sr-only">Previous</span>
+					  </a>
+					  <a class="carousel-control-next" href="#carouselIndicators" role="button" data-slide="next">
+						<span class="carousel-control-next-icon" aria-hidden="true"></span>
+						<span class="sr-only">Next</span>
+					  </a>
+					</div>
+				  </div>
+				</div>
 			</div>
 		</div>
     </section>
 	
-	<!-- CLI Grid Section -->
-    <section class="cli-section" id="portfolio">
+	<!-- Ending Grid Section -->
+    <section class="last-section">
       <div class="container">
-		<h1 class="text-center">CLI</h1>
-		<p class="lead text-center">Not guaranteed to be up-to-date with the lib, but handy for sending SSM commands.</p>
-        <div class="row mt-5 text-center">
-			<div class="col-sm-12">
-				<img class="rounded lazy" data-src="https://user-images.githubusercontent.com/348091/31599523-1df1ff3e-b253-11e7-9afc-22b37d4cec04.png" data-action="zoom">
-			</div>
-		</div>
-		<div class="alert alert-primary text-center">Don't forget to turn it off when you're done gaming!</div>
+		<h3 class="text-center">Don't forget to turn it off when you're done gaming!</h3>
     </section>
 
-    <!-- Contact Section -->
-    <section id="contact">
-      <div class="container">
-        <h2 class="text-center text-uppercase text-secondary mb-0">Contact Me</h2>
-        <hr class="star-dark mb-5">
-        <div class="row">
-          <div class="col-lg-8 mx-auto">
-            <!-- To configure the contact form email address, go to mail/contact_me.php and update the email address in the PHP file on line 19. -->
-            <!-- The form should work on most web servers, but if the form is not working you may need to configure your web server differently. -->
-            <form name="sentMessage" id="contactForm" novalidate="novalidate">
-              <div class="control-group">
-                <div class="form-group floating-label-form-group controls mb-0 pb-2">
-                  <label>Name</label>
-                  <input class="form-control" id="name" type="text" placeholder="Name" required="required" data-validation-required-message="Please enter your name.">
-                  <p class="help-block text-danger"></p>
-                </div>
-              </div>
-              <div class="control-group">
-                <div class="form-group floating-label-form-group controls mb-0 pb-2">
-                  <label>Email Address</label>
-                  <input class="form-control" id="email" type="email" placeholder="Email Address" required="required" data-validation-required-message="Please enter your email address.">
-                  <p class="help-block text-danger"></p>
-                </div>
-              </div>
-              <div class="control-group">
-                <div class="form-group floating-label-form-group controls mb-0 pb-2">
-                  <label>Phone Number</label>
-                  <input class="form-control" id="phone" type="tel" placeholder="Phone Number" required="required" data-validation-required-message="Please enter your phone number.">
-                  <p class="help-block text-danger"></p>
-                </div>
-              </div>
-              <div class="control-group">
-                <div class="form-group floating-label-form-group controls mb-0 pb-2">
-                  <label>Message</label>
-                  <textarea class="form-control" id="message" rows="5" placeholder="Message" required="required" data-validation-required-message="Please enter a message."></textarea>
-                  <p class="help-block text-danger"></p>
-                </div>
-              </div>
-              <br>
-              <div id="success"></div>
-              <div class="form-group">
-                <button type="submit" class="btn btn-primary btn-xl" id="sendMessageButton">Send</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-    </section>
-	
-    <!-- Footer -->
-    <footer class="footer text-center">
-      <div class="container">
-        <div class="row">
-          <div class="col-md-4 mb-5 mb-lg-0">
-            <h4 class="text-uppercase text-left mb-4">Links</h4>
-			<p class="text-left"><i class="fa fa-minus fa-xs mr-2"></i> <a href="https://nibl.co.uk/bots.php">https://nibl.co.uk/bots.php</a></p>
-			<p class="text-left"><i class="fa fa-minus fa-xs mr-2"></i> <a href="https://hatsuyuki-fansubs.com/">https://hatsuyuki-fansubs.com/</a></p>
-			<p class="text-left"><i class="fa fa-minus fa-xs mr-2"></i> <a href="https://imgur.com/a/ZadFGNG">Guide images hosted at Imgur</a></p>
-          </div>
-          <div class="col-md-4 mb-5 mb-lg-0">
-            <h4 class="text-uppercase text-left mb-4">Credits</h4>
-			<p class="text-left"><i class="fa fa-minus fa-xs mr-2"></i> <a href="https://flatuicolors.com/palette/defo">FlatUI Color Palettes</a></p>
-			<p class="text-left"><i class="fa fa-minus fa-xs mr-2"></i> <a href="https://arjaymc.deviantart.com/art/Thousand-Sunny-Vector-510147622">Header Logo</a></p>
-			<p class="text-left"><i class="fa fa-minus fa-xs mr-2"></i> <a href="http://jquery.eisbehr.de/lazy/">jQuery Lazy</a></p>
-			<p class="text-left"><i class="fa fa-minus fa-xs mr-2"></i> <a href="https://github.com/fat/zoom.js">zoom.js</a></p>
-          </div>
-          <div class="col-md-4">
-            <h4 class="text-uppercase mb-4">Template</h4>
-            <p class="lead mb-0">Freelance is a free to use, open source Bootstrap theme created by
-              <a href="http://startbootstrap.com">Start Bootstrap</a>.</p>
-          </div>
-        </div>
-      </div>
-    </footer>
-
+	<!-- Footer -->
     <div class="copyright py-4 text-center text-white">
       <div class="container">
-        <small>Made by Prid</small>
+        <small>Made by <a href="https://github.com/Prid13/">Prid</a></small>
       </div>
     </div>
 
@@ -255,22 +238,12 @@
     <!-- Bootstrap core JavaScript -->
     <script src="vendor/jquery/jquery.min.js"></script>
     <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-	<script src="js/transition.js"></script>
 
     <!-- Plugin JavaScript -->
     <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
-    <script src="vendor/magnific-popup/jquery.magnific-popup.min.js"></script>
-	<script src="vendor/zoomjs/js/zoom.js"></script>
-	<script src="vendor/jquery-lazy/jquery.lazy.min.js"></script>
-	<script src="vendor/aos/aos.js"></script>
-
-    <!-- Contact Form JavaScript -->
-    <script src="js/jqBootstrapValidation.js"></script>
-    <script src="js/contact_me.js"></script>
 
     <!-- Custom scripts for this template -->
     <script src="js/freelancer.min.js"></script>
-	<script src="js/script.js"></script>
 
   </body>
 

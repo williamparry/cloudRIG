@@ -1,5 +1,15 @@
+a:hover {
+	color: black;
+}
+
 #mainNav .navbar-nav li.nav-item a.nav-link-dark {
 	color: #729DBA;
+}
+
+.masthead {
+	background-image: url('../img/cloud.png');
+	background-position: center bottom;
+	background-repeat: repeat-x;
 }
 
 .bg-primary {
@@ -13,6 +23,10 @@
 .btn-primary:active,.btn-primary:focus,.btn-primary:hover {
     background-color: #fff;
     border-color: #fff;
+}
+
+.about p {
+	font-family: Roboto;
 }
 
 .features {
@@ -39,14 +53,13 @@
 	color: white;
 }
 
-.gui-section img, .cli-section img {
+.gui-cli-section img {
 	display: block;
 	margin: 0 auto;
 	max-width: 85%;
-	/*box-shadow: 0 5px 30px rgba(125, 147, 178, .3);*/
 }
 
-.cli-section {
+.last-section {
 	background-color: #fafafa;
 }
 
@@ -63,6 +76,32 @@
 	font-weight: 700;
 	color: black;
 }
+
+.carousel-control-next-icon {
+    background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23000000' viewBox='0 0 8 8'%3E%3Cpath d='M2.75 0l-1.5 1.5 2.5 2.5-2.5 2.5 1.5 1.5 4-4-4-4z'/%3E%3C/svg%3E");
+}
+
+.carousel-control-prev-icon {
+	background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23000000' viewBox='0 0 8 8'%3E%3Cpath d='M5.25 0l-4 4 4 4 1.5-1.5-2.5-2.5 2.5-2.5-1.5-1.5z'/%3E%3C/svg%3E");
+}
+
+.carousel-indicators li {
+	background-color: rgba(0, 0, 0, 0.3);
+}
+
+.carousel-indicators .active {
+	background-color: #ED4C67;
+}
+
+.nav-link {
+	font-size: 1.5em;
+}
+
+.nav-pills .nav-link.active, .nav-pills .show>.nav-link {
+	background-color: #34495e;
+}
+
+/* BOUNCE EFFECT FOR ARROW ICON IN THE HEADER SECTION */
 
 .bounceEffect {
   animation: bounce 1s infinite alternate;
@@ -83,4 +122,10 @@
   to {
     transform: translateY(-7px);
   }
+}
+
+@media (min-width: 576px) {
+	.powered-by-logo {
+		height: 70px;
+	}
 }
