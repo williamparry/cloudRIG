@@ -93,10 +93,6 @@ a:hover {
 	background-color: #ED4C67;
 }
 
-.nav-link {
-	font-size: 1.5em;
-}
-
 .nav-pills .nav-link.active, .nav-pills .show>.nav-link {
 	background-color: #34495e;
 }
