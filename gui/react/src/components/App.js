@@ -297,6 +297,19 @@ class App extends Component {
 		} else {
 
 			return (<Grid stretched className={this.state.isPossessive ? 'possessive' : ''}>
+				{this.state.updateAvailable ?
+				<Grid.Column style={{width: '100%', margin: '0 auto', paddingBottom: '0', textAlign: 'center'}}>
+					<Message 
+						icon
+						info 
+						size='tiny'
+					>
+					<Icon name='download' />
+						<Message.Content>
+							New version available. <Button onClick={this.triggerUpdate.bind(this)} size='tiny'>Update</Button>
+						</Message.Content>
+					</Message>
+				</Grid.Column> : null}
 				<Grid.Row style={{ height: 476 }}>
 					<Grid.Column>
 						<Step.Group attached='top'>
@@ -334,17 +347,6 @@ class App extends Component {
 				</Grid.Row>
 				<Grid.Row verticalAlign="bottom">
 					<Grid.Column>
-						{this.state.updateAvailable ? <Message icon
-							info size='tiny'
-							style={{
-								position: 'absolute',
-								top: '-3.4em',
-								left: '0',
-								width: '100%',
-								paddingTop: '.5em',
-								paddingBottom: '.5em'
-							}}>
-							<Icon name='download' /><Message.Content>New version available. <Button onClick={this.triggerUpdate.bind(this)} size='tiny'>Update</Button></Message.Content></Message> : ''}
 						<Container>
 							<pre id='output' style={{ height: 60, overflowY: 'scroll' }}>{this.state.logOutput.join("\n")}</pre>
 							{/* <Button size='mini' onClick={() => {
@@ -352,7 +354,6 @@ class App extends Component {
 							}}>Prepare update</Button> */}
 						</Container>
 					</Grid.Column>
-
 				</Grid.Row>
 			</Grid>);
 
