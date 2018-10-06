@@ -49,9 +49,9 @@ Not guaranteed to be up-to-date with the lib, but handy for sending SSM commands
 
 * Make a Parsec account
 * Download the Parsec client
-* [Get the self-hosting key](https://parsec.tv/add-computer/own)
+* [Get the self-hosting key](https://parsecgaming.com/server-key)
 
-![click on 'click here to see extra steps' and then in the element that appears, find the server_key](https://user-images.githubusercontent.com/348091/32673294-ef117400-c64e-11e7-949f-a34344b1368e.jpg)
+<pre>:server_key=&lt;key&gt;:</pre>
 
 ### AWS
 

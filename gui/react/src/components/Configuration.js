@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Form, Grid, Select, Button, Confirm, Popup, Image, Modal, List, Message } from 'semantic-ui-react'
+import { Form, Grid, Select, Button, Confirm, Popup, Modal, List, Message } from 'semantic-ui-react'
 import 'semantic-ui-css/semantic.min.css';
 import AWSProfile from './configuration/AWSProfile.js';
 const { ipcRenderer } = window.require('electron');
@@ -372,7 +372,7 @@ aws_secret_access_key=${credentialsObject.aws_secret_access_key}`
 							
 							<Grid.Column width={8}>
 								<Popup
-									trigger={<Form.Input type="password" label='Parsec Server Id'
+									trigger={<Form.Input type="password" label='Parsec Server Key'
 										value={this.state.config.ParsecServerId}
 										name="ParsecServerId"
 										onChange={this.handleChange.bind(this)}
@@ -382,20 +382,15 @@ aws_secret_access_key=${credentialsObject.aws_secret_access_key}`
 									on='focus'
 									size='small'
 									position='bottom left'>
-									<Popup.Header>Where can I find my server_id?</Popup.Header>
+									<Popup.Header>Where can I find my server_key?</Popup.Header>
 									<Popup.Content>
 										<ol>
 											<li>Make a Parsec account</li>
 											<li>Download the Parsec client</li>
-											<li><a href="https://parsecgaming.com/add-computer/own" rel="noopener noreferrer" target="_blank">Get the self-hosting key</a></li>
+											<li><a href="https://parsecgaming.com/server-key" rel="noopener noreferrer" target="_blank">Get the self-hosting key</a></li>
 										</ol>
 
-										<Image
-											src='https://user-images.githubusercontent.com/348091/32673294-ef117400-c64e-11e7-949f-a34344b1368e.jpg'
-											as='a'
-											size='tiny'
-											href='https://user-images.githubusercontent.com/348091/32673294-ef117400-c64e-11e7-949f-a34344b1368e.jpg'
-											target='_blank' />
+										<pre>:server_key=&lt;key&gt;:</pre>
 
 									</Popup.Content>
 								</Popup>
