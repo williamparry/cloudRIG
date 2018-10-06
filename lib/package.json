@@ -14,7 +14,7 @@
 	"license": "ISC",
 	"dependencies": {
 		"async": "^2.6.0",
-		"aws-sdk": "^2.259.1",
+		"aws-sdk": "^2.291.0",
 		"external-ip": "^2.0.3",
 		"jszip": "^3.1.5",
 		"moment": "^2.22.1",
