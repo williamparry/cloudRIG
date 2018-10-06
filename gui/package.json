@@ -12,7 +12,7 @@
 		"release": "rm -rf .tmp && export $(cat .env | xargs) && npm run pre-build && cd .tmp && npx electron-builder -p onTagOrDraft"
 	},
 	"devDependencies": {
-		"concurrently": "^3.6.1"
+		"concurrently": "^4.0.1"
 	},
 	"dependencies": {
 		"electron-builder": "^20.27.1"
