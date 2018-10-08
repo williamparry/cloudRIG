@@ -297,7 +297,7 @@ class App extends Component {
 		} else {
 
 			return (<Grid stretched className={this.state.isPossessive ? 'possessive' : ''}>
-				<Grid.Row style={{ height: 476 }}>
+				<Grid.Row style={{ height: 450, paddingBottom: 0 }}>
 					<Grid.Column>
 						<Step.Group attached='top'>
 							<Step link
@@ -332,14 +332,11 @@ class App extends Component {
 						</Segment>
 					</Grid.Column>
 				</Grid.Row>
-				<Grid.Row verticalAlign="bottom">
+				<Grid.Row verticalAlign="bottom" style={{paddingTop: 0}}>
 					<Grid.Column>
 						{this.state.updateAvailable ? <Message icon
 							info size='tiny'
 							style={{
-								position: 'absolute',
-								top: '-3.4em',
-								left: '0',
 								width: '100%',
 								paddingTop: '.5em',
 								paddingBottom: '.5em'
