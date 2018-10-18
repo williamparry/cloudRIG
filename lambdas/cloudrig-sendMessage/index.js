@@ -41,7 +41,7 @@ exports.handler = (event, context, callback) => {
                     args: data.Command.CommandId
                 }
                 lambdaARNQueue.unshift(checkMessageSuccess);
-                triggerNextLambda();
+                common.triggerNextLambda(lambdaARNQueue, eventBody);
             });
     }
 
