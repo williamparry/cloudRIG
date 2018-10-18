@@ -9,7 +9,7 @@ var standardFilter = [
         Values: ["true"]
     }
 ];
-
+var cloudWatchSavePrefix = "cloudrig-save";
 
 // Reporter, should send to cloudwatch
 function report(message) {
