@@ -12,6 +12,8 @@ exports.handler = (event, context, callback) => {
 
 
     function run() {
+        common.report("Waiting for our instance to be ready");
+
         ec2.waitFor(
             /* Assuming instanceOk doesn't take long to happen, 
             * otherwise this needs to be changed to a cloudwatch rule,
@@ -26,6 +28,7 @@ exports.handler = (event, context, callback) => {
                     common.report(err);
                     return;
                 }
+                common.report("Instance ready");
                 triggerNextLambda(lambdaARNQueue, eventBody)
             }
         );
