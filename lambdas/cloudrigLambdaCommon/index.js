@@ -63,32 +63,32 @@ function scheduleNextLambda(rate, lambdaARNQueue, eventBody) {
         report("ARN of SNS to be triggered is " + nextFunc.arn);
         report("Argument of lambda is" + nextFunc.args);
 
-        cloudwatchevents.removeTargets({
-            Ids: ["scheduled"],
-            Rule: "ScheduleLambda"
+        cloudwatchevents.putRule({
+            Name: "ScheduleLambda",
+            ScheduleExpression: "rate(" + rate + ")",
+            State: "ENABLED"
         }, function (err, data) {
             if (err) {
                 report(err);
                 return;
             }
 
-            cloudwatchevents.putTargets({
-                Rule: "ScheduleLambda",
-                Targets: [{
-                    Arn: nextFunc.arn,
-                    Input: JSON.stringify(eventBody),
-                    Id: "scheduled"
-                }]
+            cloudwatchevents.removeTargets({
+                Ids: ["scheduled"],
+                Rule: "ScheduleLambda"
             }, function (err, data) {
                 if (err) {
                     report(err);
                     return;
                 }
 
-                cloudwatchevents.putRule({
-                    Name: "ScheduleLambda",
-                    ScheduleExpression: "rate(" + rate + ")",
-                    State: "ENABLED"
+                cloudwatchevents.putTargets({
+                    Rule: "ScheduleLambda",
+                    Targets: [{
+                        Arn: nextFunc.arn,
+                        Input: JSON.stringify(eventBody),
+                        Id: "scheduled"
+                    }]
                 },
                     function (err, data) {
                         if (err) {
