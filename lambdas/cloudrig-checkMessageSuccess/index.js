@@ -32,7 +32,7 @@ exports.handler = (event, context, callback) => {
                     !!data.CommandInvocations[0].CommandPlugins[0]
                         .Output
                 ) {
-                    common.report()
+                    common.report("Command completed successfully")
                     common.triggerNextLambda(lambdaARNQueue, eventBody);
                 } else {
                     var checkMessageSuccess = {
