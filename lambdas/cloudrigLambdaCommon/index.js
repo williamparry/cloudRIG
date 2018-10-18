@@ -104,6 +104,7 @@ function scheduleNextLambda(rate, lambdaARNQueue, eventBody) {
 }
 
 // Run the start functions for the lambda, then call the run callback 
+// Should only be used after the request step (checks for instance)
 function start(runCB, eventBody) {
     // Disable the schedulelambda rule, since it might have been enabled to
     // trigger this lambda
