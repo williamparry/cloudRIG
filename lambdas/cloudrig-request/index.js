@@ -1,6 +1,7 @@
 exports.handler = (event, context, callback) => {
 
-    var common = require("cloudrigLambdaCommon");
+    var commonlib = require("cloudrigLambdaCommon");
+    var common = new commonlib(eventBody);
     var AWS = require("aws-sdk");
     var sns = new AWS.SNS();
     var ec2 = new AWS.EC2();
