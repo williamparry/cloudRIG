@@ -101,7 +101,9 @@ exports.handler = (event, context, callback) => {
                                 Rule: "cloudrig-startup-watch",
                                 Targets: [
                                     {
-                                        Arn: "arn:aws:lambda:ap-southeast-2:703028140084:function:cloudrig-deleteRequestAndInstance",
+                                        Arn: "arn:aws:sns:" +
+                                            eventBody.config.AWSRegion + ":" +
+                                            eventBody.settings.UserID + ":cloudrig-deleteRequestAndInstance",
                                         Input: JSON.stringify(startupWatchInput),
                                         Id: "1"
                                     }
