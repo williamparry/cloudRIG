@@ -195,19 +195,19 @@ Common.prototype.start = function start(runCB, eventBody) {
             },
                 function (err, data) {
                     if (err) {
-                        this.report(err);
+                        this.triggerRollback(err);
                         return;
                     }
 
                     if (data.Tags.some(function (tag) {
                         return tag.Key == "cancelled";
                     })) {
-                        this.report("Instance marked as cancelled");
+                        this.triggerRollback("Instance marked as cancelled");
                         return;
                     }
 
                     if (data.Tags.length == 0) { // Instance doesn't exist
-                        this.report("Instance not found");
+                        this.triggerRollback("Instance not found");
                         return;
                     }
 

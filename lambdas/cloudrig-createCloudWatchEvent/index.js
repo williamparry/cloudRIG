@@ -31,7 +31,7 @@ exports.handler = (event, context, callback) => {
             },
             function (err, ruleData) {
                 if (err) {
-                    common.report(err);
+                    common.triggerRollback(err);
                     return;
                 }
 
@@ -49,7 +49,7 @@ exports.handler = (event, context, callback) => {
                     },
                     function (err) {
                         if (err) {
-                            common.report(err);
+                            common.triggerRollback(err);
                             return;
                         }
 
@@ -65,7 +65,7 @@ exports.handler = (event, context, callback) => {
                             },
                             function(err,data) {
                                 if (err) {
-                                    common.report(err);
+                                    common.triggerRollback(err);
                                     return;
                                 }
 

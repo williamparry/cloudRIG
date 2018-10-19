@@ -26,7 +26,7 @@ exports.handler = (event, context, callback) => {
             },
             function (err, data) {
                 if (err) {
-                    common.report(err);
+                    common.triggerRollback(err);
                     return;
                 }
                 common.report("Instance ready");
