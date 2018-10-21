@@ -1,7 +1,6 @@
 exports.handler = (event, context, callback) => {
 
-    var commonlib = require("cloudrigLambdaCommon");
-    var common = new commonlib(eventBody);
+    var commonlib = require("cloudriglambdacommon");
     var AWS = require("aws-sdk");
     var ec2 = new AWS.EC2();
     var sns = new AWS.SNS();
@@ -10,6 +9,7 @@ exports.handler = (event, context, callback) => {
 
     var eventBody = JSON.parse(event.Records[0].Sns.Message);
     var lambdaARNQueue = eventBody.lambdaARNQueue;
+    var common = new commonlib(eventBody);
 
 
     function run() {
@@ -20,7 +20,7 @@ exports.handler = (event, context, callback) => {
                 Filters: [
                     {
                         Name: "name",
-                        Values: [config.AWSInstanceType === "g2.2xlarge" ? "parsec-g2-ws2016-14" : "parsec-g3-*"]
+                        Values: [eventBody.config.AWSInstanceType === "g2.2xlarge" ? "parsec-g2-ws2016-14" : "parsec-g3-*"]
                         // TODO: currently hardcoded to old version of g2 AMI due to issue with latest ver
                     }
                 ]
@@ -39,7 +39,7 @@ exports.handler = (event, context, callback) => {
                     eventBody.state.ImageId = data.Images[0].ImageId;
 
                     common.report("Parsec AMI found");
-                    triggerNextLambda();
+                    common.triggerNextLambda(lambdaARNQueue, eventBody);
                 }
                 else {
                     common.report("Parsec AMI not found");

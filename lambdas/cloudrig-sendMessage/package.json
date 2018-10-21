@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "cloudriglambdacommon": "../cloudrigLambdaCommon",
     "fs": "^0.0.1-security"
   }
 }

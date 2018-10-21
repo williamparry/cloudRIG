@@ -1,7 +1,6 @@
 exports.handler = (event, context, callback) => {
 
-    var commonlib = require("cloudrigLambdaCommon");
-    var common = new commonlib(eventBody);
+    var commonlib = require("cloudriglambdacommon");
     var AWS = require("aws-sdk");
     var sns = new AWS.SNS();
     var ec2 = new AWS.EC2();
@@ -10,6 +9,7 @@ exports.handler = (event, context, callback) => {
 
     var eventBody = JSON.parse(event.Records[0].Sns.Message);
     var lambdaARNQueue = eventBody.lambdaARNQueue;
+    var common = new commonlib(eventBody);
 
     function run() {
         var ssm = new AWS.SSM();

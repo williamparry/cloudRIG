@@ -1,6 +1,6 @@
 exports.handler = (event, context, callback) => {
 
-    var commonlib = require("cloudrigLambdaCommon");
+    var commonlib = require("cloudriglambdacommon");
     var common;
     var AWS = require("aws-sdk");
     var cloudwatchlogs = new AWS.CloudWatchLogs()
@@ -31,8 +31,8 @@ exports.handler = (event, context, callback) => {
             arn: snsArnPrefix + "cloudrig-waitForInstanceOk",
             args: ""
         },
-        waitForSSM: {
-            arn: snsArnPrefix + "cloudrig-waitForSSM",
+        waitSSM: {
+            arn: snsArnPrefix + "cloudrig-waitSSM",
             args: ""
         },
         attachEBSVolume: {
@@ -90,7 +90,7 @@ exports.handler = (event, context, callback) => {
         lambdaARNQueue.push(lambdaData.checkSpotPrice);
         lambdaARNQueue.push(lambdaData.request);
         lambdaARNQueue.push(lambdaData.waitForInstanceOk);
-        lambdaARNQueue.push(lambdaData.waitForSSM);
+        lambdaARNQueue.push(lambdaData.waitSSM);
         lambdaARNQueue.push(lambdaData.attachEBSVolume);
         lambdaARNQueue.push(lambdaData.installFolders);
         lambdaARNQueue.push(lambdaData.createShutdownNotifier);
@@ -108,7 +108,7 @@ exports.handler = (event, context, callback) => {
         lambdaARNQueue.push(lambdaData.checkSpotPrice);
         lambdaARNQueue.push(lambdaData.request);
         lambdaARNQueue.push(lambdaData.waitForInstanceOk);
-        lambdaARNQueue.push(lambdaData.waitForSSM);
+        lambdaARNQueue.push(lambdaData.waitSSM);
         lambdaARNQueue.push(lambdaData.attachEBSVolume);
         lambdaARNQueue.push(lambdaData.processEBSVolume);
         lambdaARNQueue.push(lambdaData.reboot);
@@ -176,53 +176,58 @@ exports.handler = (event, context, callback) => {
     }
 
 
+
+    function checkState() {
+        
+
+    
+        ec2.describeInstances(
+            {
+                Filters: common.standardFilter.concat([
+                    {
+                        Name: "instance-state-name",
+                        Values: ["stopping"]
+                    }
+                ])
+            },
+            function (err, data) {
+                if (err) {
+                    common.report(err);
+                    return;
+                }
+    
+                if (data.Reservations[0]
+                    && data.Reservations[0].Instances
+                    && data.Reservations[0].Instances.length > 0) {
+                    common.report("cloudRIG is currently stopping, try again later.");
+                    return;
+                }
+    
+                cloudwatchevents.listRules(
+                    {
+                        NamePrefix: common.cloudWatchSavePrefix + "-"
+                    },
+                    function (err, data) {
+                        if (err) {
+                            common.report(err);
+                            return;
+                        }
+    
+                        if (data.Rules[0]) {
+                            common.report("cloudRIG is currently saving, try again later.");
+                            return;
+                        }
+    
+                        run();
+    
+                    }
+                );
+            }
+        );
+    }
+
     var lambdaARNQueue = [];
-
-
-    ec2.describeInstances(
-        {
-            Filters: common.standardFilter.concat([
-                {
-                    Name: "instance-state-name",
-                    Values: ["stopping"]
-                }
-            ])
-        },
-        function (err, data) {
-            if (err) {
-                common.report(err);
-                return;
-            }
-
-            if (data.Reservations[0]
-                && data.Reservations[0].Instances
-                && data.Reservations[0].Instances.length > 0) {
-                common.report("cloudRIG is currently stopping, try again later.");
-                return;
-            }
-
-            cloudwatchevents.listRules(
-                {
-                    NamePrefix: common.cloudWatchSavePrefix + "-"
-                },
-                function (err, data) {
-                    if (err) {
-                        common.report(err);
-                        return;
-                    }
-
-                    if (data.Rules[0]) {
-                        common.report("cloudRIG is currently saving, try again later.");
-                        return;
-                    }
-
-                    run();
-
-                }
-            );
-        }
-    );
-
+    setupLogGroup(checkState);
 
 
 
