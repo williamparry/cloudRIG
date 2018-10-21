@@ -122,26 +122,6 @@ exports.handler = (event, context, callback) => {
         common.report("Starting your last cloudRIG");
     }
 
-    function setupLogGroup(cb) {
-        cloudwatchlogs.createLogGroup(
-            {
-                logGroupName: "cloudrig-logs"
-            },
-            function (err, data) {
-
-                eventBody.logStreamName = "cloudrig-start-" + Date.now();
-                cloudwatchlogs.createLogStream(
-                    {
-                        logGroupName: "cloudrig-logs",
-                        logStreamName: eventBody.logStreamName
-                    },
-                    function (err, data) {
-                        common = new commonlib(eventBody);
-                        cb();
-                    });
-            });
-    }
-
 
     function run() {
         common.report("Finding AMI");
@@ -171,16 +151,14 @@ exports.handler = (event, context, callback) => {
                 }
 
                 common.triggerNextLambda(lambdaARNQueue, eventBody);
+                callback(null, eventBody.startTime);
             }
         );
     }
 
 
-
     function checkState() {
         
-
-    
         ec2.describeInstances(
             {
                 Filters: common.standardFilter.concat([
@@ -227,7 +205,9 @@ exports.handler = (event, context, callback) => {
     }
 
     var lambdaARNQueue = [];
-    setupLogGroup(checkState);
+    eventBody.startTime = Date.now();
+    common = new commonlib(eventBody);
+    checkState();
 
 
 

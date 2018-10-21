@@ -39,7 +39,7 @@ exports.handler = (event, context, callback) => {
                     var checkMessageSuccess = {
                         arn: "arn:aws:sns:" +
                             eventBody.config.AWSRegion + ":" +
-                            eventBody.settings.UserID + "cloudrig-checkMessageSuccess",
+                            eventBody.settings.UserID + ":cloudrig-checkMessageSuccess",
                         args: eventBody.args
                     }
                     lambdaARNQueue.unshift(checkMessageSuccess);

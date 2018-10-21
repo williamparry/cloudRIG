@@ -51,9 +51,6 @@ exports.handler = (event, context, callback) => {
 
     cloudwatchevents.disableRule({ Name: "ScheduleLambda" },
         function (err, data) {
-            if (err) {
-                common.report(err);
-            }
 
             run();
         });

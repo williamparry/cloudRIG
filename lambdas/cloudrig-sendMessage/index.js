@@ -20,7 +20,7 @@ exports.handler = (event, context, callback) => {
         commands = !Array.isArray(commands) ? [commands] : commands;
 
 
-        common.report("Sending message: \"" + args + "\"");
+        common.report(`Sending message: "${args}"`);
 
         ssm.sendCommand({
             DocumentName: "AWS-RunPowerShellScript",
@@ -38,7 +38,7 @@ exports.handler = (event, context, callback) => {
                 var checkMessageSuccess = {
                     arn: "arn:aws:sns:" +
                         eventBody.config.AWSRegion + ":" +
-                        eventBody.settings.UserID + "cloudrig-checkMessageSuccess",
+                        eventBody.settings.UserID + ":cloudrig-checkMessageSuccess",
                     args: data.Command.CommandId
                 }
                 lambdaARNQueue.unshift(checkMessageSuccess);

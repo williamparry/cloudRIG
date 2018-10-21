@@ -13,7 +13,7 @@ exports.handler = (event, context, callback) => {
 
     
     function run() {
-        console.log("Rebooting cloudrig instance");
+        common.report("Rebooting cloudrig instance");
 
         ec2.rebootInstances(
             {

@@ -19,10 +19,12 @@ function Common(eventBody) {
 
 
     if (eventBody.state) {
-        this.storedInstanceId = eventBody.state.instance.InstanceId;
-        this.storedSpotInstanceRequestId = eventBody.state.spotInstanceRequestId;
+        if (eventBody.state.instance) {
+            this.storedInstanceId = eventBody.state.instance.InstanceId;
+            this.storedSpotInstanceRequestId = eventBody.state.spotInstanceRequestId;
+        }
     }
-    this.storedLogStreamName = eventBody.logStreamName;
+    this.storedStartTime = eventBody.startTime;
     this.storedAwsRegion = eventBody.config.AWSRegion;
     this.storeduserId = eventBody.settings.UserID;
     obj = this;
@@ -32,7 +34,8 @@ function Common(eventBody) {
 // Reporter, should send to cloudwatch
 Common.prototype.report = function report(message) {
 
-    console.log(message);
+    console.log("[cloudrigrun" + this.storedStartTime + 
+        "] " + JSON.stringify(message));
 
     /*cloudwatchlogs.describeLogStreams(
         {
@@ -58,8 +61,7 @@ Common.prototype.report = function report(message) {
 }
 
 
-
-
+// Trigger the rollback lambda
 Common.prototype.triggerRollback = function triggerRollback(message) {
     obj.report("Triggering rollback, error encountered: ")
     obj.report(message);
@@ -86,17 +88,17 @@ Common.prototype.triggerRollback = function triggerRollback(message) {
 Common.prototype.triggerNextLambda = function triggerNextLambda(lambdaARNQueue, eventBody) {
     // Trigger next lambda in queue
     if (lambdaARNQueue.length == 0) {
-        obj.report("No more functions in lambda queue")
+        obj.report("No more functions in lambda queue");
     }
     else {
-        obj.report("Triggering next lambda via SNS");
+        console.log("Triggering next lambda via SNS");
 
         var nextFunc = lambdaARNQueue.shift();
         eventBody.lambdaARNQueue = lambdaARNQueue;
         eventBody.args = nextFunc.args;
 
-        obj.report("ARN of SNS to be triggered is " + nextFunc.arn);
-        obj.report("Argument of lambda is" + nextFunc.args);
+        console.log("ARN of SNS to be triggered is " + nextFunc.arn);
+        console.log("Argument of lambda is" + nextFunc.args);
 
         sns.publish({
             Message: JSON.stringify(eventBody),
@@ -107,7 +109,7 @@ Common.prototype.triggerNextLambda = function triggerNextLambda(lambdaARNQueue, 
                     obj.report(err);
                     return;
                 }
-                obj.report(data);
+                console.log(data);
             });
     }
 }
@@ -116,18 +118,18 @@ Common.prototype.triggerNextLambda = function triggerNextLambda(lambdaARNQueue, 
 Common.prototype.scheduleNextLambda = function scheduleNextLambda(rate, lambdaARNQueue, eventBody) {
     // Trigger next lambda in queue
     if (lambdaARNQueue.length == 0) {
-        obj.report("No more functions in lambda queue")
+        obj.report("No more functions in lambda queue");
     }
     else {
-        obj.report("Triggering next lambda via cloudwatch rule in "
+        console.log("Triggering next lambda via cloudwatch rule in "
             + rate);
 
         var nextFunc = lambdaARNQueue.shift();
         eventBody.lambdaARNQueue = lambdaARNQueue;
         eventBody.args = nextFunc.args;
 
-        obj.report("ARN of SNS to be triggered is " + nextFunc.arn);
-        obj.report("Argument of lambda is" + nextFunc.args);
+        console.log("ARN of SNS to be triggered is " + nextFunc.arn);
+        console.log("Argument of lambda is" + nextFunc.args);
 
         cloudwatchevents.putRule({
             Name: "ScheduleLambda",
@@ -176,9 +178,6 @@ Common.prototype.start = function start(runCB, eventBody) {
     // trigger obj lambda
     cloudwatchevents.disableRule({ Name: "ScheduleLambda" },
         function (err, data) {
-            if (err) {
-                obj.report(err);
-            }
 
             // Check that the instance isn't cancelled/still exists
             ec2.describeTags({
