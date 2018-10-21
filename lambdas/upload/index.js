@@ -10,8 +10,8 @@ const { exec } = require("child_process");
 
 
 var lambdaDirs = [];
-var userId = "703028140084";
-var AWSRegion = "ap-southeast-2";
+var userId = "";
+var AWSRegion = ""; // Fill these in before running
 
 // Update each lambda in the lambdas folder (folders starting with "cloudrig-")
 async.each(fs.readdirSync("../"),
@@ -131,7 +131,7 @@ async.each(fs.readdirSync("../"),
                                     "Resource": "arn:aws:sns:${AWSRegion}:${userId}:${folderName}",
                                     "Condition": {
                                       "StringEquals": {
-                                        "AWS:SourceOwner": "703028140084"
+                                        "AWS:SourceOwner": "${userId}"
                                       }
                                     }
                                   },
