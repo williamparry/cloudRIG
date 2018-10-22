@@ -10,11 +10,11 @@ const { exec } = require("child_process");
 
 
 var lambdaDirs = [];
-var userId = "";
-var AWSRegion = ""; // Fill these in before running
+var userId ="fillthisin";
+var AWSRegion = "fillthisin"; // Fill these in before running
 
 // Update each lambda in the lambdas folder (folders starting with "cloudrig-")
-async.each(fs.readdirSync("../"),
+async.eachLimit(fs.readdirSync("../"),1,
     (folderName, cb) => {
         if (folderName.substring(0, 9) == "cloudrig-") {
 
@@ -48,6 +48,7 @@ async.each(fs.readdirSync("../"),
 
                     // Delete function if it already exists (ignore error if it doesn't)
                     lambda.deleteFunction({ FunctionName: folderName }, (err, data) => {
+                        
                         cb();
                     })
                 },
@@ -67,6 +68,10 @@ async.each(fs.readdirSync("../"),
                             VpcConfig: {}
                         },
                         (err, data) => {
+                            if (err){
+                                console.log(folderName)
+                                console.log(err);
+                            }
                             // Delete zip
                             fs.unlinkSync(`${folderName}.zip`);
                             cb();

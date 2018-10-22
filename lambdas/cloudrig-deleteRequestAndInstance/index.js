@@ -4,10 +4,16 @@ exports.handler = (event, context, callback) => {
     var ec2 = new AWS.EC2();
     var cloudwatchevents = new AWS.CloudWatchEvents();
 
+    var eventBody = event;
+
+    if (event.Records) {
+        eventBody = JSON.parse(event.Records[0].Sns.Message);
+    }
+
     function run() {
-        console.log("Tagging spot instance " + event.InstanceId + " as cancelled");
+        console.log("Tagging spot instance " + eventBody.InstanceId + " as cancelled");
         ec2.createTags({
-            Resources: [event.InstanceId],
+            Resources: [eventBody.InstanceId],
             Tags: [
                 {
                     Key: "cancelled",
@@ -20,20 +26,20 @@ exports.handler = (event, context, callback) => {
                     console.log(err);
                 }
 
-                console.log("Terminating spot instance " + event.InstanceId);
+                console.log("Terminating spot instance " + eventBody.InstanceId);
                 ec2.terminateInstances(
                     {
-                        InstanceIds: [event.InstanceId]
+                        InstanceIds: [eventBody.InstanceId]
                     },
                     function (err, data) {
                         if (err) {
                             console.log(err);
                         }
 
-                        console.log("Deleting spot request " + event.spotInstanceRequestId);
+                        console.log("Deleting spot request " + eventBody.spotInstanceRequestId);
                         ec2.cancelSpotInstanceRequests(
                             {
-                                SpotInstanceRequestIds: [event.spotInstanceRequestId]
+                                SpotInstanceRequestIds: [eventBody.spotInstanceRequestId]
                             },
                             function (err, data) {
                                 if (err) {

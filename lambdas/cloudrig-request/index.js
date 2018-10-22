@@ -54,6 +54,7 @@ exports.handler = (event, context, callback) => {
             function (err, data) {
                 if (err) {
                     common.report(err);
+                    common.report(["\"FATALERROR\""]);
                     return;
                 }
 

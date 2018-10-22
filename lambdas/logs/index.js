@@ -3,7 +3,7 @@ var AWS = require("aws-sdk");
 AWS.config.region = "ap-southeast-2"
 var cloudwatchlogs = new AWS.CloudWatchLogs();
 
-var startTime = "1540137818670";
+var startTime = "1540161473044";
 var startPattern = `[cloudrigrun${startTime}]`;
 
 var seenEventIds = [];

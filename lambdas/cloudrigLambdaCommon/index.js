@@ -65,6 +65,7 @@ Common.prototype.report = function report(message) {
 Common.prototype.triggerRollback = function triggerRollback(message) {
     obj.report("Triggering rollback, error encountered: ")
     obj.report(message);
+    obj.report("\"[FATALERROR]\"");
 
     var startupWatchInput = {
         InstanceId: obj.storedInstanceId,
