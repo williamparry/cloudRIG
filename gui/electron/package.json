@@ -30,12 +30,12 @@
 	},
 	"dependencies": {
 		"async": "^2.6.1",
-		"cloudriglib": "file:../../lib",
+		"cloudriglib": "link:../../lib",
 		"electron-context-menu": "^0.10.0",
 		"electron-updater": "^3.1.2",
 		"opn": "^5.4.0"
 	},
 	"devDependencies": {
-		"electron": "3.0.2"
+		"electron": "3.0.5"
 	}
 }
