@@ -25,4 +25,6 @@ yarn-debug.log*
 yarn-error.log*
 
 .tmp
+.tmp-app
+.tmp-react-build
 build

@@ -82,6 +82,10 @@ exports.handler = (event, context, callback) => {
         clearPreviousScheduledTasks: {
             arn: snsArnPrefix + "cloudrig-sendMessage",
             args: "Cancel-Scheduled-Shutdown.ps1"
+        },
+        initialiseEphemeralDisk: {
+            arn: snsArnPrefix + "cloudrig-sendMessage",
+            args: "Initialise-Ephemeral-Disks.ps1"
         }
     };
 
@@ -96,6 +100,9 @@ exports.handler = (event, context, callback) => {
         lambdaARNQueue.push(lambdaData.createShutdownNotifier);
         lambdaARNQueue.push(lambdaData.createTerminationChecker);
         lambdaARNQueue.push(lambdaData.initialiseDrive);
+        if (eventBody.config.AWSInstanceType == "g2.2xlarge") {
+            lambdaARNQueue.push(lambdaData.initialiseEphemeralDisk);
+        }
         lambdaARNQueue.push(lambdaData.reboot);
         lambdaARNQueue.push(lambdaData.scheduleReset);
         lambdaARNQueue.push(lambdaData.createCloudWatchEvent);
@@ -111,6 +118,9 @@ exports.handler = (event, context, callback) => {
         lambdaARNQueue.push(lambdaData.waitSSM);
         lambdaARNQueue.push(lambdaData.attachEBSVolume);
         lambdaARNQueue.push(lambdaData.processEBSVolume);
+        if (eventBody.config.AWSInstanceType == "g2.2xlarge") {
+            lambdaARNQueue.push(lambdaData.initialiseEphemeralDisk);
+        }
         lambdaARNQueue.push(lambdaData.reboot);
         lambdaARNQueue.push(lambdaData.clearPreviousScheduledTasks);
         lambdaARNQueue.push(lambdaData.createShutdownNotifier);

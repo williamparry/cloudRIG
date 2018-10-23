@@ -11,46 +11,58 @@ exports.handler = (event, context, callback) => {
     var common = new commonlib(eventBody);
 
     function run() {
-        ec2.runInstances(
-            {
-                MinCount: 1,
-                MaxCount: 1,
-                EbsOptimized: true,
-                InstanceMarketOptions: {
-                    MarketType: "spot",
-                    SpotOptions: {
-                        MaxPrice: eventBody.config.AWSMaxPrice || "0.4",
-                        SpotInstanceType: "persistent",
-                        InstanceInterruptionBehavior: "stop"
-                    }
-                },
-                TagSpecifications: [
-                    {
-                        ResourceType: "instance",
-                        Tags: [
-                            {
-                                Key: "cloudrig",
-                                Value: "true"
-                            }
-                        ]
-                    }
-                ],
-                IamInstanceProfile: {
-                    Arn: eventBody.settings.cloudRIGInstanceProfile
-                },
-                UserData: new Buffer(
-                    `network_server_start_port=8000:app_host=1:server_key=${
-                    eventBody.config.ParsecServerId
-                    }:app_check_user_data=1:app_first_run=0`
-                ).toString("base64"),
-                Placement: {
-                    AvailabilityZone: eventBody.state.availabilityZone
-                },
-                ImageId: eventBody.state.ImageId,
-                InstanceType: eventBody.config.AWSInstanceType,
-                KeyName: eventBody.settings.KeyName,
-                SecurityGroupIds: [eventBody.settings.SecurityGroupId]
+
+        var instanceConfig = {
+            BlockDeviceMappings: blockDeviceMappings,
+            MinCount: 1,
+            MaxCount: 1,
+            EbsOptimized: true,
+            InstanceMarketOptions: {
+                MarketType: "spot",
+                SpotOptions: {
+                    MaxPrice: eventBody.config.AWSMaxPrice || "0.4",
+                    SpotInstanceType: "persistent",
+                    InstanceInterruptionBehavior: "stop"
+                }
             },
+            TagSpecifications: [
+                {
+                    ResourceType: "instance",
+                    Tags: [
+                        {
+                            Key: "cloudrig",
+                            Value: "true"
+                        }
+                    ]
+                }
+            ],
+            IamInstanceProfile: {
+                Arn: eventBody.settings.cloudRIGInstanceProfile
+            },
+            UserData: new Buffer(
+                `network_server_start_port=8000:app_host=1:server_key=${
+                eventBody.config.ParsecServerId
+                }:app_check_user_data=1:app_first_run=0`
+            ).toString("base64"),
+            Placement: {
+                AvailabilityZone: eventBody.state.availabilityZone
+            },
+            ImageId: eventBody.state.ImageId,
+            InstanceType: eventBody.config.AWSInstanceType,
+            KeyName: eventBody.settings.KeyName,
+            SecurityGroupIds: [eventBody.settings.SecurityGroupId]
+        };
+
+        if (eventBody.config.AWSInstanceType == "g2.2xlarge") {
+			instanceConfig.BlockDeviceMappings = [{
+				"DeviceName": "/dev/xvdca",
+				"VirtualName": "ephemeral0"
+			}]
+		}
+
+
+        ec2.runInstances(
+            instanceConfig,
             function (err, data) {
                 if (err) {
                     common.report(err);

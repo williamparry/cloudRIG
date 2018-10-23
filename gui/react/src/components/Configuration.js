@@ -34,7 +34,14 @@ class Configuration extends Component {
 
 		});
 
-		instanceTypes = instanceTypesArr.map((instanceType) => ({ key: instanceType, text: instanceType, value: instanceType }))
+		instanceTypes = instanceTypesArr.map((instanceType) => ({ 
+			key: instanceType, 
+			text: instanceType, 
+			value: instanceType,
+			disabled: 
+				(instanceType.indexOf('g3') !== -1 && initialConfig.AWSInstanceType.indexOf('g2') !== -1) || 
+				(instanceType.indexOf('g2') !== -1 && initialConfig.AWSInstanceType.indexOf('g3') !== -1)
+		 }))
 		
 		const profiles = this.extractProfileCredentials(credentials);
 
@@ -331,6 +338,39 @@ aws_secret_access_key=${credentialsObject.aws_secret_access_key}`
 							</Grid.Column>
 						</Grid.Row>
 						<Grid.Row>
+						<Grid.Column width={5}>
+								<Popup
+									trigger={<Form.Field control={Select}
+									label='AWS Instance Type'
+									options={instanceTypes}
+									value={this.state.config.AWSInstanceType}
+									name="AWSInstanceType"
+									onChange={this.handleChange.bind(this)}
+									placeholder="- Select -"
+									required />}
+								hoverable={true}
+								wide="very"
+								on='focus'>
+									<Popup.Header>What's the difference?</Popup.Header>
+									<Popup.Content>
+										<List bulleted>
+											<List.Item><a href="https://aws.amazon.com/blogs/aws/build-3d-streaming-applications-with-ec2s-new-g2-instance-type/" rel="noopener noreferrer" target="_blank">g2.2xlarge</a> is cheap and OK for older games, and comes with additional ephemeral drive</List.Item>
+											<List.Item><a href="https://aws.amazon.com/ec2/instance-types/g3/" rel="noopener noreferrer" target="_blank">g3s.xlarge</a> (recommended) more expensive than g2.2xlarge, but powerful.</List.Item>
+											<List.Item><a href="https://aws.amazon.com/ec2/instance-types/g3/" rel="noopener noreferrer" target="_blank">g3.4xlarge</a> is very expensive, but very powerful. However, it still has only 1 GPU like the g3s.xlarge</List.Item>
+										</List>
+
+										<p>Be sure to double-check the price on the "Play" screen before you start</p>
+
+										<Message warning>
+											<Message.Header>Changing Instance Type between g2 and g3 is <em>not supported</em></Message.Header>
+											<p>Once you set g2 or g3, you're stuck with it.<br />Unless you need a g2.2xlarge I'd recommend a g3 instance.</p>
+											<small>If you really want to change the instance type, look in ~/.cloudrig/config.json file, but be careful about switching the graphics mode.</small>
+										</Message>
+
+									</Popup.Content>
+								</Popup>
+							</Grid.Column>
+							
 							<Grid.Column width={3}>
 								<Form.Input label='AWS Max Price'
 									value={this.state.config.AWSMaxPrice}
@@ -338,36 +378,6 @@ aws_secret_access_key=${credentialsObject.aws_secret_access_key}`
 									onChange={this.handleChange.bind(this)}
 									placeholder='0.5'
 									required />
-							</Grid.Column>
-							<Grid.Column width={5}>
-								<Popup
-									trigger={<Form.Field control={Select}
-									label='AWS Instance Type'
-									options={instanceTypes}
-									value={this.state.config.AWSInstanceType}
-									disabled={!!initialConfig.AWSInstanceType}
-									name="AWSInstanceType"
-									onChange={this.handleChange.bind(this)}
-									placeholder="- Select -"
-									wide="very"
-									required />}
-								hoverable={true}
-								on='focus'
-								position='top left'>
-									<Popup.Header>What's the difference?</Popup.Header>
-									<Popup.Content>
-										<List bulleted>
-											<List.Item><a href="https://aws.amazon.com/blogs/aws/build-3d-streaming-applications-with-ec2s-new-g2-instance-type/" rel="noopener noreferrer" target="_blank">g2.2xlarge</a> is cheaper and probably fine for most games</List.Item>
-											<List.Item><a href="https://aws.amazon.com/ec2/instance-types/g3/" rel="noopener noreferrer" target="_blank">g3.4xlarge</a> is more expensive, but more powerful</List.Item>
-										</List>
-
-										<Message warning>
-											<Message.Header>Changing Instance Type is <em>not supported</em></Message.Header>
-											<p>Once you set this, you're stuck with it. This should be fixed in future - <a href="https://github.com/williamparry/cloudRIG/issues/89" rel="noopener noreferrer" target="_blank">see more on Github</a></p>
-										</Message>
-
-									</Popup.Content>
-								</Popup>
 							</Grid.Column>
 							
 							<Grid.Column width={8}>
