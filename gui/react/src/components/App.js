@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Icon, Segment, Container, Step, Grid, Button, Header, List, Modal, Message } from "semantic-ui-react";
+import { Icon, Segment, Step, Grid, Button, Header, List, Modal, Message } from "semantic-ui-react";
 import "semantic-ui-css/semantic.min.css";
 import "./App.css";
 import Configuration from "./Configuration";
