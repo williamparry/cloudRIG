@@ -1,93 +1,86 @@
-const { app, BrowserWindow, ipcMain, dialog } = require('electron')
-require('electron-context-menu')();
-const url = require('url')
-const async = require('async');
-const cloudrig = require('cloudriglib')
-const autoUpdater = require("electron-updater").autoUpdater
-const fs = require('fs');
-const homedir = require('os').homedir();
+const { app, BrowserWindow, ipcMain, dialog } = require("electron");
+require("electron-context-menu")();
+const url = require("url");
+const async = require("async");
+const cloudrig = require("cloudriglib");
+const autoUpdater = require("electron-updater").autoUpdater;
+const fs = require("fs");
+const homedir = require("os").homedir();
 const opn = require("opn");
 
-autoUpdater.autoDownload = false
+autoUpdater.autoDownload = false;
 
-let hooks = {}
-let urlObj = {}
+let hooks = {};
+let urlObj = {};
 let onCreateWindow;
-let win
+let win;
 
-const log = (message) => {
+const log = message => {
 	if (win) {
-		win.webContents.send('log', message);
+		win.webContents.send("log", message);
 	}
-}
+};
 
 function createWindow() {
+	win = new BrowserWindow({ width: 800, height: 600, resizable: false, show: false });
 
-	win = new BrowserWindow({ width: 800, height: 600, resizable: false, show: false })
-
-	win.loadURL(url.format(urlObj))
+	win.loadURL(url.format(urlObj));
 
 	// Emitted when the window is closed.
-	win.on('closed', () => {
-		ipcMain.removeAllListeners('cmd')
+	win.on("closed", () => {
+		ipcMain.removeAllListeners("cmd");
 		// Dereference the window object, usually you would store windows
 		// in an array if your app supports multi windows, this is the time
 		// when you should delete the corresponding element.
-		win = null
-	})
+		win = null;
+	});
 
-	win.once('ready-to-show', () => {
-		win.show()
-	})
+	win.once("ready-to-show", () => {
+		win.show();
+	});
 
-	win.webContents.on('new-window', function (e, url) {
+	win.webContents.on("new-window", function(e, url) {
 		e.preventDefault();
-		require('electron').shell.openExternal(url);
+		require("electron").shell.openExternal(url);
 	});
 
 	if (onCreateWindow) {
 		onCreateWindow(win);
 	}
-
 }
 
 function cmdHandler(event, op, data) {
-
 	switch (op) {
-
-		case 'log':
-
-			event.sender.send('log', data)
+		case "log":
+			event.sender.send("log", data);
 
 			break;
 
-		case 'checkForUpdates':
-
-			autoUpdater.on('update-available', (info) => {
-				event.sender.send('updateCheck', true)
+		case "checkForUpdates":
+			autoUpdater.on("update-available", info => {
+				event.sender.send("updateCheck", true);
 			});
 
-			autoUpdater.on('update-not-available', (info) => {
-				event.sender.send('updateCheck', false)
+			autoUpdater.on("update-not-available", info => {
+				event.sender.send("updateCheck", false);
 			});
 
-			autoUpdater.on('error', (err) => {
-				cmdHandler(event, 'updateFail')
-			})
+			autoUpdater.on("error", err => {
+				cmdHandler(event, "updateFail");
+			});
 
 			autoUpdater.checkForUpdates();
 
 			break;
 
-		case 'doUpdate':
+		case "doUpdate":
+			event.sender.send("updateDownloading");
 
-			event.sender.send('updateDownloading')
-
-			autoUpdater.on('download-progress', (info) => {
-				event.sender.send('updateDownloadProgress', info)
+			autoUpdater.on("download-progress", info => {
+				event.sender.send("updateDownloadProgress", info);
 			});
 
-			autoUpdater.on('update-downloaded', (info) => {
+			autoUpdater.on("update-downloaded", info => {
 				autoUpdater.quitAndInstall();
 			});
 
@@ -95,329 +88,310 @@ function cmdHandler(event, op, data) {
 
 			break;
 
-		case 'openVNC':
-
+		case "openVNC":
 			cloudrig.getActiveInstances((err, activeInstances) => {
 				if (err) {
-					event.sender.send('error', err)
+					event.sender.send("error", err);
 					return;
 				}
 				opn(`vnc://admin:4ubg9sde@${activeInstances[0].PublicDnsName}`);
-			})
-
-			break;
-
-		case 'selectCredentialsFile':
-
-			dialog.showOpenDialog(win, {
-				title: "Select AWS Credentials file",
-				defaultPath: "~/.aws",
-				properties: [
-					"openFile",
-					"promptToCreate",
-					"showHiddenFiles"
-				],
-				message: "Select AWS Credentials file; this will be loaded into the cloudRIG app"
-			}, function (filePaths) {
-				event.sender.send('credentialsFileChosen', filePaths)
-			})
-
-			break;
-
-		case 'getZones':
-
-			event.returnValue = cloudrig.getZonesArr();
-			
-			break;
-
-		case 'getInstanceTypes':
-
-			event.returnValue = cloudrig.getInstanceTypesArr();
-			
-		case 'getConfiguration':
-
-			event.returnValue = cloudrig.getConfigFile()
-
-			break;
-
-		case 'getConfigurationValidity':
-
-			cloudrig.validateRequiredConfig(cloudrig.getConfigFile(), function (err) {
-				event.sender.send('getConfigurationValidity', !err)
-			})
-
-			break;
-
-		case 'saveInitialConfiguration':
-			cloudrig.setConfigFile(data);
-			cloudrig.setConfig(data)
-			event.sender.send('savedInitialConfiguration', data)
-			break;
-
-		case 'saveConfiguration':
-
-			cloudrig.validateRequiredConfig(data, function (err) {
-				if (err) {
-					event.sender.send('error', err)
-					return;
-				}
-				cloudrig.setConfigFile(data);
-				event.sender.send('getConfigurationValidity', true)
 			});
 
 			break;
 
-		case 'setConfiguration':
+		case "selectCredentialsFile":
+			dialog.showOpenDialog(
+				win,
+				{
+					title: "Select AWS Credentials file",
+					defaultPath: "~/.aws",
+					properties: ["openFile", "promptToCreate", "showHiddenFiles"],
+					message: "Select AWS Credentials file; this will be loaded into the cloudRIG app"
+				},
+				function(filePaths) {
+					event.sender.send("credentialsFileChosen", filePaths);
+				}
+			);
 
-			cloudrig.setConfig(cloudrig.getConfigFile())
+			break;
+
+		case "getZones":
+			event.returnValue = cloudrig.getZonesArr();
+
+			break;
+
+		case "getInstanceTypes":
+			event.returnValue = cloudrig.getInstanceTypesArr();
+
+		case "getConfiguration":
+			event.returnValue = cloudrig.getConfigFile();
+
+			break;
+
+		case "getConfigurationValidity":
+			cloudrig.validateRequiredConfig(cloudrig.getConfigFile(), function(err) {
+				event.sender.send("getConfigurationValidity", !err);
+			});
+
+			break;
+
+		case "saveInitialConfiguration":
+			cloudrig.setConfigFile(data);
+			cloudrig.setConfig(data);
+			event.sender.send("savedInitialConfiguration", data);
+			break;
+
+		case "saveConfiguration":
+			cloudrig.validateRequiredConfig(data, function(err) {
+				if (err) {
+					event.sender.send("error", err);
+					return;
+				}
+				cloudrig.setConfigFile(data);
+				event.sender.send("getConfigurationValidity", true);
+			});
+
+			break;
+
+		case "setConfiguration":
+			cloudrig.setConfig(cloudrig.getConfigFile());
 			event.returnValue = true;
 
 			break;
 
-		case 'disableNonPlay':
-
-			event.sender.send('disableNonPlay', data)
+		case "disableNonPlay":
+			event.sender.send("disableNonPlay", data);
 
 			break;
 
-		case 'setup':
-
-			cloudrig.setup(function (err, resp) {
+		case "setup":
+			cloudrig.setup(function(err, resp) {
 				if (err) {
-					event.sender.send('error', err)
+					event.sender.send("error", err);
 					return;
 				}
 				// Has setup questions
 				if (resp.code === 2) {
-					event.sender.send('setups', resp.questions);
+					event.sender.send("setups", resp.questions);
 					return;
 				}
-
-				event.sender.send('setupValid', true)
-
+				event.sender.send("setupValid", true);
 			});
 
 			break;
 
-		case 'runSetupSteps':
-
-			cloudrig.setup(function (err, resp) {
-
+		case "runSetupSteps":
+			cloudrig.setup(function(err, resp) {
 				var toProcess = resp.questions.map(step => {
-					return step.m
+					return step.m;
 				});
 
 				// TODO: Bit loose, tidy up later
-				async.parallel(toProcess, function (err, val) {
-
+				async.parallel(toProcess, function(err, val) {
 					if (err) {
-						event.sender.send('error', err)
+						event.sender.send("error", err);
 						return;
 					}
 
-					event.sender.send('setupCheck')
-
+					event.sender.send("setupCheck");
 				});
-
 			});
 
 			break;
 
-		case 'getState':
-
-			cloudrig.getState(function (err, data) {
-
+		case "getState":
+			cloudrig.getState(function(err, data) {
 				if (err) {
-					event.sender.send('errorPlay', err)
+					event.sender.send("errorPlay", err);
 					return;
 				}
 
-				event.sender.send('gotState', data)
-
-			})
+				event.sender.send("gotState", data);
+			});
 
 			break;
 
-		case 'start':
+		case "start":
+			event.sender.send("starting", true);
 
-			event.sender.send('starting', true)
-
-			cloudrig.start(function (err) {
-
-				event.sender.send('starting', false)
+			cloudrig.start(function(err) {
+				event.sender.send("starting", false);
 
 				if (err) {
-					event.sender.send('errorPlay', err)
+					event.sender.send("errorPlay", err);
 					return;
 				}
-
-			})
+			});
 
 			break;
 
-		case 'stop':
+		case "stop":
+			event.sender.send("stopping", true);
 
-			event.sender.send('stopping', true)
-
-			cloudrig.stop(function (err) {
-
-				event.sender.send('stopping', false)
+			cloudrig.stop(function(err) {
+				event.sender.send("stopping", false);
 
 				if (err) {
-					event.sender.send('errorStop')
+					event.sender.send("errorStop");
 					return;
 				}
-
-			})
-
-			break;
-
-		case 'scheduleStop':
-
-			event.sender.send('possessiveStarted')
-			cloudrig.scheduleStop(function (err) {
-				if (err) { event.sender.send('error', err); return; }
-				event.sender.send('possessiveFinished')
 			});
 
 			break;
 
-		case 'unScheduleStop':
-
-			event.sender.send('possessiveStarted')
-			cloudrig.cancelScheduledStop(function (err) {
-				if (err) { event.sender.send('error', err); return; }
-				event.sender.send('possessiveFinished')
+		case "scheduleStop":
+			event.sender.send("possessiveStarted");
+			cloudrig.scheduleStop(function(err) {
+				if (err) {
+					event.sender.send("error", err);
+					return;
+				}
+				event.sender.send("possessiveFinished");
 			});
 
 			break;
 
-		case 'addStorage':
-
-			event.sender.send('possessiveStarted')
-			cloudrig.createEBSVolume(data.availabilityZone, data.size, function (err) {
-				if (err) { event.sender.send('error', err); return; }
-				event.sender.send('possessiveFinished')
+		case "unScheduleStop":
+			event.sender.send("possessiveStarted");
+			cloudrig.cancelScheduledStop(function(err) {
+				if (err) {
+					event.sender.send("error", err);
+					return;
+				}
+				event.sender.send("possessiveFinished");
 			});
 
 			break;
 
-		case 'deleteStorage':
-			event.sender.send('possessiveStarted')
-			cloudrig.deleteEBSVolume(data, function (err) {
-				if (err) { event.sender.send('error', err); return; }
-				event.sender.send('possessiveFinished')
+		case "addStorage":
+			event.sender.send("possessiveStarted");
+			cloudrig.createEBSVolume(data.availabilityZone, data.size, function(err) {
+				if (err) {
+					event.sender.send("error", err);
+					return;
+				}
+				event.sender.send("possessiveFinished");
 			});
 
 			break;
 
-		case 'transferStorage':
-
-			event.sender.send('possessiveStarted')
-			cloudrig.transferEBSVolume(data, function (err) {
-				if (err) { event.sender.send('error', err); return; }
-				event.sender.send('possessiveFinished')
+		case "deleteStorage":
+			event.sender.send("possessiveStarted");
+			cloudrig.deleteEBSVolume(data, function(err) {
+				if (err) {
+					event.sender.send("error", err);
+					return;
+				}
+				event.sender.send("possessiveFinished");
 			});
 
 			break;
 
-		case 'expandStorage':
-			event.sender.send('possessiveStarted')
-			cloudrig.expandEBSVolume(data.VolumeId, data.newVolumeSize, function (err) {
-				if (err) { event.sender.send('error', err); return; }
-				event.sender.send('possessiveFinished')
+		case "transferStorage":
+			event.sender.send("possessiveStarted");
+			cloudrig.transferEBSVolume(data, function(err) {
+				if (err) {
+					event.sender.send("error", err);
+					return;
+				}
+				event.sender.send("possessiveFinished");
 			});
 
 			break;
 
-		case 'changePage':
-
-			event.sender.send('changePage', data)
+		case "expandStorage":
+			event.sender.send("possessiveStarted");
+			cloudrig.expandEBSVolume(data.VolumeId, data.newVolumeSize, function(err) {
+				if (err) {
+					event.sender.send("error", err);
+					return;
+				}
+				event.sender.send("possessiveFinished");
+			});
 
 			break;
 
-		case 'error':
+		case "changePage":
+			event.sender.send("changePage", data);
 
+			break;
+
+		case "error":
 			dialog.showMessageBox(win, {
 				type: "error",
 				message: JSON.stringify(data, null, 4)
-			})
+			});
 
 			break;
 
-		case 'closeWithError':
-
+		case "closeWithError":
 			dialog.showMessageBox(win, {
 				type: "error",
 				message: JSON.stringify(data, null, 4)
-			})
+			});
 
 			win.close();
 
 			break;
 
-		case 'prepareUpdate':
-
-			cloudrig.validateRequiredConfig(cloudrig.getConfigFile(), function (err) {
-
-				if (err) { event.sender.send('error', err); return; }
+		case "prepareUpdate":
+			cloudrig.validateRequiredConfig(cloudrig.getConfigFile(), function(err) {
+				if (err) {
+					event.sender.send("error", err);
+					return;
+				}
 
 				// Config is valid
 				if (!err) {
 					cloudrig.prepareUpdate((err, resp) => {
 						if (err) {
-							event.sender.send('error', err)
+							event.sender.send("error", err);
 							return;
 						}
 						// Update not ready
 						if (resp.code === -1) {
-							event.sender.send('updateNotReady');
+							event.sender.send("updateNotReady");
 							return;
 						}
-						event.sender.send('updateReady')
+						event.sender.send("updateReady");
 					});
-
 				}
-
-			})
+			});
 
 			break;
-
 	}
 
 	if (hooks[op]) {
-		hooks[op](event, op, data)
+		hooks[op](event, op, data);
 	}
 }
 
 function init(_urlObj, _onCreateWindow) {
-
 	urlObj = _urlObj;
-	onCreateWindow = _onCreateWindow
+	onCreateWindow = _onCreateWindow;
 
 	cloudrig.init(log);
 
-	ipcMain.on('cmd', cmdHandler);
+	ipcMain.on("cmd", cmdHandler);
 
-	app.on('ready', createWindow)
+	app.on("ready", createWindow);
 
 	// Quit when all windows are closed.
-	app.on('window-all-closed', () => {
+	app.on("window-all-closed", () => {
 		// On macOS it is common for applications and their menu bar
 		// to stay active until the user quits explicitly with Cmd + Q
-		if (process.platform !== 'darwin') {
-			app.quit()
+		if (process.platform !== "darwin") {
+			app.quit();
 		}
-	})
+	});
 
-	app.on('activate', () => {
+	app.on("activate", () => {
 		// On macOS it's common to re-create a window in the app when the
 		// dock icon is clicked and there are no other windows open.
 		if (win === null) {
-			createWindow()
+			createWindow();
 		}
-	})
-
+	});
 }
 
 function registerCMDHook(cmd, method, withLib) {

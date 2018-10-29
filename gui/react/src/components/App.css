@@ -9,12 +9,23 @@ body {
 	font-family: sans-serif;
 }
 
-.ui.grid,
-#root {
+#root,
+#wrapper {
+	display: flex;
 	height: 100%;
+	flex-direction: column;
+}
+
+#output {
+	height: 100%;
+	margin: 0;
+	white-space: pre-wrap;
+	overflow-y: scroll;
 }
 
 .stretched-segment {
+	position: relative;
+	z-index: 1;
 	height: calc(100% - 69px);
 }
 
