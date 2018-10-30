@@ -31,7 +31,8 @@ class Play extends Component {
 				scheduledStop: null,
 				currentSpotPrice: null,
 				remainingTime: null,
-				savingInstance: null
+				savingInstance: null,
+				runningTime: null
 			}
 		};
 
@@ -221,15 +222,11 @@ class Play extends Component {
 			this.state.cloudRIGState.savingInstance ||
 			(this.state.cloudRIGState.savingInstance && this.state.immediateIsStopping)
 		) {
-			actionButtons = (
-				<div>
-					<Button content="Saving..." icon="save" labelPosition="right" disabled />
-				</div>
-			);
+			actionButtons = <Button content="Saving..." icon="save" labelPosition="right" disabled />;
 		} else if (this.state.cloudRIGState.instanceReady || this.state.cloudRIGState.instanceStopping) {
 			if (!this.state.cloudRIGState.instanceStopping && !this.state.immediateIsStopping) {
 				actionButtons = (
-					<div>
+					<>
 						<Button content="Stop" icon="stop" labelPosition="right" onClick={this.stop.bind(this)} />
 						{this.state.cloudRIGState.scheduledStop ? (
 							<Button
@@ -247,14 +244,10 @@ class Play extends Component {
 							/>
 						)}
 						<Button content="Open VNC" icon="external" labelPosition="right" onClick={this.openVNC.bind(this)} />
-					</div>
+					</>
 				);
 			} else {
-				actionButtons = (
-					<div>
-						<Button content="Stopping" icon="stop" labelPosition="right" disabled />
-					</div>
-				);
+				actionButtons = <Button content="Stopping" icon="stop" labelPosition="right" disabled />;
 			}
 		} else {
 			if (!this.state.cloudRIGState.instanceReady) {
@@ -262,7 +255,7 @@ class Play extends Component {
 					let manageAction = this.state.volumesInAZ.length > 0 ? "Manage storage" : "Add storage";
 
 					actionButtons = (
-						<div>
+						<>
 							<Button content="Start" icon="play" labelPosition="right" onClick={this.start.bind(this)} />
 
 							<Modal
@@ -276,8 +269,7 @@ class Play extends Component {
 										icon="hdd outline"
 										labelPosition="right"
 									/>
-								}
-							>
+								}>
 								<Modal.Header>
 									<Icon name="hdd outline" /> {manageAction}
 								</Modal.Header>
@@ -294,7 +286,7 @@ class Play extends Component {
 									</Modal.Description>
 								</Modal.Content>
 							</Modal>
-						</div>
+						</>
 					);
 				} else {
 					actionButtons = (
@@ -335,11 +327,15 @@ class Play extends Component {
 
 			const instanceTypeCell = config.AWSInstanceType;
 
+			const runningCell = this.state.cloudRIGState.runningTime ? this.state.cloudRIGState.runningTime + " mins" : "-";
+
 			const remainingCell = this.state.cloudRIGState.scheduledStop
 				? this.state.cloudRIGState.remainingTime + " mins"
 				: "-";
 
 			const spotCell = this.state.cloudRIGState.currentSpotPrice;
+
+			const maxPrice = config.AWSMaxPrice;
 
 			const panes = [
 				{
@@ -347,16 +343,18 @@ class Play extends Component {
 					render: () => (
 						<Tab.Pane>
 							<p>
-								If you'd like to get involved in development, testing or documentation, please check out the Github
-								repo. It would be great to have more maintainers of the project other than me :)
+								If you'd like to get involved in development, testing or documentation, check out the Github repo. It
+								would be great to have more maintainers of the project other than me :)
 							</p>
-							<p>Or you could become a Patron (testing on AWS gets expensive!)</p>
+							<p>
+								Or you could become a Patron (testing on AWS gets expensive). This project uses the awesome Parsec
+								streaming tech, but is not supported by Parsec.
+							</p>
 							<a
 								href="https://www.patreon.com/bePatron?u=6484976"
 								data-patreon-widget-type="become-patron-button"
 								target="_blank"
-								rel="noopener noreferrer"
-							>
+								rel="noopener noreferrer">
 								<Image src={BecomeAPatron} alt="Become a Patron!" size="small" />
 							</a>
 						</Tab.Pane>
@@ -374,8 +372,7 @@ class Play extends Component {
 									<a
 										href="https://support.parsecgaming.com/hc/en-us/articles/360004032651-DirectX-Renderer"
 										target="_blank"
-										rel="noopener noreferrer"
-									>
+										rel="noopener noreferrer">
 										DirectX is enabled
 									</a>
 								</List.Item>
@@ -386,8 +383,7 @@ class Play extends Component {
 								<a
 									href="https://support.parsecgaming.com/hc/en-us/articles/360001667391-Welcome-to-your-Parsec-gaming-PC-in-the-cloud-"
 									target="_blank"
-									rel="noopener noreferrer"
-								>
+									rel="noopener noreferrer">
 									Parsec welcome page
 								</a>
 							</p>
@@ -414,8 +410,7 @@ class Play extends Component {
 								style={{
 									display: "flex",
 									flexDirection: "column"
-								}}
-							>
+								}}>
 								<Grid>
 									<Grid.Row>
 										<Grid.Column>{actionButtons}</Grid.Column>
@@ -435,12 +430,20 @@ class Play extends Component {
 											<Table.Cell>{statusCell}</Table.Cell>
 										</Table.Row>
 										<Table.Row>
+											<Table.Cell>Running time</Table.Cell>
+											<Table.Cell>{runningCell}</Table.Cell>
+										</Table.Row>
+										<Table.Row>
 											<Table.Cell>Remaining time</Table.Cell>
 											<Table.Cell>{remainingCell}</Table.Cell>
 										</Table.Row>
 										<Table.Row>
 											<Table.Cell>Instance Type</Table.Cell>
 											<Table.Cell>{instanceTypeCell}</Table.Cell>
+										</Table.Row>
+										<Table.Row>
+											<Table.Cell>Max Spot Price</Table.Cell>
+											<Table.Cell>${maxPrice}</Table.Cell>
 										</Table.Row>
 										<Table.Row>
 											<Table.Cell>Current Spot Price</Table.Cell>
@@ -452,8 +455,7 @@ class Play extends Component {
 								<List
 									style={{
 										margin: 0
-									}}
-								>
+									}}>
 									<List.Item>
 										<Image width="14" src={DiscordIcon} verticalAlign="middle" style={{ marginRight: 4 }} />
 										<List.Content>

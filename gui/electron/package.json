@@ -31,11 +31,11 @@
 	"dependencies": {
 		"async": "^2.6.1",
 		"cloudriglib": "link:../../lib",
-		"electron-context-menu": "^0.10.0",
-		"electron-updater": "^3.1.2",
+		"electron-context-menu": "^0.10.1",
+		"electron-updater": "^3.1.6",
 		"opn": "^5.4.0"
 	},
 	"devDependencies": {
-		"electron": "3.0.5"
+		"electron": "3.0.6"
 	}
 }
