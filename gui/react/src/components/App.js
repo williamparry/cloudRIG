@@ -84,6 +84,15 @@ class App extends Component {
 			});
 		});
 
+		ipcRenderer.on("started", event => {
+			if (!document.hasFocus()) {
+				new Notification("cloudRIG", {
+					body: "cloudRIG is ready",
+					silent: true
+				});
+			}
+		});
+
 		ipcRenderer.on("updateReady", event => {
 			ipcRenderer.send("cmd", "doUpdate");
 		});
@@ -246,8 +255,7 @@ class App extends Component {
 										this.setState({
 											updateNotReady: false
 										});
-									}}
-								>
+									}}>
 									Close
 								</Button>
 							</Modal.Description>
@@ -297,8 +305,7 @@ class App extends Component {
 														<a
 															href="https://docs.aws.amazon.com/ses/latest/DeveloperGuide/create-shared-credentials-file.html"
 															rel="noopener noreferrer"
-															target="_blank"
-														>
+															target="_blank">
 															AWS Credentials File
 														</a>
 													</List.Content>
@@ -339,8 +346,7 @@ class App extends Component {
 								zIndex: 2,
 								margin: "0",
 								width: "100%"
-							}}
-						>
+							}}>
 							<Icon name="download" />
 							<Message.Content>
 								New version available.{" "}
@@ -359,8 +365,7 @@ class App extends Component {
 										link
 										active={this.state.currentPage === pages.Configuration}
 										onClick={this.changePage.bind(this, pages.Configuration)}
-										disabled={this.state.disableNonStartPages}
-									>
+										disabled={this.state.disableNonStartPages}>
 										<Icon name="configure" />
 										<Step.Content>
 											<Step.Title>Configure</Step.Title>
@@ -370,8 +375,7 @@ class App extends Component {
 										link
 										active={this.state.currentPage === pages.Initialization}
 										onClick={this.changePage.bind(this, pages.Initialization)}
-										disabled={this.state.currentPage === pages.Configuration || this.state.disableNonStartPages}
-									>
+										disabled={this.state.currentPage === pages.Configuration || this.state.disableNonStartPages}>
 										<Icon name="tasks" />
 										<Step.Content>
 											<Step.Title>Initialize</Step.Title>
@@ -382,8 +386,7 @@ class App extends Component {
 										active={this.state.currentPage === pages.Play}
 										disabled={
 											this.state.currentPage === pages.Configuration || this.state.currentPage === pages.Initialization
-										}
-									>
+										}>
 										<Icon name="game" />
 										<Step.Content>
 											<Step.Title>Play</Step.Title>

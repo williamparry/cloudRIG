@@ -216,6 +216,7 @@ function cmdHandler(event, op, data) {
 
 			cloudrig.start(function(err) {
 				event.sender.send("starting", false);
+				event.sender.send("started");
 
 				if (err) {
 					event.sender.send("errorPlay", err);
