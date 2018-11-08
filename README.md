@@ -11,7 +11,7 @@ This is a community project that uses [Parsec](https://parsecgaming.com/) techno
 * 2 minute termination warning overlay
 * Auto-saves your rig when you stop or are booted off
 * Attach, extend a separate game drive
-* Choose either g2.2xlarge, g3s.xlarge, and g3.4xlarge instance types
+* Choose either g2.2xlarge, g3s.xlarge, or g3.4xlarge instance types
 
 There are 2 ways to use cloudRIG: [GUI](#gui) or [CLI](#cli).
 
