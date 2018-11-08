@@ -36,6 +36,6 @@
 		"opn": "^5.4.0"
 	},
 	"devDependencies": {
-		"electron": "3.0.6"
+		"electron": "3.0.8"
 	}
 }

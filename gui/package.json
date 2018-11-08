@@ -15,6 +15,6 @@
 		"concurrently": "^4.0.1"
 	},
 	"dependencies": {
-		"electron-builder": "^20.27.1"
+		"electron-builder": "^20.31.2"
 	}
 }

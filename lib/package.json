@@ -13,12 +13,10 @@
 	"author": "",
 	"license": "ISC",
 	"dependencies": {
-		"archiver": "^3.0.0",
 		"async": "^2.6.0",
-		"aws-sdk": "^2.339.0",
+		"aws-sdk": "^2.351.0",
 		"child-process": "^1.0.2",
 		"external-ip": "^2.0.3",
-		"fs-extra": "^7.0.0",
 		"jszip": "^3.1.5",
 		"moment": "^2.22.1",
 		"tmp": "0.0.33"
