@@ -12,9 +12,9 @@
 		"release": "export $(cat .env | xargs) && yarn build:prepare && cd .tmp-app && npx electron-builder -p onTagOrDraft"
 	},
 	"devDependencies": {
-		"concurrently": "^4.0.1"
+		"concurrently": "^4.1.0"
 	},
 	"dependencies": {
-		"electron-builder": "^20.31.2"
+		"electron-builder": "^20.38.4"
 	}
 }

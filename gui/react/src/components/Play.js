@@ -347,8 +347,7 @@ class Play extends Component {
 								would be great to have more maintainers of the project other than me :)
 							</p>
 							<p>
-								Or you could become a Patron (testing on AWS gets expensive). This project uses the awesome Parsec
-								streaming tech, but is not supported by Parsec.
+								Or you could become a Patron (testing on AWS gets expensive).
 							</p>
 							<a
 								href="https://www.patreon.com/bePatron?u=6484976"

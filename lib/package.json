@@ -14,11 +14,11 @@
 	"license": "ISC",
 	"dependencies": {
 		"async": "^2.6.0",
-		"aws-sdk": "^2.351.0",
+		"aws-sdk": "^2.382.0",
 		"child-process": "^1.0.2",
-		"external-ip": "^2.0.3",
+		"external-ip": "^2.1.1",
 		"jszip": "^3.1.5",
-		"moment": "^2.22.1",
+		"moment": "^2.23.0",
 		"tmp": "0.0.33"
 	}
 }
