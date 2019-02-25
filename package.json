@@ -5,8 +5,5 @@
         "release": "cd gui && yarn release",
         "gui": "yarn start",
         "cli": "cd cli && node index"
-    },
-    "dependencies": {
-        "opn": "^5.4.0"
     }
 }

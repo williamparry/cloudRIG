@@ -2,7 +2,6 @@ import React, { Component } from "react";
 import { Button, Grid, List, Image, Table, Icon, Modal, Tab } from "semantic-ui-react";
 import Loading from "./Loading";
 import DiscordIcon from "../img/discord_icon.svg";
-import BecomeAPatron from "../img/become_a_patron_button.png";
 import Storage from "./play/Storage";
 
 const { ipcRenderer } = window.require("electron");
@@ -346,16 +345,6 @@ class Play extends Component {
 								If you'd like to get involved in development, testing or documentation, check out the Github repo. It
 								would be great to have more maintainers of the project other than me :)
 							</p>
-							<p>
-								Or you could become a Patron (testing on AWS gets expensive).
-							</p>
-							<a
-								href="https://www.patreon.com/bePatron?u=6484976"
-								data-patreon-widget-type="become-patron-button"
-								target="_blank"
-								rel="noopener noreferrer">
-								<Image src={BecomeAPatron} alt="Become a Patron!" size="small" />
-							</a>
 						</Tab.Pane>
 					)
 				},

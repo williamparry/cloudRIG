@@ -8,7 +8,7 @@
 	},
 	"main": "index.js",
 	"description": "Play games with Parsec on AWS for cheap.",
-	"version": "0.0.1-alpha.6",
+	"version": "0.0.1-alpha.7",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/williamparry/cloudRIG"
@@ -29,13 +29,13 @@
 		]
 	},
 	"dependencies": {
-		"async": "^2.6.1",
+		"async": "^2.6.2",
 		"cloudriglib": "link:../../lib",
-		"electron-context-menu": "^0.10.1",
+		"electron-context-menu": "^0.11.0",
 		"electron-updater": "^4.0.6",
 		"opn": "^5.4.0"
 	},
 	"devDependencies": {
-		"electron": "4.0.0"
+		"electron": "4.0.5"
 	}
 }

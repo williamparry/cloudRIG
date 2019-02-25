@@ -8,13 +8,12 @@
 		"build:electron": "rm -rf .tmp-app && mkdir .tmp-app && rsync -av --progress electron/ .tmp-app --exclude node_modules && cd .tmp-app && yarn install --only=production && rm dev.html && rm yarn.lock && rm -f yarn-error.log && rm -f .DS_STORE && mv -f index.prod.js index.js",
 		"build:react": "rm -rf .tmp-react-build && mkdir .tmp-react-build && rsync -av --progress react/ .tmp-react-build --exclude node_modules && cd .tmp-react-build && yarn install --only=production && yarn build && cp -r build ../.tmp-app",
 		"build:prepare": "yarn run concurrently \"yarn build:electron\" \"yarn build:react\" && cd .tmp-app && find . -name \".DS_Store\" -delete",
-		"build": "yarn build:prepare && cd .tmp-app && npx electron-builder",
-		"release": "export $(cat .env | xargs) && yarn build:prepare && cd .tmp-app && npx electron-builder -p onTagOrDraft"
+		"build": "yarn build:prepare && cd .tmp-app && npx electron-builder"
 	},
 	"devDependencies": {
 		"concurrently": "^4.1.0"
 	},
 	"dependencies": {
-		"electron-builder": "^20.38.4"
+		"electron-builder": "^20.38.5"
 	}
 }

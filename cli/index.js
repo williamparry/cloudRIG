@@ -1,13 +1,10 @@
 "use strict";
 
-var fs = require("fs");
 var async = require("async");
-var opn = require("opn");
 var inquirer = require("inquirer");
 var prettyjson = require("prettyjson");
 var figlet = require("figlet");
 var cowsay = require("cowsay");
-var argv = require("yargs").argv;
 var cloudrig = require("cloudriglib");
 
 function criticalError(err) {
@@ -107,7 +104,7 @@ function mainMenu() {
 			}
 		}
 
-		choices.push("Get State", "Advanced", "Support cloudRIG");
+		choices.push("Get State", "Advanced");
 
 		console.log(`Current Spot price for ${config.AWSAvailabilityZone} is $${state.currentSpotPrice}`);
 
@@ -391,45 +388,9 @@ function mainMenu() {
 
 						break;
 
-					case "Support cloudRIG":
-						supportCloudRIG(mainMenu);
-						break;
 				}
 			});
 	});
-}
-
-function supportCloudRIG(cb) {
-	console.log(
-		`\nIf you'd like to get involved in development, testing or documentation, check out the Github repo. It would be great to have more maintainers of the project other than me :)\n`
-	);
-	console.log(
-		`Or you could become a Patron (testing on AWS gets expensive). This project uses the awesome Parsec streaming tech, but is not supported by Parsec.\n`
-	);
-
-	inquirer
-		.prompt([
-			{
-				name: "cmd",
-				message: "Support cloudRIG",
-				type: "rawlist",
-				choices: ["« Back", "Become a patron", "Visit Github page"]
-			}
-		])
-		.then(function(answers) {
-			switch (answers.cmd) {
-				case "« Back":
-					cb();
-					break;
-
-				case "Become a patron":
-					opn("https://www.patreon.com/bePatron?u=6484976", { wait: false }).then(cb);
-					break;
-				case "Visit Github page":
-					opn("https://github.com/williamparry/cloudRIG", { wait: false }).then(cb);
-					break;
-			}
-		});
 }
 
 function advancedMenu(cb) {
