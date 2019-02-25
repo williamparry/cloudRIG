@@ -1,5 +1,7 @@
 os: osx
-before_install: cd gui
+before_install: 
+  - touch yarn.lock
+  - cd gui
 script: yarn build
 language: node_js
 node_js:
