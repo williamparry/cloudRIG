@@ -1,3 +1,5 @@
+**Looking for maintainers. Please get in touch if you'd like to get involved.**
+
 # cloudRIG
 
 cloudRIG is the cheapest way to use AWS + Parsec for game and other application streaming. When configured, it will set up the requisite AWS infrastructure for you to boot spot instances preloaded with Parsec.
