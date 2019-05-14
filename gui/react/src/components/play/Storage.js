@@ -86,6 +86,7 @@ class Storage extends Component {
 							<Grid.Row>
 								<Grid.Column>
 									<Form.Select label='Create Volume With Size' value={this.state.newVolume} onChange={this.handleChange.bind(this)} options={ [
+										{ key: '50', text: '50 GB', value: 50 },
 										{ key: '100', text: '100 GB', value: 100 },
 										{ key: '150', text: '150 GB', value: 150 },
 										{ key: '200', text: '200 GB', value: 200 },
