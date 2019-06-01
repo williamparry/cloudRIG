@@ -5,6 +5,7 @@ import AWSProfile from "./configuration/AWSProfile.js";
 const { ipcRenderer } = window.require("electron");
 
 let instanceTypes;
+let instanceTypesPerRegion;
 let allRegions;
 let allZones;
 let initialConfig;
@@ -17,6 +18,7 @@ class Configuration extends Component {
 		const credentials = ipcRenderer.sendSync("cmd", "getCredentials");
 		const zonesArr = ipcRenderer.sendSync("cmd", "getZones");
 		const instanceTypesArr = ipcRenderer.sendSync("cmd", "getInstanceTypes");
+		instanceTypesPerRegion = ipcRenderer.sendSync("cmd", "getInstanceTypesPerRegion");
 
 		allRegions = [];
 		allZones = [];
@@ -43,6 +45,7 @@ class Configuration extends Component {
 
 		this.state = {
 			currentZones: this.getZones(initialConfig.AWSRegion),
+			currentInstanceTypes: this.getInstanceTypes(initialConfig.AWSRegion),
 			profiles: profiles,
 			addCredentialsOpen: false,
 			editCredentialsOpen: false,
@@ -203,16 +206,26 @@ aws_secret_access_key=${credentialsObject.aws_secret_access_key}`;
 		});
 	}
 
+	getInstanceTypes(region) {
+		const instanceTypeForRegion = instanceTypesPerRegion[region];
+		return instanceTypes.filter(instanceType => {
+			return instanceTypeForRegion.indexOf(instanceType.key) >= 0;
+		});
+	}
+
 	handleRegionChange(e, data) {
 		const currentZones = this.getZones(data.value);
+		const currentInstanceTypes = this.getInstanceTypes(data.value);
 
 		this.setState({
-			currentZones: currentZones
+			currentZones: currentZones,
+			currentInstanceTypes: currentInstanceTypes
 		});
 
 		setTimeout(() => {
 			var newConfig = { ...this.state.config };
 			newConfig.AWSAvailabilityZone = currentZones[0].key;
+			newConfig.AWSInstanceType = currentInstanceTypes[0].key;
 
 			this.setState({
 				config: newConfig
@@ -380,7 +393,7 @@ aws_secret_access_key=${credentialsObject.aws_secret_access_key}`;
 										<Form.Field
 											control={Select}
 											label="AWS Instance Type"
-											options={instanceTypes}
+											options={this.state.currentInstanceTypes}
 											value={this.state.config.AWSInstanceType}
 											name="AWSInstanceType"
 											onChange={this.handleChange.bind(this)}
@@ -403,7 +416,7 @@ aws_secret_access_key=${credentialsObject.aws_secret_access_key}`;
 												>
 													g2.2xlarge
 												</a>{" "}
-												is cheap and OK for older games, and comes with additional ephemeral drive
+												is cheap and OK for older games, and comes with additional ephemeral drive (not available in all the regions)
 											</List.Item>
 											<List.Item>
 												<a
