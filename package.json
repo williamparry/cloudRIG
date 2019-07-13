@@ -1,6 +1,5 @@
 {
-	"version": "0.0.1",
-	"scripts": {
+		"scripts": {
         "start": "cd gui && yarn start",
         "build": "cd gui && yarn build",
         "release": "cd gui && yarn release",
