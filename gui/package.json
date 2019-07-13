@@ -3,11 +3,12 @@
 	"version": "0.0.5",
 	"license": "MIT",
 	"scripts": {
-		"postinstall": "yarn run concurrently \"cd react && yarn install\" \"cd electron && yarn install\" ",
-		"start": "yarn run concurrently \"cd react && yarn start\" \"cd electron && yarn run electron .\"",
+		"postinstall": "yarn run concurrently \"cd react && yarn install\" \"cd electron && yarn install\"",
+		"start": "yarn run concurrently \"yarn build:lib\" \"cd react && yarn start\" \"cd electron && yarn run electron .\"",
 		"build:electron": "rm -rf .tmp-app && mkdir .tmp-app && rsync -av --progress electron/ .tmp-app --exclude node_modules && cd .tmp-app && yarn install --only=production && rm dev.html && rm yarn.lock && rm -f yarn-error.log && rm -f .DS_STORE && mv -f index.prod.js index.js",
 		"build:react": "rm -rf .tmp-react-build && mkdir .tmp-react-build && rsync -av --progress react/ .tmp-react-build --exclude node_modules && cd .tmp-react-build && yarn install --only=production && yarn build && cp -r build ../.tmp-app",
 		"build:prepare": "yarn run concurrently \"yarn build:electron\" \"yarn build:react\" && cd .tmp-app && find . -name \".DS_Store\" -delete",
+		"build:lib": "cd ../lib && yarn install",
 		"build": "yarn build:prepare && cd .tmp-app && npx electron-builder"
 	},
 	"devDependencies": {
