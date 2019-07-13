@@ -129,7 +129,7 @@ function cmdHandler(event, op, data) {
 
 		case "getConfiguration":
 			const configuration = cloudrig.getConfigFile();
-			logger.info("Configuration loaded: " + JSON.stringify(configuration));
+			logger.debug("Configuration loaded: " + JSON.stringify(configuration));
 			event.returnValue = configuration;
 			break;
 
