@@ -1,0 +1,3 @@
+- [ ] Code is linted
+- [ ] Changelog has been updated
+- [ ] Version has been updated
