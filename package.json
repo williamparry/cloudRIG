@@ -1,5 +1,6 @@
 {
-    "scripts": {
+	"version": "0.0.1",
+	"scripts": {
         "start": "cd gui && yarn start",
         "build": "cd gui && yarn build",
         "release": "cd gui && yarn release",
@@ -8,5 +9,6 @@
     },
     "devDependencies": {
         "prettier": "^1.18.2"
-    }
+    },
+    "dependencies": {}
 }
