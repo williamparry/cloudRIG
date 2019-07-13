@@ -207,16 +207,26 @@ aws_secret_access_key=${credentialsObject.aws_secret_access_key}`;
 	}
 
 	getInstanceTypes(region) {
-		const instanceTypeForRegion = instanceTypesPerRegion[region];
-		return instanceTypes.filter(instanceType => {
-			return instanceTypeForRegion.indexOf(instanceType.key) >= 0;
-		});
+		const instanceTypesForRegion = instanceTypesPerRegion[region];
+
+		let selectedInstanceTypes;
+		if (instanceTypesForRegion) {
+			// Get the instance types for the region
+			selectedInstanceTypes = instanceTypes.filter(instanceType => {
+				return instanceTypesForRegion.indexOf(instanceType.key) >= 0;
+			});
+		} else {
+			// If we do not have a region selected, we return an empty list
+			selectedInstanceTypes = [];
+		}
+
+		return selectedInstanceTypes;
 	}
 
 	handleRegionChange(e, data) {
 		const currentZones = this.getZones(data.value);
 		const currentInstanceTypes = this.getInstanceTypes(data.value);
-
+		
 		this.setState({
 			currentZones: currentZones,
 			currentInstanceTypes: currentInstanceTypes
