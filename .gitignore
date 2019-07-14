@@ -28,3 +28,6 @@ yarn-error.log*
 .tmp-app
 .tmp-react-build
 build
+
+# WebStorm
+.idea

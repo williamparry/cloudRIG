@@ -7,6 +7,7 @@ const autoUpdater = require("electron-updater").autoUpdater;
 const fs = require("fs");
 const homedir = require("os").homedir();
 const opn = require("opn");
+const logger = require('electron-log');
 
 autoUpdater.autoDownload = false;
 
@@ -53,7 +54,6 @@ function cmdHandler(event, op, data) {
 	switch (op) {
 		case "log":
 			event.sender.send("log", data);
-
 			break;
 
 		case "checkForUpdates":
@@ -117,15 +117,20 @@ function cmdHandler(event, op, data) {
 
 		case "getZones":
 			event.returnValue = cloudrig.getZonesArr();
-
 			break;
 
 		case "getInstanceTypes":
 			event.returnValue = cloudrig.getInstanceTypesArr();
+			break;
+			
+		case "getInstanceTypesPerRegion":
+			event.returnValue = cloudrig.getInstanceTypesPerRegion();
+			break;
 
 		case "getConfiguration":
-			event.returnValue = cloudrig.getConfigFile();
-
+			const configuration = cloudrig.getConfigFile();
+			logger.debug("Configuration loaded: " + JSON.stringify(configuration));
+			event.returnValue = configuration;
 			break;
 
 		case "getConfigurationValidity":
