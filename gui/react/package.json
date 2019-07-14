@@ -5,11 +5,11 @@
   "license": "MIT",
   "dependencies": {
     "electron-log": "^3.0.6",
-    "react": "^16.8.3",
-    "react-dom": "^16.8.3",
-    "react-scripts": "2.1.5",
-    "semantic-ui-css": "2.4.1",
-    "semantic-ui-react": "^0.85.0"
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6",
+    "react-scripts": "^3.0.1",
+    "semantic-ui-css": "^2.4.1",
+    "semantic-ui-react": "^0.87.3"
   },
   "scripts": {
     "start": "react-scripts start",
