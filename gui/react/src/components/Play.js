@@ -3,6 +3,7 @@ import { Button, Grid, List, Image, Table, Icon, Modal, Tab } from "semantic-ui-
 import Loading from "./Loading";
 import DiscordIcon from "../img/discord_icon.svg";
 import Storage from "./play/Storage";
+import Contributors from "./play/Contributors";
 
 const { ipcRenderer } = window.require("electron");
 
@@ -377,6 +378,14 @@ class Play extends Component {
 							</p>
 						</Tab.Pane>
 					)
+				},
+				{
+					menuItem: "Contributors",
+					render: () => (
+						<Tab.Pane>
+							<Contributors />
+						</Tab.Pane>
+					)
 				}
 			];
 
@@ -404,7 +413,10 @@ class Play extends Component {
 										<Grid.Column>{actionButtons}</Grid.Column>
 									</Grid.Row>
 									<Grid.Row>
-										<Grid.Column>
+										<Grid.Column style={{
+											'height': '295px',
+											'overflow-y': 'auto'
+										}}>
 											<Tab panes={panes} />
 										</Grid.Column>
 									</Grid.Row>

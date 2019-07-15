@@ -8,6 +8,7 @@ const fs = require("fs");
 const homedir = require("os").homedir();
 const opn = require("opn");
 const logger = require('electron-log');
+const request = require('request');
 
 autoUpdater.autoDownload = false;
 
@@ -363,8 +364,16 @@ function cmdHandler(event, op, data) {
 					});
 				}
 			});
-
 			break;
+
+		case "getContributors":
+			cloudrig.getGithubContributors(function(err, data) {
+				if (err) {
+					event.sender.send("contributorListError", err);
+				} else {
+					event.sender.send("contributorList", data);
+				}
+			});
 	}
 
 	if (hooks[op]) {
