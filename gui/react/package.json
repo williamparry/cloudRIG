@@ -5,12 +5,17 @@
   "license": "MIT",
   "dependencies": {
     "electron-log": "^3.0.6",
-    "react": "^16.8.6",
-    "react-dom": "^16.8.6",
-    "react-scripts": "^3.0.1",
+    "react": "^16.9.0",
+    "react-dom": "^16.9.0",
+    "react-scripts": "^3.1.0",
     "semantic-ui-css": "^2.4.1",
     "semantic-ui-react": "^0.87.3"
   },
+	"resolutions": {
+		"react-scripts/**/set-value": "^2.0.1",
+		"react-scripts/**/mixin-deep": "^2.0.1",
+		"react-scripts/**/lodash": "^4.17.15"
+	},
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
