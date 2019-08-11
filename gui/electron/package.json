@@ -16,7 +16,13 @@
 	"build": {
 		"appId": "com.williamparry.cloudrig",
 		"mac": {
-			"category": "public.app-category.games"
+			"category": "public.app-category.games",
+			"hardenedRuntime": true,
+			"gatekeeperAssess": true,
+			"target": [
+				"dmg",
+				"zip"
+			]
 		},
 		"directories": {
 			"output": "../../_releases",
@@ -26,7 +32,8 @@
 			"index.js",
 			"common.js",
 			"build/**/*"
-		]
+		],
+		"afterSign": "./afterSignHook.js"
 	},
 	"dependencies": {
 		"async": "^3.1.0",
@@ -34,10 +41,11 @@
 		"electron-context-menu": "^0.13.0",
 		"electron-log": "^3.0.6",
 		"electron-updater": "^4.1.2",
-		"request": "^2.88.0",
-		"opn": "^6.0.0"
+		"opn": "^6.0.0",
+		"request": "^2.88.0"
 	},
 	"devDependencies": {
-		"electron": "^4.2.6"
+		"electron": "^4.2.6",
+		"electron-notarize": "^0.1.1"
 	}
 }
