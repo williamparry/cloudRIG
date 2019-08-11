@@ -4,10 +4,15 @@
         "build": "cd gui && yarn build",
         "release": "cd gui && yarn release",
         "gui": "yarn start",
-        "cli": "cd cli && node index"
-    },
-    "devDependencies": {
-        "prettier": "^1.18.2"
-    },
-    "dependencies": {}
+        "cli": "cd cli && node index",
+				"auditall": "yarn run concurrently \"yarn audit\" \"cd gui && yarn audit\" \"cd gui/electron && yarn audit\" \"cd gui/react && yarn audit\" \"cd cli && yarn audit\" \"cd lib && yarn audit\""
+		},
+		"devDependencies": {
+			"concurrently": "^4.1.1",
+			"prettier": "^1.18.2"
+		},
+    "dependencies": {},
+		"resolutions": {
+			"concurrently/lodash": "^4.17.15"
+		}
 }
