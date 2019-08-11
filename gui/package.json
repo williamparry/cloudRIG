@@ -16,5 +16,8 @@
 	},
 	"dependencies": {
 		"electron-builder": "^21.0.15"
+	},
+	"resolutions": {
+		"concurrently/lodash": "^4.17.15"
 	}
 }
