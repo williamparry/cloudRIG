@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { List } from "semantic-ui-react";
+import { List, ListHeader } from "semantic-ui-react";
 import 'semantic-ui-css/semantic.min.css';
 
 const { ipcRenderer } = window.require("electron");
@@ -73,11 +73,34 @@ class Contributors extends Component {
 
 			<React.Fragment>
 				{(this.state.contributors && this.state.contributors.content) && (
-					<List>
-						{this.state.contributors.content.map((contributor, index) => {
-							return <List.Item key={index}>{contributor.login}</List.Item>
-						})}
-					</List>
+					<>
+						<List>
+							<ListHeader><b>Maintainers</b></ListHeader>
+							{this.state.contributors.content.activeMaintainers.map((contributor, index) => {
+								return <List.Item key={index}>
+									{contributor.login}
+								</List.Item>
+							})}
+						</List>
+
+						<List>
+							<ListHeader><b>Original development</b></ListHeader>
+							{this.state.contributors.content.originalDevelopmentMaintainers.map((contributor, index) => {
+								return <List.Item key={index}>
+									{contributor.login}
+								</List.Item>
+							})}
+						</List>
+
+						<List>
+							<ListHeader><b>Contributors</b></ListHeader>
+							{this.state.contributors.content.otherContributors.map((contributor, index) => {
+								return <List.Item key={index}>
+									{contributor.login}
+								</List.Item>
+							})}
+						</List>
+					</>
 				)}
 				{(!this.state.contributors || !this.state.contributors.content) && (
 					<p>No contributors</p>
