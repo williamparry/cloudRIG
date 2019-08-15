@@ -475,7 +475,7 @@ class Play extends Component {
 									<List.Item>
 										<List.Icon name="github" />
 										<List.Content>
-											<a href="https://github.com/williamparry/cloudRIG" target="_blank" rel="noopener noreferrer">
+											<a href="https://github.com/cloudrig/cloudRIG" target="_blank" rel="noopener noreferrer">
 												Github
 											</a>
 										</List.Content>

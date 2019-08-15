@@ -19,13 +19,13 @@ There are 2 ways to use cloudRIG: [GUI](#gui) or [CLI](#cli).
 
 ---
 
-**Note:** I STRONGLY recommend you use a dedicated AWS account for cloudRIG as described [here](https://github.com/williamparry/cloudRIG/wiki/AWS-Testing#setting-up-a-test-account).
+**Note:** I STRONGLY recommend you use a dedicated AWS account for cloudRIG as described [here](https://github.com/cloudrig/cloudRIG/wiki/AWS-Testing#setting-up-a-test-account).
 
 ---
 
-## [GUI](https://github.com/williamparry/cloudRIG/tree/master/gui)
+## [GUI](https://github.com/cloudrig/cloudRIG/tree/master/gui)
 
-### [Releases](https://github.com/williamparry/cloudRIG/releases)
+### [Releases](https://github.com/cloudrig/cloudRIG/releases)
 
 ### Screenshots
 
@@ -35,7 +35,7 @@ There are 2 ways to use cloudRIG: [GUI](#gui) or [CLI](#cli).
 ![AWS setup Screen](https://user-images.githubusercontent.com/348091/42418364-18d057c0-82e2-11e8-9877-c58a3120c0dd.png)
 ![Play Screen](https://user-images.githubusercontent.com/348091/42418357-ef8cd33e-82e1-11e8-838c-087e5422c0d5.png)
 
-## [CLI](https://github.com/williamparry/cloudRIG/tree/master/cli)
+## [CLI](https://github.com/cloudrig/cloudRIG/tree/master/cli)
 
 Not guaranteed to be up-to-date with the lib, but handy for sending SSM commands.
 
