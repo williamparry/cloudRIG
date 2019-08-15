@@ -10,17 +10,18 @@ module.exports = async function (params) {
 		return;
 	}
 
-	if (process.env.MACOS_NOTORIZATION_ENABLE === "false") {
-		console.log("App notorization has been explicitely disabled (MACOS_NOTORIZATION_ENABLE)")
-		return;
-	}
-
 	// Same appId in electron-builder.
-	let appId = require('./package.json').build.appId;
+	let appId = require('../package.json').build.appId;
+	console.log('Using appId: ' + appId);
 
 	let appPath = path.join(params.appOutDir, `${params.packager.appInfo.productFilename}.app`);
 	if (!fs.existsSync(appPath)) {
 		throw new Error(`Cannot find application at: ${appPath}`);
+	}
+
+	if (process.env.MACOS_NOTORIZATION_ENABLE === "false") {
+		console.log("App notorization has been explicitely disabled (MACOS_NOTORIZATION_ENABLE)")
+		return;
 	}
 
 	console.log(`Notarizing ${appId} found at ${appPath}...`);

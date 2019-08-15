@@ -343,7 +343,7 @@ class App extends Component {
 								borderRadius: 0,
 								position: "absolute",
 								bottom: "120px",
-								zIndex: 1,
+								zIndex: 2,
 								margin: "0",
 								width: "100%"
 							}}>
