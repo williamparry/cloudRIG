@@ -3,7 +3,7 @@ require("electron-context-menu")();
 const url = require("url");
 const async = require("async");
 const cloudrig = require("cloudriglib");
-const autoUpdater = require("electron-updater").autoUpdater;
+const { autoUpdater } = require("electron-updater")
 const fs = require("fs");
 const homedir = require("os").homedir();
 const opn = require("opn");

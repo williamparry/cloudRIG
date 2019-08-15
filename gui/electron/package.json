@@ -18,7 +18,9 @@
 		"mac": {
 			"category": "public.app-category.games",
 			"hardenedRuntime": true,
-			"gatekeeperAssess": true,
+			"gatekeeperAssess": false,
+			"entitlements": "signature-helper/entitlements.mac.plist",
+			"entitlementsInherit": "signature-helper/entitlements.mac.plist",
 			"target": [
 				"dmg",
 				"zip"
@@ -33,7 +35,7 @@
 			"common.js",
 			"build/**/*"
 		],
-		"afterSign": "./afterSignHook.js"
+		"afterSign": "./signature-helper/afterSignHook.js"
 	},
 	"dependencies": {
 		"async": "^3.1.0",
