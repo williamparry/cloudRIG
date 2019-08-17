@@ -14,7 +14,8 @@
 	"resolutions": {
 		"react-scripts/**/set-value": "^2.0.1",
 		"react-scripts/**/mixin-deep": "^2.0.1",
-		"react-scripts/**/lodash": "^4.17.15"
+		"react-scripts/**/lodash": "^4.17.15",
+		"react-scripts/**/lodash.template": "^4.5.0"
 	},
   "scripts": {
     "start": "react-scripts start",
