@@ -3,14 +3,11 @@ require("electron-context-menu")();
 const url = require("url");
 const async = require("async");
 const cloudrig = require("cloudriglib");
-const { autoUpdater } = require("electron-updater")
 const fs = require("fs");
 const homedir = require("os").homedir();
 const opn = require("opn");
 const logger = require('electron-log');
 const request = require('request');
-
-autoUpdater.autoDownload = false;
 
 let hooks = {};
 let urlObj = {};
@@ -55,38 +52,6 @@ function cmdHandler(event, op, data) {
 	switch (op) {
 		case "log":
 			event.sender.send("log", data);
-			break;
-
-		case "checkForUpdates":
-			autoUpdater.on("update-available", info => {
-				event.sender.send("updateCheck", true);
-			});
-
-			autoUpdater.on("update-not-available", info => {
-				event.sender.send("updateCheck", false);
-			});
-
-			autoUpdater.on("error", err => {
-				cmdHandler(event, "updateFail");
-			});
-
-			autoUpdater.checkForUpdates();
-
-			break;
-
-		case "doUpdate":
-			event.sender.send("updateDownloading");
-
-			autoUpdater.on("download-progress", info => {
-				event.sender.send("updateDownloadProgress", info);
-			});
-
-			autoUpdater.on("update-downloaded", info => {
-				autoUpdater.quitAndInstall();
-			});
-
-			autoUpdater.downloadUpdate();
-
 			break;
 
 		case "openVNC":
@@ -339,31 +304,6 @@ function cmdHandler(event, op, data) {
 
 			win.close();
 
-			break;
-
-		case "prepareUpdate":
-			cloudrig.validateRequiredConfig(cloudrig.getConfigFile(), function(err) {
-				if (err) {
-					event.sender.send("error", err);
-					return;
-				}
-
-				// Config is valid
-				if (!err) {
-					cloudrig.prepareUpdate((err, resp) => {
-						if (err) {
-							event.sender.send("error", err);
-							return;
-						}
-						// Update not ready
-						if (resp.code === -1) {
-							event.sender.send("updateNotReady");
-							return;
-						}
-						event.sender.send("updateReady");
-					});
-				}
-			});
 			break;
 
 		case "getContributors":

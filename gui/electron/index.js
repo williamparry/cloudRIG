@@ -28,10 +28,6 @@ common.registerCMDHook("saveCredentialsFile", function (event, op, data) {
   event.returnValue = true;
 });
 
-common.registerCMDHook("updateFail", function (event, op, data) {
-  event.sender.send("updateCheck", false);
-});
-
 common.init(
   {
     pathname: path.join(__dirname, 'dev.html'),

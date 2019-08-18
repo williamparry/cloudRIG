@@ -15,11 +15,6 @@ common.registerCMDHook("saveCredentialsFile", function(cloudrig, event, op, data
 	event.returnValue = true;
 }, true)
 
-// TODO: Remove
-common.registerCMDHook("updateFail", function(event, op, data) {
-	event.sender.send('updateCheck', false)
-})
-
 common.init({
 	pathname: path.join(__dirname, 'build/index.html'),
 	protocol: 'file:',

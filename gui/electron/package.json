@@ -42,7 +42,6 @@
 		"cloudriglib": "link:../../lib",
 		"electron-context-menu": "^0.13.0",
 		"electron-log": "^3.0.6",
-		"electron-updater": "^4.1.2",
 		"opn": "^6.0.0",
 		"request": "^2.88.0"
 	},

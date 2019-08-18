@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Icon, Segment, Step, Grid, Button, Header, List, Modal, Message } from "semantic-ui-react";
+import { Icon, Segment, Step, Grid, Header, Modal, Message } from "semantic-ui-react";
 import "semantic-ui-css/semantic.min.css";
 import "./App.css";
 import Configuration from "./Configuration";
@@ -16,13 +16,6 @@ class App extends Component {
 		currentPage: pages.Loading,
 		config: {},
 		setupValid: false,
-		updateTriggered: false,
-		updateNotReady: false,
-		updateAvailable: false,
-		updateDownloading: false,
-		updateDownloadData: {
-			percent: 0
-		},
 		disableNonStartPages: false,
 		logOutput: ["Welcome :)"]
 	};
@@ -37,21 +30,8 @@ class App extends Component {
 		ipcRenderer.send("cmd", "selectCredentialsFile");
 	}
 
-	triggerUpdate(event, config) {
-		this.setState({
-			updateTriggered: true,
-			logOutput: ["Starting update"]
-		});
-		ipcRenderer.send("cmd", "prepareUpdate");
-	}
-
 	componentWillUnmount() {
 		ipcRenderer.removeAllListeners("getConfigurationValidity");
-		ipcRenderer.removeAllListeners("updateCheck");
-		ipcRenderer.removeAllListeners("updateReady");
-		ipcRenderer.removeAllListeners("updateNotReady");
-		ipcRenderer.removeAllListeners("updateDownloading");
-		ipcRenderer.removeAllListeners("updateDownloadProgress");
 		ipcRenderer.removeAllListeners("setupValid");
 		ipcRenderer.removeAllListeners("disableNonPlay");
 		ipcRenderer.removeAllListeners("changePage");
@@ -78,12 +58,6 @@ class App extends Component {
 			});
 		});
 
-		ipcRenderer.on("updateCheck", (event, updateAvailable) => {
-			this.setState({
-				updateAvailable: updateAvailable
-			});
-		});
-
 		ipcRenderer.on("started", event => {
 			if (!document.hasFocus()) {
 				new Notification("cloudRIG", {
@@ -91,28 +65,6 @@ class App extends Component {
 					silent: true
 				});
 			}
-		});
-
-		ipcRenderer.on("updateReady", event => {
-			ipcRenderer.send("cmd", "doUpdate");
-		});
-
-		ipcRenderer.on("updateNotReady", (event, message) => {
-			this.setState({
-				updateNotReady: message
-			});
-		});
-
-		ipcRenderer.on("updateDownloading", event => {
-			this.setState({
-				updateDownloading: true
-			});
-		});
-
-		ipcRenderer.on("updateDownloadProgress", (event, data) => {
-			this.setState({
-				updateDownloadData: data
-			});
 		});
 
 		ipcRenderer.on("setupValid", (event, valid) => {
@@ -198,9 +150,6 @@ class App extends Component {
 			},
 			() => {
 				ipcRenderer.send("cmd", "getConfigurationValidity");
-				setTimeout(() => {
-					ipcRenderer.send("cmd", "checkForUpdates");
-				}, 2000);
 			}
 		);
 	}
@@ -215,55 +164,12 @@ class App extends Component {
 				<Play />
 			) : null;
 
-		if (this.state.updateTriggered && !this.state.updateDownloading) {
-			return (
-				<div>
-					<Modal open={true}>
-						<Modal.Header>Preparing update...</Modal.Header>
-						<Modal.Content>
-							<Modal.Description>
-								<pre id="output" style={{ height: 300, overflowY: "scroll", overflowX: "hidden" }}>
-									{this.state.logOutput.join("\n")}
-								</pre>
-							</Modal.Description>
-						</Modal.Content>
-					</Modal>
-				</div>
-			);
-		} else if (this.state.updateTriggered && this.state.updateDownloading) {
-			return (
-				<div>
-					<Modal open={true}>
-						<Modal.Header>Downloading update...</Modal.Header>
-						<Modal.Content>
-							<Modal.Description>{Math.floor(this.state.updateDownloadData.percent)}%</Modal.Description>
-						</Modal.Content>
-					</Modal>
-				</div>
-			);
-		} else if (!this.setupValid && this.state.updateNotReady) {
-			return (
-				<div>
-					<Modal open={true}>
-						<Modal.Header>Update not ready</Modal.Header>
-						<Modal.Content>
-							<Modal.Description>
-								<p>{this.state.updateNotReady}</p>
-								<Button
-									onClick={() => {
-										ipcRenderer.send("cmd", "setup");
-										this.setState({
-											updateNotReady: false
-										});
-									}}>
-									Close
-								</Button>
-							</Modal.Description>
-						</Modal.Content>
-					</Modal>
-				</div>
-			);
-		} else if (!this.state.config.AWSCredentialsFile) {
+		const DeprecationMessage = () => <Message.Content>
+		This version is deprecated. Please uninstall and re-download at{' '}
+		<a href="https://github.com/cloudRIG/cloudrig/" rel="noopener noreferrer" target="_blank">https://github.com/cloudRIG/cloudrig/</a>
+	</Message.Content> 
+
+		if (!this.state.config.AWSCredentialsFile) {
 			return (
 				<div>
 					<Modal open={true}>
@@ -272,50 +178,18 @@ class App extends Component {
 						</Modal.Header>
 						<Modal.Content>
 							<Modal.Description>
-								<Header>Please select your AWS credentials file</Header>
-								<br />
-								<Grid>
-									<Grid.Row>
-										<Grid.Column width={5}>
-											<Button
-												content="Choose"
-												icon="download"
-												labelPosition="right"
-												size="large"
-												onClick={this.handleChoose.bind(this)}
-											/>
-										</Grid.Column>
-
-										<Grid.Column width={11}>
-											<List>
-												<List.Item>
-													<List.Icon name="warning sign" />
-													<List.Content>It is advised that you use a separate AWS account for cloudRIG</List.Content>
-												</List.Item>
-												<List.Item>
-													<List.Icon name="warning sign" />
-													<List.Content>
-														It is advised that you use a separate credentials file for cloudRIG
-													</List.Content>
-												</List.Item>
-												<List.Item>
-													<List.Icon name="info circle" />
-													<List.Content>
-														More information on{" "}
-														<a
-															href="https://docs.aws.amazon.com/ses/latest/DeveloperGuide/create-shared-credentials-file.html"
-															rel="noopener noreferrer"
-															target="_blank">
-															AWS Credentials File
-														</a>
-													</List.Content>
-												</List.Item>
-											</List>
-										</Grid.Column>
-									</Grid.Row>
-								</Grid>
-								<br />
-								<br />
+							<Message
+								icon
+								warning
+								size="tiny"
+								style={{
+									borderRadius: 0,
+									margin: "0",
+									width: "100%"
+								}}>
+								<Icon name="exclamation circle" />
+								<DeprecationMessage />
+							</Message>
 								<Header>NOTICE</Header>
 								<p>
 									<small>
@@ -329,34 +203,29 @@ class App extends Component {
 							</Modal.Description>
 						</Modal.Content>
 					</Modal>
+					
 				</div>
 			);
 		} else {
 			return (
 				<div style={{ display: "flex", flexDirection: "column", flexGrow: 1 }}>
-					{this.state.updateAvailable && (
-						<Message
-							icon
-							info
-							size="tiny"
-							style={{
-								borderRadius: 0,
-								position: "absolute",
-								bottom: "120px",
-								zIndex: 2,
-								margin: "0",
-								width: "100%"
-							}}>
-							<Icon name="download" />
-							<Message.Content>
-								New version available.{" "}
-								<Button onClick={this.triggerUpdate.bind(this)} size="tiny">
-									Update
-								</Button>
-							</Message.Content>
-						</Message>
-					)}
-
+					<Message
+						icon
+						warning
+						size="tiny"
+						style={{
+							borderRadius: 0,
+							position: "absolute",
+							bottom: "120px",
+							zIndex: 999999999,
+							margin: "0",
+							padding: 5,
+							width: "100%"
+						}}>
+						<Icon name="exclamation circle" />
+						<DeprecationMessage />
+					</Message>
+					
 					<Grid style={{ flexGrow: 1 }} className={this.state.isPossessive ? "possessive" : ""}>
 						<Grid.Row>
 							<Grid.Column>
