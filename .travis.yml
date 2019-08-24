@@ -1,24 +1,20 @@
 os: osx
 sudo: false
-
-language: node_js
-node_js:
-  - "10"
-
-
 before_install:
   - curl -o- -L https://yarnpkg.com/install.sh | bash -s -- --version 1.17.3
   - export PATH=$HOME/.yarn/bin:$PATH
   - cd gui
-
 install: yarn install
-
 script: yarn build
-
-
+language: node_js
+node_js:
+  - "10"
+branches:
+  only: 
+    - master
+    - finalrelease
 before_deploy:
 - export FILE_TO_UPLOAD=$(ls _releases/-*.dmg)
-
 deploy:
   provider: releases
   file_glob: true
@@ -26,4 +22,3 @@ deploy:
   skip_cleanup: true
   on:
     tags: true
-      branch: finalrelease
