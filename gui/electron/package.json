@@ -11,7 +11,7 @@
 	"version": "0.0.1-alpha.12",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/cloudrig/cloudRIG"
+		"url": "https://github.com/williamparry/cloudRIG"
 	},
 	"build": {
 		"appId": "com.williamparry.cloudrig",
